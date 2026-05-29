@@ -3,6 +3,33 @@
 [ext_resource type="Script" uid="uid://blhnkah83s0vc" path="res://desktop_pet/desktop_pet.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bfqch5tjt2fd3" path="res://terrain/terrain_mask.png" id="2_icon"]
 
+[sub_resource type="GDScript" id="GDScript_menu"]
+script/source = "extends PopupMenu
+
+const MENU_ALWAYS_ON_TOP := 0
+const MENU_QUIT := 1
+
+
+func _ready() -> void:
+	add_check_item(\"置顶\", MENU_ALWAYS_ON_TOP)
+	set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+	add_separator()
+	add_item(\"退出\", MENU_QUIT)
+	about_to_popup.connect(_on_about_to_popup)
+
+func _on_about_to_popup() -> void:
+	set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+
+func _on_id_pressed(menu_id: int) -> void:
+	match menu_id:
+		MENU_ALWAYS_ON_TOP:
+			var win := get_window()
+			win.always_on_top = not win.always_on_top
+			set_item_checked(MENU_ALWAYS_ON_TOP, win.always_on_top)
+		MENU_QUIT:
+			get_tree().quit()
+"
+
 [node name="DesktopPet" type="StatusIndicator" unique_id=861953393]
 tooltip = "Kingdom2D"
 icon = ExtResource("2_icon")
@@ -12,3 +39,7 @@ script = ExtResource("1_script")
 [node name="Menu" type="PopupMenu" parent="." unique_id=38895099]
 unique_name_in_owner = true
 prefer_native_menu = true
+script = SubResource("GDScript_menu")
+
+[connection signal="pressed" from="." to="." method="_on_pressed"]
+[connection signal="id_pressed" from="Menu" to="Menu" method="_on_id_pressed"]
