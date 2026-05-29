@@ -1,7 +1,14 @@
 [gd_scene format=3 uid="uid://c6xxc447w21ld"]
 
+[ext_resource type="Script" uid="uid://bfvpyvhlsvk8j" path="res://game/game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
+
 [node name="Game" type="Window" unique_id=2073799186]
 transparent_bg = true
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+scaling_3d_mode = 5
+canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 position = Vector2i(0, 36)
 size = Vector2i(256, 128)
@@ -9,8 +16,12 @@ borderless = true
 always_on_top = true
 transparent = true
 unfocusable = true
-mouse_passthrough = true
+script = ExtResource("1_game")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=4643393]
+[node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
+unique_name_in_owner = true
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1741326273]
+unique_name_in_owner = true
 offset_right = 40.0
 offset_bottom = 40.0
