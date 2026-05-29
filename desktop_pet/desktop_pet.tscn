@@ -1,12 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://c8desktoppet01"]
+[gd_scene format=3 uid="uid://ur58dr5043b5"]
 
-[ext_resource type="Script" path="res://desktop_pet/desktop_pet.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://blhnkah83s0vc" path="res://desktop_pet/desktop_pet.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bfqch5tjt2fd3" path="res://terrain/terrain_mask.png" id="2_icon"]
 
-[node name="DesktopPet" type="StatusIndicator"]
-icon = ExtResource("2_icon")
+[node name="DesktopPet" type="StatusIndicator" unique_id=861953393]
 tooltip = "Kingdom2D"
+icon = ExtResource("2_icon")
 menu = NodePath("Menu")
 script = ExtResource("1_script")
 
-[node name="Menu" type="PopupMenu" parent="."]
+[node name="Menu" type="PopupMenu" parent="." unique_id=38895099]
+prefer_native_menu = true
