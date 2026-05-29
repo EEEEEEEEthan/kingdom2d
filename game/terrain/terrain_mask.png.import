@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfqch5tjt2fd3"
-path="res://.godot/imported/terrain_mask.png-a393270b805b50530260271bdb7d38a3.ctex"
+path="res://.godot/imported/terrain_mask.png-f149a9144f348905d394ec6911da6dfb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://terrain/terrain_mask.png"
-dest_files=["res://.godot/imported/terrain_mask.png-a393270b805b50530260271bdb7d38a3.ctex"]
+source_file="res://game/terrain/terrain_mask.png"
+dest_files=["res://.godot/imported/terrain_mask.png-f149a9144f348905d394ec6911da6dfb.ctex"]
 
 [params]
 
