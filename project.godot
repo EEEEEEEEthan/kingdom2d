@@ -10,10 +10,13 @@ config_version=5
 
 [application]
 
+run/main_scene="uid://dkui3dlb4vu1c"
 config/features=PackedStringArray("4.7")
 
 [display]
 
+window/size/viewport_width=960
+window/size/viewport_height=128
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

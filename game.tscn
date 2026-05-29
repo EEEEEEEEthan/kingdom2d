@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dkui3dlb4vu1c"]
+
+[ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://terrain/terrain.tscn" id="1_80nbo"]
+
+[node name="Game" type="Node" unique_id=1799066687]
+
+[node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("1_80nbo")]
+position = Vector2(0, 128)
