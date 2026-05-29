@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://c8desktoppet01"]
+
+[ext_resource type="Script" path="res://desktop_pet/desktop_pet.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bfqch5tjt2fd3" path="res://terrain/terrain_mask.png" id="2_icon"]
+
+[node name="DesktopPet" type="StatusIndicator"]
+icon = ExtResource("2_icon")
+tooltip = "Kingdom2D"
+menu = NodePath("Menu")
+script = ExtResource("1_script")
+
+[node name="Menu" type="PopupMenu" parent="."]
