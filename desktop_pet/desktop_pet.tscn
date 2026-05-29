@@ -10,4 +10,5 @@ menu = NodePath("Menu")
 script = ExtResource("1_script")
 
 [node name="Menu" type="PopupMenu" parent="." unique_id=38895099]
+unique_name_in_owner = true
 prefer_native_menu = true

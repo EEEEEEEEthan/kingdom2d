@@ -15,14 +15,14 @@ func _ready() -> void:
 		visible = false
 		return
 
-	$Menu.add_check_item("置顶", MENU_ALWAYS_ON_TOP)
-	$Menu.set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
-	$Menu.add_separator()
-	$Menu.add_item("退出", MENU_QUIT)
-	$Menu.about_to_popup.connect(_on_menu_about_to_popup)
-	$Menu.id_pressed.connect(_on_menu_id_pressed)
+	%Menu.add_check_item("置顶", MENU_ALWAYS_ON_TOP)
+	%Menu.set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+	%Menu.add_separator()
+	%Menu.add_item("退出", MENU_QUIT)
+	%Menu.about_to_popup.connect(_on_menu_about_to_popup)
+	%Menu.id_pressed.connect(_on_menu_id_pressed)
 	pressed.connect(_on_pressed)
-	menu = $Menu.get_path()
+	menu = %Menu.get_path()
 	get_tree().auto_accept_quit = false
 
 
@@ -49,7 +49,7 @@ func _show_window() -> void:
 
 
 func _on_menu_about_to_popup() -> void:
-	$Menu.set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+	%Menu.set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
 
 
 func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
@@ -62,6 +62,6 @@ func _on_menu_id_pressed(menu_id: int) -> void:
 		MENU_ALWAYS_ON_TOP:
 			var win := get_window()
 			win.always_on_top = not win.always_on_top
-			$Menu.set_item_checked(MENU_ALWAYS_ON_TOP, win.always_on_top)
+			%Menu.set_item_checked(MENU_ALWAYS_ON_TOP, win.always_on_top)
 		MENU_QUIT:
 			get_tree().quit()
