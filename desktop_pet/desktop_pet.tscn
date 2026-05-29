@@ -12,20 +12,20 @@ const MENU_QUIT := 1
 
 func _ready() -> void:
 	add_check_item(\"置顶\", MENU_ALWAYS_ON_TOP)
-	set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+	set_item_checked(MENU_ALWAYS_ON_TOP, get_parent().is_always_on_top_enabled())
 	add_separator()
 	add_item(\"退出\", MENU_QUIT)
 	about_to_popup.connect(_on_about_to_popup)
 
 func _on_about_to_popup() -> void:
-	set_item_checked(MENU_ALWAYS_ON_TOP, get_window().always_on_top)
+	set_item_checked(MENU_ALWAYS_ON_TOP, get_parent().is_always_on_top_enabled())
 
 func _on_id_pressed(menu_id: int) -> void:
 	match menu_id:
 		MENU_ALWAYS_ON_TOP:
-			var win := get_window()
-			win.always_on_top = not win.always_on_top
-			set_item_checked(MENU_ALWAYS_ON_TOP, win.always_on_top)
+			var desktop_pet := get_parent()
+			desktop_pet.toggle_always_on_top()
+			set_item_checked(MENU_ALWAYS_ON_TOP, desktop_pet.is_always_on_top_enabled())
 		MENU_QUIT:
 			get_tree().quit()
 "

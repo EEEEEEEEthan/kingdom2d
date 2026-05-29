@@ -1,26 +1,40 @@
 extends StatusIndicator
 
+var _always_on_top := true
+
+
 func _ready() -> void:
 	if not Engine.is_embedded_in_editor():
-		var win := get_window()
-		win.always_on_top = true
-		win.unfocusable = false
+		_sync_window_flags()
 	get_tree().auto_accept_quit = false
 
 
-func _apply_window_flags() -> void:
+func is_always_on_top_enabled() -> bool:
+	return _always_on_top
+
+
+func toggle_always_on_top() -> void:
+	_always_on_top = not _always_on_top
 	if Engine.is_embedded_in_editor():
 		return
+	_sync_window_flags()
+
+
+func _sync_window_flags() -> void:
 	var win := get_window()
-	win.always_on_top = true
 	win.unfocusable = false
+	win.always_on_top = _always_on_top
 
 
 func _notification(what: int) -> void:
 	if Engine.is_embedded_in_editor():
 		return
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		get_window().hide()
+	match what:
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			get_window().hide()
+		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_FOCUS_OUT:
+			_sync_window_flags()
+
 
 func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
 	if mouse_button == MOUSE_BUTTON_LEFT:
