@@ -22,10 +22,12 @@ DesktopPet="*res://desktop_pet/desktop_pet.tscn"
 
 window/size/viewport_width=960
 window/size/viewport_height=128
-window/size/always_on_top=false
-window/per_pixel_transparency/allowed=true
+window/size/borderless=true
+window/size/no_focus=true
+window/energy_saving/keep_screen_on=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/per_pixel_transparency/allowed=true
 
 [physics]
 
