@@ -14,10 +14,6 @@ config/name="Kingdom2D"
 run/main_scene="uid://dkui3dlb4vu1c"
 config/features=PackedStringArray("4.7")
 
-[autoload]
-
-DesktopPet="*res://desktop_pet/desktop_pet.tscn"
-
 [display]
 
 window/size/viewport_width=256
