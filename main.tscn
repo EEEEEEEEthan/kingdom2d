@@ -1,18 +1,13 @@
 [gd_scene format=3 uid="uid://dkui3dlb4vu1c"]
 
 [ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b8k7launcherpanel" path="res://launcher/launcher.tscn" id="2_launcher"]
 
 [node name="Main" type="Node" unique_id=1799066687]
 
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 visible = false
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2061427511]
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="Launcher" parent="." instance=ExtResource("2_launcher")]
 
-[node name="Button" type="CheckButton" parent="VBoxContainer" unique_id=1889278503]
-layout_mode = 2
-text = "show game"
-
-[connection signal="toggled" from="VBoxContainer/Button" to="Game" method="set_visible"]
+[connection signal="toggled" from="Launcher/VBoxContainer/Button" to="Game" method="set_visible"]

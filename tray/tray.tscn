@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://bqj8ytrayicon01"]
+
+[ext_resource type="Script" path="res://tray/tray.gd" id="1_tray"]
+[ext_resource type="Texture2D" path="res://tray/icon.svg" id="2_icon"]
+
+[node name="Tray" type="StatusIndicator"]
+tooltip = "Kingdom2D"
+icon = ExtResource("2_icon")
+menu = NodePath("PopupMenu")
+script = ExtResource("1_tray")
+
+[node name="PopupMenu" type="PopupMenu" parent="."]
+prefer_native_menu = true
+item_count = 2
+item_0/text = "显示控制面板"
+item_0/id = 0
+item_1/text = "退出"
+item_1/id = 1
