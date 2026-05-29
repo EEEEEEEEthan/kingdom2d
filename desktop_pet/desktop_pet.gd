@@ -59,6 +59,8 @@ func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
 func _on_menu_id_pressed(menu_id: int) -> void:
 	match menu_id:
 		MENU_ALWAYS_ON_TOP:
-			get_window().always_on_top = $Menu.is_item_checked(MENU_ALWAYS_ON_TOP)
+			var win := get_window()
+			win.always_on_top = not win.always_on_top
+			$Menu.set_item_checked(MENU_ALWAYS_ON_TOP, win.always_on_top)
 		MENU_QUIT:
 			get_tree().quit()
