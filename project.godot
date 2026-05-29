@@ -23,6 +23,7 @@ DesktopPet="*res://desktop_pet/desktop_pet.tscn"
 window/size/viewport_width=960
 window/size/viewport_height=128
 window/size/always_on_top=false
+window/per_pixel_transparency/allowed=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

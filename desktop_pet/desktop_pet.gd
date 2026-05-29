@@ -22,8 +22,11 @@ func toggle_always_on_top() -> void:
 
 func _sync_window_flags() -> void:
 	var win := get_window()
+	win.borderless = true
+	win.transparent = true
 	win.unfocusable = false
 	win.always_on_top = _always_on_top
+	get_viewport().transparent_bg = true
 
 
 func _notification(what: int) -> void:
