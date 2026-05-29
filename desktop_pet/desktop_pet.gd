@@ -31,7 +31,7 @@ func _apply_window_flags() -> void:
 		return
 	var win := get_window()
 	win.always_on_top = true
-	win.unfocusable = true
+	win.unfocusable = false
 
 
 func _notification(what: int) -> void:
@@ -45,6 +45,7 @@ func _show_window() -> void:
 	var win := get_window()
 	win.show()
 	win.mode = Window.MODE_WINDOWED
+	win.grab_focus()
 
 
 func _on_menu_about_to_popup() -> void:
