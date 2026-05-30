@@ -23,13 +23,12 @@ script = ExtResource("1_game")
 
 [node name="DistantMountains" type="Parallax2D" parent="." unique_id=1807359014]
 scroll_scale = Vector2(0.18, 0)
-scroll_offset = Vector2(-3, -20)
-repeat_size = Vector2(512, 0)
+repeat_size = Vector2(1920, 0)
 repeat_times = 249
 
 [node name="Mountains" type="Sprite2D" parent="DistantMountains" unique_id=1080317094]
 texture_filter = 1
-position = Vector2(0, 73)
+position = Vector2(0, 52)
 texture = SubResource("Texture2D_4fuuu")
 offset = Vector2(0, -24)
 
