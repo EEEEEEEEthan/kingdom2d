@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://dpvh6vuxwydj5"]
 
+[ext_resource type="Script" path="res://game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 
 [node name="Game" type="Node" unique_id=532875448]
+script = ExtResource("1_game")
 
 [node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
