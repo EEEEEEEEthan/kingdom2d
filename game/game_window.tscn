@@ -7,6 +7,7 @@ script/source = "extends Window
 
 const BASE_WIDTH := 640
 const BASE_HEIGHT := 64
+const MAX_WIDTH := 4096
 
 var _dragging := false
 var _drag_mouse_offset := Vector2i.ZERO
@@ -26,7 +27,7 @@ func _ready() -> void:
 
 func apply_layout(align_to_bottom: bool = false) -> void:
 	var screen_size := DisplayServer.screen_get_size(current_screen)
-	var width := maxi(1, int(round(screen_size.x * width_ratio)))
+	var width := mini(maxi(1, int(round(screen_size.x * width_ratio))), MAX_WIDTH)
 	var height := BASE_HEIGHT * scale
 	content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
 	content_scale_factor = float(scale)

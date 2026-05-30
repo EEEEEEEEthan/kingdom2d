@@ -3,9 +3,21 @@
 [sub_resource type="GDScript" id="GDScript_wa830"]
 script/source = "extends Window
 
+const MAX_GAME_WIDTH := 4096
+
 signal game_visibility_toggled(visible: bool)
 signal scale_changed(scale: int)
 signal width_ratio_changed(width_ratio: float)
+
+func _ready() -> void:
+	_apply_width_slider_limit()
+
+func _apply_width_slider_limit() -> void:
+	var screen_width := DisplayServer.screen_get_size(current_screen).x
+	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
+	%WidthSlider.max_value = max_ratio
+	if %WidthSlider.value > max_ratio:
+		%WidthSlider.value = max_ratio
 
 func get_scale() -> int:
 	return int(%ScaleSlider.value)
