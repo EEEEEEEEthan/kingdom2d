@@ -39,6 +39,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_pin_engine_root_offscreen()
 	get_window().close_requested.connect(_on_engine_root_close_requested)
+	_hide_to_tray()
 
 
 func _notification(what: int) -> void:
@@ -78,7 +79,6 @@ func _show_setting_panel(anchor_mouse: Vector2i) -> void:
 	_setting_panel.show()
 	_setting_panel.mode = Window.MODE_WINDOWED
 	_setting_panel.grab_focus()
-	visible = false
 
 
 func _place_setting_panel_near_mouse(mouse: Vector2i) -> void:

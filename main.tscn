@@ -26,7 +26,6 @@ script = SubResource("GDScript_miis5")
 
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 unique_name_in_owner = true
-visible = false
 
 [node name="SettingPanel" parent="." unique_id=413646671 instance=ExtResource("2_setting_panel")]
 unique_name_in_owner = true
