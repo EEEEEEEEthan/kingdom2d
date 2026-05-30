@@ -13,6 +13,13 @@ signal width_ratio_changed(width_ratio: float)
 
 func _ready() -> void:
 	_apply_width_slider_limit()
+	_sync_from_game_window()
+
+func _sync_from_game_window() -> void:
+	%ScaleSlider.set_value_no_signal(float(game_window.scale))
+	var width_ratio := minf(game_window.width_ratio, %WidthSlider.max_value)
+	%WidthSlider.set_value_no_signal(width_ratio)
+	%Button.set_pressed_no_signal(game_window.visible)
 
 func _apply_width_slider_limit() -> void:
 	var screen_width := DisplayServer.screen_get_size(current_screen).x
@@ -20,12 +27,6 @@ func _apply_width_slider_limit() -> void:
 	%WidthSlider.max_value = max_ratio
 	if %WidthSlider.value > max_ratio:
 		%WidthSlider.value = max_ratio
-
-func get_scale() -> int:
-	return int(%ScaleSlider.value)
-
-func get_width_ratio() -> float:
-	return %WidthSlider.value
 
 func _on_scale_slider_value_changed(value: float) -> void:
 	scale_changed.emit(int(value))
@@ -61,6 +62,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Button" type="CheckButton" parent="VBoxContainer" unique_id=1362798757]
+unique_name_in_owner = true
 layout_mode = 2
 text = "show game"
 script = SubResource("GDScript_miis5")

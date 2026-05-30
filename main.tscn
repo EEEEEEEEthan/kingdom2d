@@ -6,11 +6,6 @@
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends Node
 
-func _ready() -> void:
-	%Game.scale = %SettingPanel.get_scale()
-	%Game.width_ratio = %SettingPanel.get_width_ratio()
-	%Game.apply_layout()
-
 func _on_setting_panel_game_visibility_toggled(toggled: bool) -> void:
 	%Game.visible = toggled
 
@@ -27,8 +22,9 @@ script = SubResource("GDScript_miis5")
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 unique_name_in_owner = true
 
-[node name="SettingPanel" parent="." unique_id=413646671 instance=ExtResource("2_setting_panel")]
+[node name="SettingPanel" parent="." unique_id=413646671 node_paths=PackedStringArray("game_window") instance=ExtResource("2_setting_panel")]
 unique_name_in_owner = true
+game_window = NodePath("../Game")
 
 [connection signal="game_visibility_toggled" from="SettingPanel" to="." method="_on_setting_panel_game_visibility_toggled"]
 [connection signal="scale_changed" from="SettingPanel" to="." method="_on_setting_panel_scale_changed"]
