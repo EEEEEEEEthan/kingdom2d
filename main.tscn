@@ -21,9 +21,12 @@ script = SubResource("GDScript_miis5")
 
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 unique_name_in_owner = true
+anisotropic_filtering_level = 0
 
 [node name="SettingPanel" parent="." unique_id=413646671 node_paths=PackedStringArray("game_window") instance=ExtResource("2_setting_panel")]
 unique_name_in_owner = true
+anisotropic_filtering_level = 0
+always_on_top = true
 game_window = NodePath("../Game")
 
 [connection signal="game_visibility_toggled" from="SettingPanel" to="." method="_on_setting_panel_game_visibility_toggled"]

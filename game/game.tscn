@@ -23,17 +23,6 @@ script = ExtResource("3_h7iqs")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGdJREFUOI21UssKwDAM0rH//2V32WEEE1dKAz00wUdsKQk7dYW53tPWPQDdnasO6ECJwKmxzH47iOUInFqbQRdiBS45sEpN70wGW68gzO/OSpJCHD+RI/gqVLDtOwfdvtbNtEK0DwAPMoUTLchY33wAAAAASUVORK5CYII="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="Gradient" id="Gradient_4fuuu"]
-colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_4fuuu"]
-gradient = SubResource("Gradient_4fuuu")
-width = 128
-height = 128
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.42307693)
-
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_game")
 
@@ -139,7 +128,6 @@ unique_name_in_owner = true
 position = Vector2(0, 32)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
-visible = false
 
 [node name="ResetCamera" type="Button" parent="CanvasLayer" unique_id=1876362366]
 unique_name_in_owner = true
@@ -153,12 +141,5 @@ offset_right = 34.0
 offset_bottom = -6.0
 grow_vertical = 0
 icon = SubResource("Texture2D_vasa2")
-
-[node name="PointLight2D" type="PointLight2D" parent="." unique_id=260845347]
-visible = false
-position = Vector2(74, 35)
-scale = Vector2(1.0000001, 0.93750006)
-energy = 5.42
-texture = SubResource("GradientTexture2D_4fuuu")
 
 [connection signal="pressed" from="CanvasLayer/ResetCamera" to="." method="_on_reset_camera_pressed"]
