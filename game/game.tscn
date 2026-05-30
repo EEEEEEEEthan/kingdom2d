@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://xgcrpbt4i16f" path="res://game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 
-[node name="Game" type="Node" unique_id=532875448]
+[node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_game")
 
 [node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
@@ -14,3 +14,15 @@ position = Vector2(0, 64)
 unique_name_in_owner = true
 position = Vector2(2048, 32)
 position_smoothing_enabled = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
+follow_viewport_enabled = true
+
+[node name="Button" type="Button" parent="CanvasLayer" unique_id=1876362366]
+anchors_preset = -1
+anchor_top = 64.0
+anchor_bottom = 64.0
+offset_top = -64.0
+offset_right = 8.0
+offset_bottom = -56.0
+grow_vertical = 0

@@ -1,3 +1,59 @@
 [gd_resource type="Theme" format=3 uid="uid://dlq4pbrcr35rn"]
 
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="1_e1x85"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h7iqs"]
+atlas = ExtResource("1_e1x85")
+region = Rect2(33, 1, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vasa2"]
+resource_name = "DisabledButton"
+texture = SubResource("AtlasTexture_h7iqs")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e1x85"]
+atlas = ExtResource("1_e1x85")
+region = Rect2(1, 1, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cjfk0"]
+resource_name = "HighlightedButton"
+texture = SubResource("AtlasTexture_e1x85")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_05tig"]
+atlas = ExtResource("1_e1x85")
+region = Rect2(17, 1, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1rmny"]
+resource_name = "NormalButton"
+texture = SubResource("AtlasTexture_05tig")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mihib"]
+atlas = ExtResource("1_e1x85")
+region = Rect2(17, 17, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yin2u"]
+resource_name = "PressedButton"
+texture = SubResource("AtlasTexture_mihib")
+texture_margin_left = 4.0
+texture_margin_top = 5.0
+texture_margin_right = 4.0
+texture_margin_bottom = 3.0
+region_rect = Rect2(0, 0, 14, 14)
+
 [resource]
+Button/styles/disabled = SubResource("StyleBoxTexture_vasa2")
+Button/styles/focus = SubResource("StyleBoxTexture_cjfk0")
+Button/styles/hover = SubResource("StyleBoxTexture_cjfk0")
+Button/styles/normal = SubResource("StyleBoxTexture_1rmny")
+Button/styles/pressed = SubResource("StyleBoxTexture_yin2u")

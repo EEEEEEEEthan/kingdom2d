@@ -42,4 +42,6 @@ theme/custom="uid://dlq4pbrcr35rn"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
+textures/default_filters/anisotropic_filtering_level=0
