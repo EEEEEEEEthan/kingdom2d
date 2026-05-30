@@ -21,11 +21,12 @@ position = Vector2(0, 64)
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
 position = Vector2(2048, 32)
-position_smoothing_enabled = true
+position_smoothing_enabled = false
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
 
-[node name="Button" type="Button" parent="CanvasLayer" unique_id=1876362366]
+[node name="ResetCamera" type="Button" parent="CanvasLayer" unique_id=1876362366]
+unique_name_in_owner = true
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -35,3 +36,5 @@ offset_right = 34.0
 offset_bottom = -6.0
 grow_vertical = 0
 icon = SubResource("Texture2D_vasa2")
+
+[connection signal="pressed" from="CanvasLayer/ResetCamera" to="." method="_on_reset_camera_pressed"]
