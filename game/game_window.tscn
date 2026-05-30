@@ -14,26 +14,33 @@ var _drag_mouse_offset := Vector2i.ZERO
 @export var scale: int = 1:
 	set(value):
 		scale = value
-		content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
-		content_scale_factor = float(value)
-		var height := BASE_HEIGHT * value
-		var width := size.x
-		_align_to_screen_bottom(height)
-		size = Vector2i(width, height)
+		apply_layout()
 
 @export var width_ratio: float = 1.0:
 	set(value):
 		width_ratio = value
 		apply_layout()
 
-func apply_layout() -> void:
+func _ready() -> void:
+	apply_layout(true)
+
+func apply_layout(align_to_bottom: bool = false) -> void:
 	var screen_size := DisplayServer.screen_get_size(current_screen)
 	var width := maxi(1, int(round(screen_size.x * width_ratio)))
 	var height := BASE_HEIGHT * scale
 	content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
 	content_scale_factor = float(scale)
-	_align_to_screen_bottom(height)
-	size = Vector2i(width, height)
+	var new_size := Vector2i(width, height)
+	if align_to_bottom:
+		_align_to_screen_bottom(height)
+		size = new_size
+	else:
+		_resize_preserve_bottom_center(new_size)
+
+func _resize_preserve_bottom_center(new_size: Vector2i) -> void:
+	var bottom_center := Vector2i(position.x + size.x / 2, position.y + size.y)
+	position = Vector2i(bottom_center.x - new_size.x / 2, bottom_center.y - new_size.y)
+	size = new_size
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
