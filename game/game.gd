@@ -7,11 +7,8 @@ var _drag_anchor_mouse_x: float
 
 
 func _ready() -> void:
-	var camera := %Camera2D
-	camera.position_smoothing_enabled = false
 	_center_x = _terrain_center_x()
-	camera.position.x = _clamp_camera_x(_center_x)
-	camera.position_smoothing_enabled = true
+	%Camera2D.position.x = _clamp_camera_x(_center_x)
 
 
 func _on_reset_camera_pressed() -> void:
@@ -37,12 +34,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mouse_button := event as InputEventMouseButton
 		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
 			return
-		var camera := %Camera2D
 		_dragging = mouse_button.pressed
-		camera.position_smoothing_enabled = not _dragging
 		if _dragging:
-			camera.reset_smoothing()
-			_drag_camera_x = camera.position.x
+			_drag_camera_x = %Camera2D.position.x
 			_drag_anchor_mouse_x = mouse_button.position.x
 	elif _dragging and event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
