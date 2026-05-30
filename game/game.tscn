@@ -1,24 +1,10 @@
-[gd_scene format=3 uid="uid://c6xxc447w21ld"]
+[gd_scene format=3 uid="uid://dpvh6vuxwydj5"]
 
-[ext_resource type="Script" uid="uid://bfvpyvhlsvk8j" path="res://game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 
-[node name="Game" type="Window" unique_id=2073799186]
-transparent_bg = true
-snap_2d_transforms_to_pixel = true
-snap_2d_vertices_to_pixel = true
-scaling_3d_mode = 5
-canvas_item_default_texture_filter = 0
-oversampling_override = 1.0
-size = Vector2i(2048, 64)
-borderless = true
-always_on_top = true
-transparent = true
-unfocusable = true
-content_scale_size = Vector2i(640, 128)
-script = ExtResource("1_game")
+[node name="Game" type="Node" unique_id=532875448]
 
-[node name="ColorRect2" type="ColorRect" parent="." unique_id=1084583874]
+[node name="ColorRect2" type="ColorRect" parent="." unique_id=1548483645]
 unique_name_in_owner = true
 visible = false
 offset_left = -20.0
@@ -32,11 +18,11 @@ color = Color(0.41648296, 0, 0.17166159, 1)
 unique_name_in_owner = true
 position = Vector2(0, 64)
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1741326273]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1144644571]
 unique_name_in_owner = true
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1240990860]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
-position = Vector2(1024, 32)
+position = Vector2(2048, 32)

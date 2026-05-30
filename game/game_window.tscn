@@ -1,4 +1,9 @@
-extends Window
+[gd_scene format=3 uid="uid://c6xxc447w21ld"]
+
+[ext_resource type="PackedScene" uid="uid://dpvh6vuxwydj5" path="res://game/game.tscn" id="1_le0pw"]
+
+[sub_resource type="GDScript" id="GDScript_le0pw"]
+script/source = "extends Window
 
 const BASE_WIDTH := 640
 const BASE_HEIGHT := 64
@@ -55,3 +60,21 @@ func _align_to_screen_bottom(height: int) -> void:
 		screen_pos.x,
 		usable.position.y + usable.size.y - height,
 	)
+"
+
+[node name="Game" type="Window" unique_id=2073799186]
+transparent_bg = true
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+scaling_3d_mode = 5
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+size = Vector2i(2048, 64)
+borderless = true
+always_on_top = true
+transparent = true
+unfocusable = true
+content_scale_size = Vector2i(640, 128)
+script = SubResource("GDScript_le0pw")
+
+[node name="Game" parent="." unique_id=532875448 instance=ExtResource("1_le0pw")]

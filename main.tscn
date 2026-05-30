@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dkui3dlb4vu1c"]
 
-[ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game_window.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://option_panel/option_panel.tscn" id="2_launcher"]
 
 [sub_resource type="GDScript" id="GDScript_miis5"]
@@ -32,4 +32,3 @@ unique_name_in_owner = true
 
 [connection signal="game_visibility_toggled" from="OptionPanel" to="." method="_on_option_panel_game_visibility_toggled"]
 [connection signal="scale_changed" from="OptionPanel" to="." method="_on_option_panel_scale_changed"]
-[connection signal="width_ratio_changed" from="OptionPanel" to="." method="_on_option_panel_width_ratio_changed"]
