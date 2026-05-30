@@ -24,7 +24,6 @@ position = Vector2(2048, 32)
 position_smoothing_enabled = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
-follow_viewport_enabled = true
 
 [node name="Button" type="Button" parent="CanvasLayer" unique_id=1876362366]
 anchors_preset = 2
