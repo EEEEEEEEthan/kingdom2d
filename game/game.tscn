@@ -10,7 +10,7 @@ snap_2d_vertices_to_pixel = true
 scaling_3d_mode = 5
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
-size = Vector2i(256, 64)
+size = Vector2i(2048, 64)
 borderless = true
 always_on_top = true
 transparent = true
@@ -36,3 +36,6 @@ position = Vector2(0, 64)
 unique_name_in_owner = true
 offset_right = 40.0
 offset_bottom = 40.0
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1240990860]
+position = Vector2(1024, 32)
