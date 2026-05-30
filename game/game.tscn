@@ -6,6 +6,17 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
 [ext_resource type="Texture2D" uid="uid://c8v7oxc2p6mt3" path="res://game/terrain/mountains_normal.png" id="4_normal"]
 
+[sub_resource type="Gradient" id="Gradient_dxrkv"]
+interpolation_mode = 2
+colors = PackedColorArray(0.37254903, 0.8039216, 0.89411765, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_dxrkv"]
+gradient = SubResource("Gradient_dxrkv")
+width = 4
+height = 16
+fill_from = Vector2(0, 1)
+fill_to = Vector2(0, 0)
+
 [sub_resource type="CanvasTexture" id="CanvasTexture_dxrkv"]
 diffuse_texture = ExtResource("2_4fuuu")
 normal_texture = ExtResource("4_normal")
@@ -25,6 +36,11 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_game")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=591946890]
+position = Vector2(0, 32)
+scale = Vector2(99999, 4)
+texture = SubResource("GradientTexture2D_dxrkv")
 
 [node name="Sunlight" type="DirectionalLight2D" parent="." unique_id=1096293578]
 rotation = -2.0228367
