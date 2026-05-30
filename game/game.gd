@@ -1,9 +1,7 @@
 extends Node
 
-var _dragging := false
 var _center_x: float
-var _drag_camera_x: float
-var _drag_anchor_mouse_x: float
+var _drag_loop_active := false
 
 
 func _ready() -> void:
@@ -30,18 +28,30 @@ func _terrain_center_x() -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		var mouse_button := event as InputEventMouseButton
-		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
-			return
-		_dragging = mouse_button.pressed
-		if _dragging:
-			_drag_camera_x = %Camera2D.position.x
-			_drag_anchor_mouse_x = mouse_button.position.x
-	elif _dragging and event is InputEventMouseMotion:
-		var motion := event as InputEventMouseMotion
-		var delta_x := motion.position.x - _drag_anchor_mouse_x
-		%Camera2D.position.x = _clamp_camera_x(_drag_camera_x - delta_x)
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button.button_index != MOUSE_BUTTON_LEFT or not mouse_button.pressed:
+		return
+	if _drag_loop_active:
+		return
+	_drag_pan_loop()
+
+
+func _drag_pan_loop() -> void:
+	_drag_loop_active = true
+	var anchor_mouse_x := get_viewport().get_mouse_position().x
+	var anchor_camera_x: float = %Camera2D.position.x
+	var camera_x = anchor_camera_x
+	while Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		var delta_x := get_viewport().get_mouse_position().x - anchor_mouse_x
+		var x = round(_clamp_camera_x(anchor_camera_x - delta_x))
+		if abs(camera_x - %Camera2D.position.x) > 1:
+			printerr(str(%Camera2D.position.x) + "-" + str(camera_x))
+		%Camera2D.position.x = x
+		camera_x = x
+		await get_tree().process_frame
+	_drag_loop_active = false
 
 
 func _view_half_width() -> float:

@@ -49,8 +49,6 @@ blend_mode = 2
 height = 64.0
 
 [node name="Parallaxes" type="Node2D" parent="." unique_id=627955714]
-process_mode = 4
-visible = false
 
 [node name="DistantMountains" type="Parallax2D" parent="Parallaxes" unique_id=1807359014]
 scroll_scale = Vector2(0.1, 0)

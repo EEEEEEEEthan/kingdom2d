@@ -68,8 +68,6 @@ func _align_to_screen_bottom(height: int) -> void:
 
 [node name="Game" type="Window" unique_id=2073799186]
 transparent_bg = true
-snap_2d_transforms_to_pixel = true
-snap_2d_vertices_to_pixel = true
 scaling_3d_mode = 5
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
