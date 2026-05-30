@@ -71,12 +71,11 @@ transparent_bg = true
 scaling_3d_mode = 5
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
-size = Vector2i(2048, 64)
+size = Vector2i(256, 64)
 borderless = true
 always_on_top = true
 transparent = true
 unfocusable = true
-content_scale_size = Vector2i(640, 128)
 script = SubResource("GDScript_le0pw")
 
 [node name="Game" parent="." unique_id=532875448 instance=ExtResource("1_le0pw")]
