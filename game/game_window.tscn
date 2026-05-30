@@ -10,8 +10,26 @@ const BASE_HEIGHT := 64
 
 var _dragging := false
 var _drag_mouse_offset := Vector2i.ZERO
-var _scale := 1
-var _scale_initialized := false
+
+@export var scale: int = 1:
+	set(value):
+		scale = value
+		content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
+		content_scale_factor = float(value)
+		var height := BASE_HEIGHT * value
+		var width := size.x
+		size = Vector2i(width, height)
+		_align_to_screen_bottom(height)
+
+@export var width_ratio: float = 1.0:
+	set(value):
+		width_ratio = value
+		var width := _width_from_screen_ratio(value)
+		var height := BASE_HEIGHT * scale
+		content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
+		content_scale_factor = float(scale)
+		size = Vector2i(width, height)
+		_align_to_screen_bottom(height)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -25,26 +43,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dragging = false
 	elif event is InputEventMouseMotion and _dragging:
 		position = DisplayServer.mouse_get_position() - _drag_mouse_offset
-
-
-func apply_scale(scale: int) -> void:
-	_scale = scale
-	content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
-	content_scale_factor = float(scale)
-	var height := BASE_HEIGHT * scale
-	var width := size.x if _scale_initialized else BASE_WIDTH * scale
-	_scale_initialized = true
-	size = Vector2i(width, height)
-	_align_to_screen_bottom(height)
-
-
-func apply_width_ratio(width_ratio: float) -> void:
-	var width := _width_from_screen_ratio(width_ratio)
-	var height := BASE_HEIGHT * _scale
-	content_scale_size = Vector2i(BASE_WIDTH, BASE_HEIGHT)
-	content_scale_factor = float(_scale)
-	size = Vector2i(width, height)
-	_align_to_screen_bottom(height)
 
 
 func _width_from_screen_ratio(width_ratio: float) -> int:

@@ -7,17 +7,17 @@
 script/source = "extends Node
 
 func _ready() -> void:
-	_on_option_panel_scale_changed(%OptionPanel.get_scale())
-	_on_option_panel_width_ratio_changed(%OptionPanel.get_width_ratio())
+	%Game.scale = %OptionPanel.get_scale()
+	%Game.width_ratio = %OptionPanel.get_width_ratio()
 
 func _on_option_panel_game_visibility_toggled(toggled: bool) -> void:
 	%Game.visible = toggled
 
 func _on_option_panel_scale_changed(scale: int) -> void:
-	%Game.apply_scale(scale)
+	%Game.scale = scale
 
 func _on_option_panel_width_ratio_changed(width_ratio: float) -> void:
-	%Game.apply_width_ratio(width_ratio)
+	%Game.width_ratio = width_ratio
 "
 
 [node name="Main" type="Node" unique_id=1799066687]
