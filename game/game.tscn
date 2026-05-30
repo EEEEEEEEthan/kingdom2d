@@ -4,6 +4,13 @@
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
 
+[sub_resource type="Texture2D" id="Texture2D_4fuuu"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_h7iqs")
+_base64_data = "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"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [sub_resource type="Texture2D" id="Texture2D_vasa2"]
 resource_local_to_scene = false
 resource_name = ""
@@ -14,14 +21,25 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_game")
 
+[node name="DistantMountains" type="Parallax2D" parent="." unique_id=1807359014]
+scroll_scale = Vector2(0.18, 0)
+scroll_offset = Vector2(-3, -20)
+repeat_size = Vector2(512, 0)
+repeat_times = 249
+
+[node name="Mountains" type="Sprite2D" parent="DistantMountains" unique_id=1080317094]
+texture_filter = 1
+position = Vector2(0, 73)
+texture = SubResource("Texture2D_4fuuu")
+offset = Vector2(0, -24)
+
 [node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
 position = Vector2(0, 64)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
-position = Vector2(2048, 32)
-position_smoothing_enabled = false
+position = Vector2(0, 32)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
 

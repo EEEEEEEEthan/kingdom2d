@@ -1,7 +1,5 @@
 extends Node
 
-const WORLD_WIDTH := 4096.0
-
 var _dragging := false
 var _center_x: float
 
@@ -19,11 +17,18 @@ func _on_reset_camera_pressed() -> void:
 	camera.position.x = _clamp_camera_x(_center_x)
 
 
-func _terrain_center_x() -> float:
+func _terrain_x_range() -> Vector2:
 	var terrain := %Terrain
 	var used: Rect2i = terrain.get_used_rect()
-	var tile_size: Vector2i = terrain.tile_set.tile_size
-	return terrain.position.x + (used.position.x + used.size.x * 0.5) * tile_size.x
+	var tile_w := float(terrain.tile_set.tile_size.x)
+	var min_x: float = terrain.position.x + used.position.x * tile_w
+	var max_x: float = terrain.position.x + (used.position.x + used.size.x) * tile_w
+	return Vector2(min_x, max_x)
+
+
+func _terrain_center_x() -> float:
+	var x_range := _terrain_x_range()
+	return (x_range.x + x_range.y) * 0.5
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -39,5 +44,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _clamp_camera_x(x: float) -> float:
+	var x_range := _terrain_x_range()
 	var half_view := get_viewport().get_visible_rect().size.x * 0.5
-	return clampf(x, half_view, WORLD_WIDTH - half_view)
+	return clampf(x, x_range.x + half_view, x_range.y - half_view)
