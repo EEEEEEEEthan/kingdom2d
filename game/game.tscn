@@ -75,7 +75,7 @@ func _drag_pan_loop() -> void:
 	while Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		var delta_x := get_viewport().get_mouse_position().x - anchor_mouse_x
 		position.x = round(_clamp_camera_x(anchor_camera_x - delta_x))
-		await get_tree().process_frame
+		await get_tree().physics_frame
 	_drag_loop_active = false
 
 
@@ -206,7 +206,11 @@ position = Vector2(0, 74)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
+process_thread_group = 1
+process_thread_group_order = 0
+process_thread_messages = 0
 position = Vector2(0, 32)
+process_callback = 0
 script = SubResource("GDScript_camera")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
