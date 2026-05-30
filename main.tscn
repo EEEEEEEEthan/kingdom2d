@@ -1,13 +1,23 @@
 [gd_scene format=3 uid="uid://dkui3dlb4vu1c"]
 
 [ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game.tscn" id="1_ig7tw"]
-[ext_resource type="PackedScene" uid="uid://b8k7launcherpanel" path="res://launcher/launcher.tscn" id="2_launcher"]
+[ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://option_panel/option_panel.tscn" id="2_launcher"]
+
+[sub_resource type="GDScript" id="GDScript_miis5"]
+script/source = "extends Node
+
+func _on_option_panel_game_visibility_toggled(toggled: bool) -> void:
+	%Game.visible = toggled
+"
 
 [node name="Main" type="Node" unique_id=1799066687]
+script = SubResource("GDScript_miis5")
 
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
+unique_name_in_owner = true
 visible = false
 
-[node name="Launcher" parent="." instance=ExtResource("2_launcher")]
+[node name="OptionPanel" parent="." unique_id=413646671 instance=ExtResource("2_launcher")]
+unique_name_in_owner = true
 
-[connection signal="toggled" from="Launcher/VBoxContainer/Button" to="Game" method="set_visible"]
+[connection signal="game_visibility_toggled" from="OptionPanel" to="." method="_on_option_panel_game_visibility_toggled"]

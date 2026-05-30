@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://n3eb1xsiuq1d"]
+
+[sub_resource type="GDScript" id="GDScript_wa830"]
+script/source = "extends Window
+
+signal game_visibility_toggled(visible: bool)
+"
+
+[sub_resource type="GDScript" id="GDScript_miis5"]
+script/source = "extends CheckButton
+
+func _on_toggled(toggled_on: bool) -> void:
+	owner.game_visibility_toggled.emit(toggled_on)
+"
+
+[node name="OptionPanel" type="Window" unique_id=1280178936]
+oversampling_override = 1.0
+title = "Kingdom2D"
+position = Vector2i(100, 100)
+size = Vector2i(240, 72)
+script = SubResource("GDScript_wa830")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=74975574]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="CheckButton" parent="VBoxContainer" unique_id=1362798757]
+layout_mode = 2
+text = "show game"
+script = SubResource("GDScript_miis5")
+
+[connection signal="toggled" from="VBoxContainer/Button" to="VBoxContainer/Button" method="_on_toggled"]

@@ -10,7 +10,7 @@ var _tray_supported := (
 const ENGINE_ROOT_OFFSCREEN_POS := Vector2i(-32000, -32000)
 const ENGINE_ROOT_SIZE := Vector2i(1, 1)
 
-var _launcher: Window
+var _option_panel: Window
 
 @onready var _menu: PopupMenu = $PopupMenu
 
@@ -24,8 +24,8 @@ func _ready() -> void:
 	_menu.id_pressed.connect(_on_menu_id_pressed)
 
 	await get_tree().process_frame
-	_launcher = get_tree().current_scene.get_node(^"Launcher") as Window
-	_launcher.close_requested.connect(_on_launcher_close_requested)
+	_option_panel = get_tree().current_scene.get_node(^"OptionPanel") as Window
+	_option_panel.close_requested.connect(_on_launcher_close_requested)
 
 	_pin_engine_root_offscreen()
 	await get_tree().process_frame
@@ -58,15 +58,15 @@ func _on_launcher_close_requested() -> void:
 
 
 func _hide_to_tray() -> void:
-	_launcher.hide()
+	_option_panel.hide()
 	_pin_engine_root_offscreen()
 	visible = true
 
 
 func _show_launcher() -> void:
-	_launcher.show()
-	_launcher.mode = Window.MODE_WINDOWED
-	_launcher.grab_focus()
+	_option_panel.show()
+	_option_panel.mode = Window.MODE_WINDOWED
+	_option_panel.grab_focus()
 	visible = false
 
 
