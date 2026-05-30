@@ -4,24 +4,9 @@
 
 [node name="Game" type="Node" unique_id=532875448]
 
-[node name="ColorRect2" type="ColorRect" parent="." unique_id=1548483645]
-unique_name_in_owner = true
-visible = false
-offset_left = -20.0
-offset_top = -65.0
-offset_right = 20.0
-offset_bottom = -25.0
-scale = Vector2(7.97, 7.97)
-color = Color(0.41648296, 0, 0.17166159, 1)
-
 [node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
 position = Vector2(0, 64)
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1144644571]
-unique_name_in_owner = true
-offset_right = 40.0
-offset_bottom = 40.0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
