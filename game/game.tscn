@@ -2,6 +2,14 @@
 
 [ext_resource type="Script" uid="uid://xgcrpbt4i16f" path="res://game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
+
+[sub_resource type="Texture2D" id="Texture2D_vasa2"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_h7iqs")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGdJREFUOI21UssKwDAM0rH//2V32WEEE1dKAz00wUdsKQk7dYW53tPWPQDdnasO6ECJwKmxzH47iOUInFqbQRdiBS45sEpN70wGW68gzO/OSpJCHD+RI/gqVLDtOwfdvtbNtEK0DwAPMoUTLchY33wAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_game")
@@ -19,10 +27,12 @@ position_smoothing_enabled = true
 follow_viewport_enabled = true
 
 [node name="Button" type="Button" parent="CanvasLayer" unique_id=1876362366]
-anchors_preset = -1
-anchor_top = 64.0
-anchor_bottom = 64.0
-offset_top = -64.0
-offset_right = 8.0
-offset_bottom = -56.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -30.0
+offset_right = 34.0
+offset_bottom = -6.0
 grow_vertical = 0
+icon = SubResource("Texture2D_vasa2")
