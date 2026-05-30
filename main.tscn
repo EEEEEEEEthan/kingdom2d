@@ -9,6 +9,7 @@ script/source = "extends Node
 func _ready() -> void:
 	%Game.scale = %OptionPanel.get_scale()
 	%Game.width_ratio = %OptionPanel.get_width_ratio()
+	%Game.apply_layout()
 
 func _on_option_panel_game_visibility_toggled(toggled: bool) -> void:
 	%Game.visible = toggled
@@ -32,3 +33,4 @@ unique_name_in_owner = true
 
 [connection signal="game_visibility_toggled" from="OptionPanel" to="." method="_on_option_panel_game_visibility_toggled"]
 [connection signal="scale_changed" from="OptionPanel" to="." method="_on_option_panel_scale_changed"]
+[connection signal="width_ratio_changed" from="OptionPanel" to="." method="_on_option_panel_width_ratio_changed"]
