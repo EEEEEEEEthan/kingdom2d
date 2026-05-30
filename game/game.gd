@@ -2,19 +2,17 @@ extends Node
 
 var _dragging := false
 var _center_x: float
+var _drag_camera_x: float
+var _drag_anchor_mouse_x: float
 
 
 func _ready() -> void:
-	var camera := %Camera2D
-	camera.position_smoothing_enabled = false
 	_center_x = _terrain_center_x()
-	camera.position.x = _clamp_camera_x(_center_x)
-	camera.position_smoothing_enabled = true
+	%Camera2D.position.x = _clamp_camera_x(_center_x)
 
 
 func _on_reset_camera_pressed() -> void:
-	var camera := %Camera2D
-	camera.position.x = _clamp_camera_x(_center_x)
+	%Camera2D.position.x = _clamp_camera_x(_center_x)
 
 
 func _terrain_x_range() -> Vector2:
@@ -37,13 +35,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
 			return
 		_dragging = mouse_button.pressed
+		if _dragging:
+			_drag_camera_x = %Camera2D.position.x
+			_drag_anchor_mouse_x = mouse_button.position.x
 	elif _dragging and event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
-		var camera := %Camera2D
-		camera.position.x = _clamp_camera_x(camera.position.x - motion.relative.x)
+		var delta_x := motion.position.x - _drag_anchor_mouse_x
+		%Camera2D.position.x = _clamp_camera_x(_drag_camera_x - delta_x)
+
+
+func _view_half_width() -> float:
+	var viewport := get_viewport()
+	if viewport is Window:
+		return float(viewport.content_scale_size.x) * 0.5
+	return viewport.get_visible_rect().size.x * 0.5
 
 
 func _clamp_camera_x(x: float) -> float:
 	var x_range := _terrain_x_range()
-	var half_view := get_viewport().get_visible_rect().size.x * 0.5
+	var half_view := _view_half_width()
 	return clampf(x, x_range.x + half_view, x_range.y - half_view)
