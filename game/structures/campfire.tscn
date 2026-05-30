@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://cww4vutt0k27m"]
+
+[ext_resource type="PackedScene" uid="uid://bh0xjukljktdb" path="res://game/structures/base_structure.tscn" id="1_x36yl"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_s7fkd"]
+
+[sub_resource type="Texture2D" id="Texture2D_dxrkv"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_s7fkd")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAGCAYAAAAYLBS/AAAAAXNSR0IArs4c6QAAAHVJREFUGJVlziEOg1AQBNAHqSJBV32BRFb2Qj0sF0Ai/hFIsL+mS7d0zO5MZibTvZ4PMJdBQlvrAd1FB308HxO0eOYytMzD11+EttbD4g7njWAU3/Ik2MtkrBsY62b58oYuz/sLZOxl+inu8+YI7GU6jVmL4BtYUjKuOh4J6wAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="Texture2D" id="Texture2D_u5opy"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_s7fkd")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAGCAYAAAAYLBS/AAAAAXNSR0IArs4c6QAAAHlJREFUGJVty7ENwyAQheEflC7tDZDS6W6EjMAIjMIojMAo18VlaksuXZMiwiLgV909vc8FfdPnwR2gvjgAHBe5jcWHo3Zvu/+wH0yNSdCwAGBhISfp8YRqTIKZYLYDoGVFTSbor0CKWxv+8AB9Azm7ExR7nkMt6wS/IW011pRw6VsAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
+diffuse_texture = SubResource("Texture2D_dxrkv")
+normal_texture = SubResource("Texture2D_u5opy")
+
+[sub_resource type="Texture2D" id="Texture2D_s7fkd"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_s7fkd")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAKCAYAAACuaZ5oAAAAAXNSR0IArs4c6QAAAH5JREFUKJFjXGNkxEBLwITE/o9HHT45vGqZ8EkSMPw/MRbDLEBWSIxrCamBy6P4wNj+Cz6DUAxFUotLzX8UC7AYjs9ivGqR1cMtkGkUwKkBl5z/ARas4sjqUYLo7EEeol0q0yjAsNHhD0F1jEj5ABZ+jGhqKBJH9iO6QqqIAwDI5idBjyf9AAAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s7fkd"]
+atlas = SubResource("Texture2D_s7fkd")
+
+[sub_resource type="GDScript" id="GDScript_s7fkd"]
+script/source = "extends Sprite2D
+
+var _timeout: float
+
+func _process(delta: float) -> void:
+	_timeout -= delta
+	if _timeout <= 0:
+		frame = (frame + 1) % self.hframes
+		_timeout = 0.2
+"
+
+[node name="Campfire" unique_id=1642746995 instance=ExtResource("1_x36yl")]
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
+texture = SubResource("CanvasTexture_4fuuu")
+offset = Vector2(0, 1)
+
+[node name="Flame" type="Sprite2D" parent="." index="1" unique_id=620438040]
+position = Vector2(0, -4)
+texture = SubResource("AtlasTexture_s7fkd")
+hframes = 4
+script = SubResource("GDScript_s7fkd")
