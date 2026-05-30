@@ -26,6 +26,8 @@ func _ready() -> void:
 		return
 
 	get_tree().auto_accept_quit = false
+	menu = NodePath()
+	pressed.connect(_on_pressed)
 	_menu.id_pressed.connect(_on_menu_id_pressed)
 
 	await get_tree().process_frame
@@ -75,6 +77,14 @@ func _show_launcher() -> void:
 	visible = false
 
 
+func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
+	match mouse_button:
+		MOUSE_BUTTON_LEFT:
+			_show_launcher()
+		MOUSE_BUTTON_RIGHT:
+			_menu.popup(Rect2i(mouse_position, Vector2i.ZERO))
+
+
 func _on_menu_id_pressed(id: int) -> void:
 	match id as MenuId:
 		MenuId.SHOW_LAUNCHER:
@@ -86,7 +96,6 @@ func _on_menu_id_pressed(id: int) -> void:
 [node name="Tray" type="StatusIndicator" unique_id=497099990]
 tooltip = "Kingdom2D"
 icon = ExtResource("2_icon")
-menu = NodePath("PopupMenu")
 script = SubResource("GDScript_14jt7")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=1884544456]
