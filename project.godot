@@ -25,6 +25,11 @@ window/size/viewport_height=64
 window/energy_saving/keep_screen_on=false
 window/subwindows/embed_subwindows=false
 window/per_pixel_transparency/allowed=true
+window/vsync/vsync_mode=0
+
+[editor]
+
+movie_writer/disable_vsync=true
 
 [editor_plugins]
 
