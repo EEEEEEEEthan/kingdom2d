@@ -49,6 +49,8 @@ blend_mode = 2
 height = 64.0
 
 [node name="Parallaxes" type="Node2D" parent="." unique_id=627955714]
+process_mode = 4
+visible = false
 
 [node name="DistantMountains" type="Parallax2D" parent="Parallaxes" unique_id=1807359014]
 scroll_scale = Vector2(0.1, 0)
@@ -142,7 +144,6 @@ position = Vector2(0, 74)
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
 position = Vector2(0, 32)
-position_smoothing_enabled = false
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1776243115]
 
