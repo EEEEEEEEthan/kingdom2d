@@ -6,8 +6,18 @@
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends Node
 
+func _ready() -> void:
+	_on_option_panel_scale_changed(%OptionPanel.get_scale())
+	_on_option_panel_width_ratio_changed(%OptionPanel.get_width_ratio())
+
 func _on_option_panel_game_visibility_toggled(toggled: bool) -> void:
 	%Game.visible = toggled
+
+func _on_option_panel_scale_changed(scale: int) -> void:
+	%Game.apply_scale(scale)
+
+func _on_option_panel_width_ratio_changed(width_ratio: float) -> void:
+	%Game.apply_width_ratio(width_ratio)
 "
 
 [node name="Main" type="Node" unique_id=1799066687]
@@ -21,3 +31,5 @@ visible = false
 unique_name_in_owner = true
 
 [connection signal="game_visibility_toggled" from="OptionPanel" to="." method="_on_option_panel_game_visibility_toggled"]
+[connection signal="scale_changed" from="OptionPanel" to="." method="_on_option_panel_scale_changed"]
+[connection signal="width_ratio_changed" from="OptionPanel" to="." method="_on_option_panel_width_ratio_changed"]
