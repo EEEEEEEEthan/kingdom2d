@@ -28,9 +28,6 @@ script = ExtResource("2_s7fkd")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAKCAYAAACuaZ5oAAAAAXNSR0IArs4c6QAAAH5JREFUKJFjXGNkxEBLwITE/o9HHT45vGqZ8EkSMPw/MRbDLEBWSIxrCamBy6P4wNj+Cz6DUAxFUotLzX8UC7AYjs9ivGqR1cMtkGkUwKkBl5z/ARas4sjqUYLo7EEeol0q0yjAsNHhD0F1jEj5ABZ+jGhqKBJH9iO6QqqIAwDI5idBjyf9AAAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_s7fkd"]
-atlas = SubResource("Texture2D_s7fkd")
-
 [sub_resource type="GDScript" id="GDScript_s7fkd"]
 script/source = "extends Sprite2D
 
@@ -51,6 +48,6 @@ offset = Vector2(0, 1)
 
 [node name="Flame" type="Sprite2D" parent="." index="1" unique_id=620438040]
 position = Vector2(0, -4)
-texture = SubResource("AtlasTexture_s7fkd")
+texture = SubResource("Texture2D_s7fkd")
 hframes = 4
 script = SubResource("GDScript_s7fkd")
