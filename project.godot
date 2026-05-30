@@ -28,6 +28,14 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/per_pixel_transparency/allowed=true
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_editable_texture/plugin.cfg")
+
+[gui]
+
+theme/custom="uid://dlq4pbrcr35rn"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

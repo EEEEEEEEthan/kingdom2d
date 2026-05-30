@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dpvh6vuxwydj5"]
 
-[ext_resource type="Script" path="res://game/game.gd" id="1_game"]
+[ext_resource type="Script" uid="uid://xgcrpbt4i16f" path="res://game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 
 [node name="Game" type="Node" unique_id=532875448]
@@ -13,3 +13,4 @@ position = Vector2(0, 64)
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
 position = Vector2(2048, 32)
+position_smoothing_enabled = true
