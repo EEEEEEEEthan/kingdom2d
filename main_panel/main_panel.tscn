@@ -70,31 +70,41 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("AtlasTexture_us4cm")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=74975574]
+[node name="TabContainer" type="TabContainer" parent="." unique_id=487170182]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
+current_tab = 0
+tab_0/title = "游戏"
+tab_1/title = "设置"
 
-[node name="Button" type="CheckButton" parent="VBoxContainer" unique_id=1362798757]
+[node name="Control" type="Control" parent="TabContainer" unique_id=2016897490]
+layout_mode = 2
+metadata/_tab_index = 0
+metadata/_tab_name = "游戏"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer" unique_id=74975574]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+metadata/_tab_name = "设置"
+
+[node name="Button" type="CheckButton" parent="TabContainer/VBoxContainer" unique_id=1362798757]
 unique_name_in_owner = true
 layout_mode = 2
 text = "show game"
 script = SubResource("GDScript_miis5")
 
-[node name="ScaleRow" type="HBoxContainer" parent="VBoxContainer" unique_id=312104171]
+[node name="ScaleRow" type="HBoxContainer" parent="TabContainer/VBoxContainer" unique_id=312104171]
 layout_mode = 2
 
-[node name="ScaleLabel" type="Label" parent="VBoxContainer/ScaleRow" unique_id=1322494843]
+[node name="ScaleLabel" type="Label" parent="TabContainer/VBoxContainer/ScaleRow" unique_id=1322494843]
 layout_mode = 2
 text = "缩放"
 
-[node name="ScaleSlider" type="HSlider" parent="VBoxContainer/ScaleRow" unique_id=912326887]
+[node name="ScaleSlider" type="HSlider" parent="TabContainer/VBoxContainer/ScaleRow" unique_id=912326887]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -104,14 +114,14 @@ value = 1.0
 tick_count = 8
 ticks_on_borders = true
 
-[node name="WidthRow" type="HBoxContainer" parent="VBoxContainer" unique_id=444210854]
+[node name="WidthRow" type="HBoxContainer" parent="TabContainer/VBoxContainer" unique_id=444210854]
 layout_mode = 2
 
-[node name="WidthLabel" type="Label" parent="VBoxContainer/WidthRow" unique_id=2062401688]
+[node name="WidthLabel" type="Label" parent="TabContainer/VBoxContainer/WidthRow" unique_id=2062401688]
 layout_mode = 2
 text = "宽度"
 
-[node name="WidthSlider" type="HSlider" parent="VBoxContainer/WidthRow" unique_id=2015898382]
+[node name="WidthSlider" type="HSlider" parent="TabContainer/VBoxContainer/WidthRow" unique_id=2015898382]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -122,6 +132,6 @@ value = 1.0
 tick_count = 8
 ticks_on_borders = true
 
-[connection signal="toggled" from="VBoxContainer/Button" to="VBoxContainer/Button" method="_on_toggled"]
-[connection signal="value_changed" from="VBoxContainer/ScaleRow/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
-[connection signal="value_changed" from="VBoxContainer/WidthRow/WidthSlider" to="." method="_on_width_slider_value_changed"]
+[connection signal="toggled" from="TabContainer/VBoxContainer/Button" to="TabContainer/VBoxContainer/Button" method="_on_toggled"]
+[connection signal="value_changed" from="TabContainer/VBoxContainer/ScaleRow/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
+[connection signal="value_changed" from="TabContainer/VBoxContainer/WidthRow/WidthSlider" to="." method="_on_width_slider_value_changed"]
