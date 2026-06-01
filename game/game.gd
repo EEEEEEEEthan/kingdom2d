@@ -8,6 +8,7 @@ const MAP_WIDTH = MAP_CELL_COUNT * TILE_SIZE
 const MAP_RIGHT_X = MAP_LEFT_X + MAP_WIDTH
 const CAMERA_VIEW_MIN_LEFT_X = MAP_LEFT_X
 const CAMERA_VIEW_MAX_RIGHT_X = MAP_RIGHT_X
+const SAVE_FILE_PATH = "user://save.dat"
 
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
@@ -18,18 +19,23 @@ var structure_manager: StructureManager:
 		return structure_manager
 
 func _ready() -> void:
-	pass
-	# 有存档就直接读档，没存档就直接新游戏
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		load_game()
+	else:
+		new_game()
 
 func reset_game() -> void:
-	pass
+	structure_manager.reset()
 
 func new_game() -> void:
-	pass
+	reset_game()
 
 func load_game() -> void:
-	pass
-	# structure_manager.deserialize(data)
+	reset_game()
+	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
+	var data := file.get_var() as Dictionary
+	structure_manager.deserialize(data)
 
 func save_game() -> void:
-	pass
+	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
+	file.store_var(structure_manager.serialize())
