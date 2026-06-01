@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://n3eb1xsiuq1d"]
 
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="1_k4ubr"]
+
 [sub_resource type="GDScript" id="GDScript_wa830"]
 script/source = "extends Window
 
@@ -35,6 +37,10 @@ func _on_width_slider_value_changed(value: float) -> void:
 	width_ratio_changed.emit(value)
 "
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
+atlas = ExtResource("1_k4ubr")
+region = Rect2(5, 5, 6, 6)
+
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends CheckButton
 
@@ -43,12 +49,23 @@ func _on_toggled(toggled_on: bool) -> void:
 "
 
 [node name="SettingPanel" type="Window" unique_id=1280178936]
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(100, 100)
-size = Vector2i(240, 120)
-visible = false
+size = Vector2i(191, 120)
+content_scale_mode = 1
+content_scale_stretch = 1
 script = SubResource("GDScript_wa830")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1398113266]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_us4cm")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=74975574]
 anchors_preset = 15
@@ -65,6 +82,7 @@ grow_vertical = 2
 unique_name_in_owner = true
 layout_mode = 2
 text = "show game"
+flat = true
 script = SubResource("GDScript_miis5")
 
 [node name="ScaleRow" type="HBoxContainer" parent="VBoxContainer" unique_id=312104171]
