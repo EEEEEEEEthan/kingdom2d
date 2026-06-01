@@ -5,7 +5,7 @@
 [sub_resource type="GDScript" id="GDScript_14jt7"]
 script/source = "extends StatusIndicator
 
-enum MenuId { SHOW_SETTING_PANEL, QUIT }
+enum MenuId { SHOW_MAIN_PANEL, QUIT }
 
 var _tray_supported := (
 	DisplayServer.has_feature(DisplayServer.FEATURE_STATUS_INDICATOR)
@@ -15,8 +15,8 @@ var _tray_supported := (
 const ENGINE_ROOT_OFFSCREEN_POS := Vector2i(-32000, -32000)
 const ENGINE_ROOT_SIZE := Vector2i(1, 1)
 
-var _setting_panel: Window
-var _setting_panel_positioned := false
+var _main_panel: Window
+var _main_panel_positioned := false
 
 @onready var _menu: PopupMenu = $PopupMenu
 
@@ -32,8 +32,8 @@ func _ready() -> void:
 	_menu.id_pressed.connect(_on_menu_id_pressed)
 
 	await get_tree().process_frame
-	_setting_panel = get_tree().current_scene.get_node(^\"SettingPanel\") as Window
-	_setting_panel.close_requested.connect(_on_setting_panel_close_requested)
+	_main_panel = get_tree().current_scene.get_node(^\"MainPanel\") as Window
+	_main_panel.close_requested.connect(_on_main_panel_close_requested)
 
 	_pin_engine_root_offscreen()
 	await get_tree().process_frame
@@ -62,48 +62,48 @@ func _on_engine_root_close_requested() -> void:
 	_hide_to_tray()
 
 
-func _on_setting_panel_close_requested() -> void:
+func _on_main_panel_close_requested() -> void:
 	_hide_to_tray()
 
 
 func _hide_to_tray() -> void:
-	_setting_panel.hide()
+	_main_panel.hide()
 	_pin_engine_root_offscreen()
 	visible = true
 
 
-func _show_setting_panel(anchor_mouse: Vector2i) -> void:
-	if not _setting_panel_positioned:
-		_place_setting_panel_near_mouse(anchor_mouse)
-		_setting_panel_positioned = true
-	_setting_panel.show()
-	_setting_panel.mode = Window.MODE_WINDOWED
-	_setting_panel.grab_focus()
+func _show_main_panel(anchor_mouse: Vector2i) -> void:
+	if not _main_panel_positioned:
+		_place_main_panel_near_mouse(anchor_mouse)
+		_main_panel_positioned = true
+	_main_panel.show()
+	_main_panel.mode = Window.MODE_WINDOWED
+	_main_panel.grab_focus()
 
 
-func _place_setting_panel_near_mouse(mouse: Vector2i) -> void:
+func _place_main_panel_near_mouse(mouse: Vector2i) -> void:
 	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
 	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var size := _setting_panel.size
+	var size := _main_panel.size
 	var pos := mouse
 	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - size.x))
 	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - size.y))
-	_setting_panel.current_screen = screen
-	_setting_panel.position = pos
+	_main_panel.current_screen = screen
+	_main_panel.position = pos
 
 
 func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
 	match mouse_button:
 		MOUSE_BUTTON_LEFT:
-			_show_setting_panel(mouse_position)
+			_show_main_panel(mouse_position)
 		MOUSE_BUTTON_RIGHT:
 			_menu.popup(Rect2i(mouse_position, Vector2i.ZERO))
 
 
 func _on_menu_id_pressed(id: int) -> void:
 	match id as MenuId:
-		MenuId.SHOW_SETTING_PANEL:
-			_show_setting_panel(DisplayServer.mouse_get_position())
+		MenuId.SHOW_MAIN_PANEL:
+			_show_main_panel(DisplayServer.mouse_get_position())
 		MenuId.QUIT:
 			get_tree().quit()
 "
