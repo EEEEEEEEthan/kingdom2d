@@ -10,6 +10,8 @@ const CAMERA_VIEW_MIN_LEFT_X = MAP_LEFT_X
 const CAMERA_VIEW_MAX_RIGHT_X = MAP_RIGHT_X
 const SAVE_FILE_PATH = "user://save.dat"
 
+const _SERKEY_STRUCTURE_MANAGER = 1
+
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
 
@@ -34,8 +36,11 @@ func load_game() -> void:
 	reset_game()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	var data := file.get_var() as Dictionary
-	structure_manager.deserialize(data)
+	structure_manager.deserialize(data[_SERKEY_STRUCTURE_MANAGER])
 
 func save_game() -> void:
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
-	file.store_var(structure_manager.serialize())
+	var data = {
+		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
+	}
+	file.store_var(data)
