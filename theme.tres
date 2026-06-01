@@ -68,6 +68,9 @@ region = Rect2(33, 65, 30, 14)
 atlas = ExtResource("1_e1x85")
 region = Rect2(65, 65, 30, 14)
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_k4ubr"]
+resource_name = "Empty"
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_cjfk0"]
 atlas = ExtResource("1_e1x85")
 region = Rect2(17, 33, 14, 14)
@@ -90,7 +93,7 @@ region = Rect2(17, 1, 5, 14)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_vj6dk"]
 texture = SubResource("AtlasTexture_1rmny")
-texture_margin_left = 3.0
+texture_margin_left = 4.0
 texture_margin_top = 4.0
 texture_margin_bottom = 4.0
 
@@ -100,7 +103,7 @@ region = Rect2(1, 1, 5, 14)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ttqs8"]
 texture = SubResource("AtlasTexture_yin2u")
-texture_margin_left = 3.0
+texture_margin_left = 4.0
 texture_margin_top = 4.0
 texture_margin_bottom = 4.0
 
@@ -167,6 +170,12 @@ CheckButton/icons/checked = SubResource("AtlasTexture_k4ubr")
 CheckButton/icons/checked_disabled = SubResource("AtlasTexture_howt0")
 CheckButton/icons/unchecked = SubResource("AtlasTexture_n3ikw")
 CheckButton/icons/unchecked_disabled = SubResource("AtlasTexture_mworl")
+CheckButton/styles/disabled = SubResource("StyleBoxEmpty_k4ubr")
+CheckButton/styles/focus = SubResource("StyleBoxEmpty_k4ubr")
+CheckButton/styles/hover = SubResource("StyleBoxEmpty_k4ubr")
+CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_k4ubr")
+CheckButton/styles/normal = SubResource("StyleBoxEmpty_k4ubr")
+CheckButton/styles/pressed = SubResource("StyleBoxEmpty_k4ubr")
 HSlider/icons/grabber = SubResource("AtlasTexture_cjfk0")
 HSlider/icons/grabber_disabled = SubResource("AtlasTexture_vj6dk")
 HSlider/icons/grabber_highlight = SubResource("AtlasTexture_110ce")

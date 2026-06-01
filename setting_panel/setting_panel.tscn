@@ -49,12 +49,15 @@ func _on_toggled(toggled_on: bool) -> void:
 "
 
 [node name="SettingPanel" type="Window" unique_id=1280178936]
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(100, 100)
 size = Vector2i(191, 120)
+always_on_top = true
 content_scale_mode = 1
 content_scale_stretch = 1
 script = SubResource("GDScript_wa830")
@@ -82,7 +85,6 @@ grow_vertical = 2
 unique_name_in_owner = true
 layout_mode = 2
 text = "show game"
-flat = true
 script = SubResource("GDScript_miis5")
 
 [node name="ScaleRow" type="HBoxContainer" parent="VBoxContainer" unique_id=312104171]

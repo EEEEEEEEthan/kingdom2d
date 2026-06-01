@@ -26,7 +26,6 @@ anisotropic_filtering_level = 0
 
 [node name="SettingPanel" parent="." unique_id=413646671 node_paths=PackedStringArray("game_window") instance=ExtResource("2_setting_panel")]
 unique_name_in_owner = true
-always_on_top = true
 game_window = NodePath("../Game")
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
