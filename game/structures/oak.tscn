@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://b1e6tr43ujd3j"]
+
+[ext_resource type="PackedScene" uid="uid://bh0xjukljktdb" path="res://game/structures/base_structure.tscn" id="1_pj4fb"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_l17i3"]
+
+[sub_resource type="Texture2D" id="Texture2D_dxrkv"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_l17i3")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAN1JREFUOI2Nkj0OwjAMhT+jnqZLhTogBnoRdkYuwNwbcIVcpJ07sPQ0SGbBkeMG0bckaeP341hOzzs7oIDUfhx2FCogfTvZfheBXZS+nQB0WYdIWiXIirZ3hQB8CXOcfw42CE4ygbclXZpNKa8AXZp9sXgCcas2o/J+SFTkdb0Q7pcR+nZSU2xGzeqmHPMDiJsDtUuxcT9QRMhNW9ahyO0dOBcZTcik8dyl2WffkMRnFEBcBHEOxMX7Owd0aS6sG0kQqBOE967CSDYEXjXCZsOTFF9u52OsiU0FioHiA41YXXOa7YxUAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="Texture2D" id="Texture2D_u5opy"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_l17i3")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAQpJREFUOI11k7FxwzAMRR91KeJUulPpBiPEG3CUjOARNIrnSMUNVNolL71aqUQKEzRJU/9OB57I//EBgu77+kcHCrhibXAAt/DIP4YeG8DHSQH1cWqFLeqRgAIEWTGyxTmeuIWHAkS5AOjQELUkZDdsb1kkLu8llMRyLXFhjieKzAZnAtraDbLi2fBsLakqd0jNqmD1B74AmGWv9kvBIchaEUsXVrvZ78AdXqNlnmVH4pKbZpE0E1kg2zYXRfYol8p2ElGAj6SkRs4icQL2XH85fT0HjtfoVoc8527ttJOYrLvyM3KQe7uX38pxE+UTQMfxeUR+qtvObrsCB7ZbkQOBZ+aM6/hbZWzxD7hsboBh6uOuAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
+diffuse_texture = SubResource("Texture2D_dxrkv")
+normal_texture = SubResource("Texture2D_u5opy")
+
+[node name="Campfire" unique_id=1642746995 instance=ExtResource("1_pj4fb")]
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
+texture = SubResource("CanvasTexture_4fuuu")
+offset = Vector2(0, -7)

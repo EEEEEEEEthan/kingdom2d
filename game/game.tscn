@@ -27,6 +27,13 @@ diffuse_texture = ExtResource("2_4fuuu")
 normal_texture = ExtResource("4_normal")
 texture_filter = 1
 
+[sub_resource type="Texture2D" id="Texture2D_dxrkv"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_h7iqs")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAKCAYAAACT+/8OAAAAAXNSR0IArs4c6QAAADhJREFUCJljTLM0ZEAGTFD6PxQzML47PAsmwMDAwMDIxIAGWKbtfovVDISKqzdO41eBqQVmHUwAAOSBCun8O6/TAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [sub_resource type="GDScript" id="GDScript_camera"]
 script/source = "extends Camera2D
 
@@ -201,9 +208,20 @@ flip_h = true
 region_enabled = true
 region_rect = Rect2(0, 0, 128, 48)
 
-[node name="Terrain" parent="." unique_id=391382551 instance=ExtResource("2_vasa2")]
+[node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
+position = Vector2(0, 58)
+
+[node name="Character" type="Sprite2D" parent="Horizon" unique_id=257550443]
+visible = false
+position = Vector2(111, -4)
+texture = SubResource("Texture2D_dxrkv")
+
+[node name="Terrain" parent="Horizon" unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
-position = Vector2(0, 74)
+position = Vector2(0, 16)
+
+[node name="Structures" type="Node2D" parent="Horizon" unique_id=1226675239]
+unique_name_in_owner = true
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
