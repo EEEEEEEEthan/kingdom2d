@@ -3,6 +3,19 @@
 [ext_resource type="PackedScene" uid="uid://bh0xjukljktdb" path="res://game/structures/base_structure.tscn" id="1_pj4fb"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_l17i3"]
 
+[sub_resource type="GDScript" id="GDScript_pj4fb"]
+script/source = "extends BaseStructure
+
+func get_id() -> int:
+	return BaseStructure.TYPE_OAK
+
+func _serialize() -> Dictionary:
+	return {}
+
+func _deserialize(_data: Dictionary) -> void:
+	pass
+"
+
 [sub_resource type="Texture2D" id="Texture2D_dxrkv"]
 resource_local_to_scene = false
 resource_name = ""
@@ -22,6 +35,7 @@ diffuse_texture = SubResource("Texture2D_dxrkv")
 normal_texture = SubResource("Texture2D_u5opy")
 
 [node name="Campfire" unique_id=1642746995 instance=ExtResource("1_pj4fb")]
+script = SubResource("GDScript_pj4fb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 texture = SubResource("CanvasTexture_4fuuu")
