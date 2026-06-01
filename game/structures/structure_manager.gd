@@ -1,8 +1,9 @@
 extends Node
+class_name StructureManager
 
-const TILE_SIZE = 8
-const MAP_SIZE = 512
+func serialize() -> Dictionary:
+	get:
+		
 
-func add_structure(structure: Structure, index: int) -> void:
-	# structure.position = 
-	pass
+func add_structure(_structure: Structure, index: int) -> void:
+	_structure.position = Vector2(Game.get_position_by_cell_index(index), 0)
