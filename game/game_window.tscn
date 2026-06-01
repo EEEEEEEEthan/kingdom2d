@@ -31,15 +31,18 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 	content_scale_factor = float(scale)
 	var new_size := Vector2i(width, height)
 	if align_to_bottom:
-		_align_to_screen_bottom(height)
+		var screen := current_screen
+		var screen_pos := DisplayServer.screen_get_position(screen)
+		var usable := DisplayServer.screen_get_usable_rect(screen)
+		position = Vector2i(
+			screen_pos.x,
+			usable.position.y + usable.size.y - height,
+		)
 		size = new_size
 	else:
-		_resize_preserve_bottom_center(new_size)
-
-func _resize_preserve_bottom_center(new_size: Vector2i) -> void:
-	var bottom_center := Vector2(position.x + size.x / 2.0, position.y + size.y)
-	position = Vector2(bottom_center.x - new_size.x / 2.0, bottom_center.y - new_size.y)
-	size = new_size
+		var bottom_center := Vector2(position.x + size.x / 2.0, position.y + size.y)
+		position = Vector2(bottom_center.x - new_size.x / 2.0, bottom_center.y - new_size.y)
+		size = new_size
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -53,15 +56,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dragging = false
 	elif event is InputEventMouseMotion and _dragging:
 		position = DisplayServer.mouse_get_position() - _drag_mouse_offset
-
-func _align_to_screen_bottom(height: int) -> void:
-	var screen := current_screen
-	var screen_pos := DisplayServer.screen_get_position(screen)
-	var usable := DisplayServer.screen_get_usable_rect(screen)
-	position = Vector2i(
-		screen_pos.x,
-		usable.position.y + usable.size.y - height,
-	)
 "
 
 [node name="Game" type="Window" unique_id=2073799186]
