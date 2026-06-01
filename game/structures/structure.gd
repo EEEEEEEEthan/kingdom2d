@@ -1,12 +1,12 @@
 extends Node2D
-class_name BaseStructure
+class_name Structure
 
 const TYPE_OAK = 1
 
 const _KEY_ID = 1
 const _KEY_DATA = 2
 
-static func deserialize(data: Dictionary) -> BaseStructure:
+static func deserialize(data: Dictionary) -> Structure:
 	var type_id := data[_KEY_ID] as int
 	var scene: PackedScene
 	match type_id:
@@ -22,7 +22,7 @@ func get_id() -> int:
 	return 0
 
 func _deserialize(_data: Dictionary) -> void:
-	printerr("等待子类override")
+	pass
 
 func serialize() -> Dictionary:
 	return{
@@ -31,5 +31,4 @@ func serialize() -> Dictionary:
 	}
 
 func _serialize() -> Dictionary:
-	printerr("等待子类override")
 	return {}

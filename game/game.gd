@@ -1,6 +1,9 @@
 extends Node
 class_name Game
 
+const TILE_SIZE = 8
+const MAP_SIZE = 512
+
 func _ready() -> void:
 	pass
 
