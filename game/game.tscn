@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
 [ext_resource type="Texture2D" uid="uid://c8v7oxc2p6mt3" path="res://game/terrain/mountains_normal.png" id="4_normal"]
+[ext_resource type="PackedScene" uid="uid://cu0uoq3b10sk6" path="res://game/structures/structure_manager.tscn" id="6_dakft"]
 
 [sub_resource type="Gradient" id="Gradient_dxrkv"]
 interpolation_mode = 2
@@ -220,7 +221,7 @@ texture = SubResource("Texture2D_dxrkv")
 unique_name_in_owner = true
 position = Vector2(0, 16)
 
-[node name="Structures" type="Node2D" parent="Horizon" unique_id=1226675239]
+[node name="Structures" parent="Horizon" unique_id=1469177200 instance=ExtResource("6_dakft")]
 unique_name_in_owner = true
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
