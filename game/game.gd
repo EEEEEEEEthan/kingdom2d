@@ -19,6 +19,7 @@ var structure_manager: StructureManager:
 
 func _ready() -> void:
 	pass
+	# 有存档就直接读档，没存档就直接新游戏
 
 func reset_game() -> void:
 	pass
@@ -28,6 +29,7 @@ func new_game() -> void:
 
 func load_game() -> void:
 	pass
+	# structure_manager.deserialize(data)
 
 func save_game() -> void:
 	pass

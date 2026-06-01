@@ -20,7 +20,7 @@ func serialize() -> Dictionary:
 		structures.append(structure.serialize())
 	return result
 
-func deserialize(data: Array) -> void:
+func deserialize(data: Dictionary) -> void:
 	_next_id = data[_KEY_NEXT_ID]
 	var array = data[_KEY_STRUCTURES]
 	for item in array:
