@@ -36,6 +36,10 @@ var cell_index: int:
 		if not is_node_ready(): await ready
 		position = Vector2(value * Game.TILE_SIZE, 0)
 
+var active: bool:
+	get:
+		return id > 0
+
 func get_type_id() -> int:
 	printerr("等待子类override")
 	return 0
