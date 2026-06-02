@@ -51,3 +51,4 @@ func save_game() -> void:
 
 func clear() -> void:
 	structure_manager.clear()
+	terrain.clear()

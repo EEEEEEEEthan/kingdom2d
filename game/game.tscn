@@ -111,7 +111,7 @@ blend_mode = 2
 height = 64.0
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
-position = Vector2(0, 58)
+position = Vector2(0, 61)
 
 [node name="Character" type="Sprite2D" parent="Horizon" unique_id=257550443]
 visible = false
@@ -120,7 +120,7 @@ texture = SubResource("Texture2D_dxrkv")
 
 [node name="Terrain" parent="Horizon" unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
-position = Vector2(0, 16)
+position = Vector2(0, 3)
 
 [node name="StructureManager" parent="Horizon" unique_id=1469177200 instance=ExtResource("6_dakft")]
 unique_name_in_owner = true
