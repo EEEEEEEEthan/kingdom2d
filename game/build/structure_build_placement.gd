@@ -60,8 +60,7 @@ func _try_place() -> void:
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
 	_preview.modulate = Color.WHITE
-	_preview_juice.remove_child(_preview)
-	_preview_juice.free()
+	_preview_juice.release_preview()
 	structure_manager.add_structure(_preview, _preview.cell_index)
 	queue_free()
 
@@ -80,13 +79,20 @@ class _StructureBuildPreviewJuice extends Node2D:
 	var _idle_tween: Tween
 	var _snap_tween: Tween
 
-
 	func _init(preview: Node2D) -> void:
 		_preview = preview
 		add_child(preview)
 		await ready
 		_start_idle_pulse()
 
+	func release_preview() -> void:
+		remove_child(_preview)
+		if _idle_tween and _idle_tween.is_valid():
+			_idle_tween.kill()
+		if _snap_tween and _snap_tween.is_valid():
+			_snap_tween.kill()
+		_preview.scale = Vector2.ONE
+		queue_free()
 
 	func play_cell_snap() -> void:
 		if _idle_tween and _idle_tween.is_valid():
@@ -97,15 +103,6 @@ class _StructureBuildPreviewJuice extends Node2D:
 		_snap_tween.tween_property(_preview, "scale", Vector2(1.0, _SNAP_SQUASH_Y), 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		_snap_tween.tween_property(_preview, "scale", Vector2(_SNAP_STRETCH, _SNAP_STRETCH), 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_snap_tween.tween_callback(_start_idle_pulse)
-
-
-	func _exit_tree() -> void:
-		if _idle_tween and _idle_tween.is_valid():
-			_idle_tween.kill()
-		if _snap_tween and _snap_tween.is_valid():
-			_snap_tween.kill()
-		_preview.scale = Vector2.ONE
-
 
 	func _start_idle_pulse() -> void:
 		if _idle_tween and _idle_tween.is_valid():
