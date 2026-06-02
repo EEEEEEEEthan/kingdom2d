@@ -1,10 +1,8 @@
 [gd_scene format=3 uid="uid://dpvh6vuxwydj5"]
 
 [ext_resource type="Script" uid="uid://bgkb425iiewla" path="res://game/game.gd" id="1_dxrkv"]
-[ext_resource type="Texture2D" uid="uid://d0ug3uw4wo00y" path="res://game/terrain/mountains.png" id="2_4fuuu"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
-[ext_resource type="Texture2D" uid="uid://c8v7oxc2p6mt3" path="res://game/terrain/mountains_normal.png" id="4_normal"]
 [ext_resource type="PackedScene" uid="uid://cu0uoq3b10sk6" path="res://game/structures/structure_manager.tscn" id="6_dakft"]
 
 [sub_resource type="Gradient" id="Gradient_dxrkv"]
@@ -17,16 +15,6 @@ width = 4
 height = 16
 fill_from = Vector2(0, 1)
 fill_to = Vector2(0, 0)
-
-[sub_resource type="CanvasTexture" id="CanvasTexture_dxrkv"]
-diffuse_texture = ExtResource("2_4fuuu")
-normal_texture = ExtResource("4_normal")
-texture_filter = 1
-
-[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
-diffuse_texture = ExtResource("2_4fuuu")
-normal_texture = ExtResource("4_normal")
-texture_filter = 1
 
 [sub_resource type="Texture2D" id="Texture2D_dxrkv"]
 resource_local_to_scene = false
@@ -124,94 +112,6 @@ height = 64.0
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
 position = Vector2(0, 58)
-
-[node name="Parallaxes" type="Node2D" parent="Horizon" unique_id=627955714]
-position = Vector2(0, -58)
-
-[node name="DistantMountains" type="Parallax2D" parent="Horizon/Parallaxes" unique_id=1807359014]
-scroll_scale = Vector2(0.1, 0)
-repeat_size = Vector2(2048, 0)
-
-[node name="Mountains" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains" unique_id=1080317094]
-texture_filter = 1
-position = Vector2(259, 63)
-texture = SubResource("CanvasTexture_dxrkv")
-offset = Vector2(0, -24)
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 48)
-
-[node name="DistantMountains2" type="Parallax2D" parent="Horizon/Parallaxes" unique_id=559577270]
-scroll_scale = Vector2(0.15, 0)
-repeat_size = Vector2(300, 0)
-repeat_times = 13
-
-[node name="Mountains" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains2" unique_id=2100223411]
-texture_filter = 1
-position = Vector2(325, 81)
-texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -24)
-region_enabled = true
-region_rect = Rect2(128, 0, 128, 48)
-
-[node name="Mountains2" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains2" unique_id=515379667]
-texture_filter = 1
-position = Vector2(369, 86)
-texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -24)
-flip_h = true
-region_enabled = true
-region_rect = Rect2(128, 0, 128, 48)
-
-[node name="DistantMountains3" type="Parallax2D" parent="Horizon/Parallaxes" unique_id=2093264715]
-scroll_scale = Vector2(0.2, 0)
-repeat_size = Vector2(400, 0)
-repeat_times = 13
-
-[node name="Mountains" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains3" unique_id=1064285154]
-texture_filter = 1
-position = Vector2(515, 82)
-texture = SubResource("CanvasTexture_dxrkv")
-offset = Vector2(0, -24)
-flip_h = true
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 48)
-
-[node name="DistantMountains4" type="Parallax2D" parent="Horizon/Parallaxes" unique_id=1451614044]
-scroll_scale = Vector2(0.5, 0)
-repeat_size = Vector2(500, 0)
-repeat_times = 13
-
-[node name="Mountains" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains4" unique_id=1540130224]
-texture_filter = 1
-position = Vector2(32, 94)
-texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -24)
-flip_h = true
-region_enabled = true
-region_rect = Rect2(128, 0, 128, 48)
-
-[node name="DistantMountains5" type="Parallax2D" parent="Horizon/Parallaxes" unique_id=906165084]
-scroll_scale = Vector2(0.8, 0)
-repeat_size = Vector2(600, 0)
-repeat_times = 13
-
-[node name="Mountains" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains5" unique_id=1705476786]
-texture_filter = 1
-position = Vector2(181, 83)
-texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -24)
-flip_h = true
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 48)
-
-[node name="Mountains2" type="Sprite2D" parent="Horizon/Parallaxes/DistantMountains5" unique_id=1674894293]
-texture_filter = 1
-position = Vector2(215, 89)
-texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -24)
-flip_h = true
-region_enabled = true
-region_rect = Rect2(0, 0, 128, 48)
 
 [node name="Character" type="Sprite2D" parent="Horizon" unique_id=257550443]
 visible = false
