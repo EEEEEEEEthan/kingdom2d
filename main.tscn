@@ -7,9 +7,6 @@
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends Node
 
-func _on_control_window_game_visibility_toggled(toggled: bool) -> void:
-	%Game.visible = toggled
-
 func _on_control_window_scale_changed(new_scale: int) -> void:
 	%Game.scale = new_scale
 
@@ -34,7 +31,7 @@ game_window = NodePath("../Game")
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 
-[connection signal="game_visibility_toggled" from="ControlWindow" to="." method="_on_control_window_game_visibility_toggled"]
+[connection signal="game_visibility_toggled" from="ControlWindow" to="Game" method="set_visible"]
+[connection signal="reset_game_requested" from="ControlWindow" to="." method="_on_control_window_reset_game_requested"]
 [connection signal="scale_changed" from="ControlWindow" to="." method="_on_control_window_scale_changed"]
 [connection signal="width_ratio_changed" from="ControlWindow" to="." method="_on_control_window_width_ratio_changed"]
-[connection signal="reset_game_requested" from="ControlWindow" to="." method="_on_control_window_reset_game_requested"]
