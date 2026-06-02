@@ -90,6 +90,52 @@ script = ExtResource("3_h7iqs")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGdJREFUOI21UssKwDAM0rH//2V32WEEE1dKAz00wUdsKQk7dYW53tPWPQDdnasO6ECJwKmxzH47iOUInFqbQRdiBS45sEpN70wGW68gzO/OSpJCHD+RI/gqVLDtOwfdvtbNtEK0DwAPMoUTLchY33wAAAAASUVORK5CYII="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
+[sub_resource type="GDScript" id="GDScript_popup_menu"]
+script/source = "extends PopupMenu
+
+enum ItemId { SETTINGS }
+
+var _control_window: Window
+var _control_window_positioned := false
+
+
+func _on_menu_pressed() -> void:
+	var menu := %Menu
+	var global_pos: Vector2i = menu.get_screen_position()
+	var screen := DisplayServer.get_screen_from_rect(Rect2(global_pos, Vector2.ONE))
+	var screen_pos: Vector2i = global_pos - DisplayServer.screen_get_position(screen) + Vector2i(64, 0)
+	current_screen = screen
+	popup(Rect2i(screen_pos, Vector2i.ZERO))
+
+
+func _on_id_pressed(id: int) -> void:
+	match id as ItemId:
+		ItemId.SETTINGS:
+			_show_control_window(DisplayServer.mouse_get_position())
+
+
+func _show_control_window(anchor_mouse: Vector2i) -> void:
+	if not _control_window:
+		_control_window = get_tree().current_scene.get_node(^\"ControlWindow\") as Window
+	if not _control_window_positioned:
+		_place_control_window_near_mouse(anchor_mouse)
+		_control_window_positioned = true
+	_control_window.show()
+	_control_window.mode = Window.MODE_WINDOWED
+	_control_window.grab_focus()
+
+
+func _place_control_window_near_mouse(mouse: Vector2i) -> void:
+	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var size := _control_window.size
+	var pos := mouse
+	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - size.x))
+	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - size.y))
+	_control_window.current_screen = screen
+	_control_window.position = pos
+"
+
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_dxrkv")
 
@@ -147,4 +193,20 @@ light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_vasa2")
 
+[node name="PopupMenu" type="PopupMenu" parent="CanvasLayer" unique_id=284130578]
+unique_name_in_owner = true
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+position = Vector2i(29, 0)
+visible = true
+item_count = 1
+item_0/text = "设置"
+item_0/id = 0
+script = SubResource("GDScript_popup_menu")
+
+[connection signal="pressed" from="CanvasLayer/VBoxContainer/Menu" to="CanvasLayer/PopupMenu" method="_on_menu_pressed"]
 [connection signal="pressed" from="CanvasLayer/VBoxContainer/ResetCamera" to="Camera2D" method="reset_to_center"]
+[connection signal="id_pressed" from="CanvasLayer/PopupMenu" to="CanvasLayer/PopupMenu" method="_on_id_pressed"]
