@@ -127,12 +127,12 @@ func _on_id_pressed(id: int) -> void:
 
 
 func _on_build_id_pressed(id: int) -> void:
-	_start_build_placement(id)
+	_start_build_placement(StructureConfig.configs_by_id[id as StructureConfig.TypeId])
 
 
-func _start_build_placement(structure_type_id: int) -> void:
+func _start_build_placement(structure_config: StructureConfig) -> void:
 	var game := get_parent().get_parent() as Game
-	game.add_child(load(\"res://game/build/structure_build_placement.gd\").new(structure_type_id))
+	game.add_child(load(\"res://game/build/structure_build_placement.gd\").new(game, structure_config))
 
 
 func _show_control_window(anchor_mouse: Vector2i) -> void:

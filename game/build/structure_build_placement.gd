@@ -3,23 +3,21 @@ class_name StructureBuildPlacement
 
 const _PREVIEW_MODULATE := Color(0.45, 0.65, 1.0)
 
-var _structure_type_id: int
+var _structure_config: StructureConfig
 var _game: Game
-var _structure_manager: StructureManager
 var _preview: Structure
 var _cell_index: int
 
 
-func _init(structure_type_id: int) -> void:
-	_structure_type_id = structure_type_id
+func _init(game: Game, structure_config: StructureConfig) -> void:
+	_game = game
+	_structure_config = structure_config
 
 
 func _ready() -> void:
-	_game = get_parent() as Game
-	_structure_manager = _game.structure_manager
-	_preview = StructureConfig.configs_by_id[_structure_type_id].instantiate() as Structure
+	_preview = _structure_config.instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
-	_structure_manager.add_child(_preview)
+	_game.structure_manager.add_child(_preview)
 	_update_cell_index_from_mouse()
 
 
@@ -50,19 +48,21 @@ func _update_cell_index_from_mouse() -> void:
 
 
 func _mouse_to_cell_index() -> int:
-	var local: Vector2 = _structure_manager.get_global_transform().affine_inverse() * _structure_manager.get_global_mouse_position()
+	var structure_manager := _game.structure_manager
+	var local: Vector2 = structure_manager.get_global_transform().affine_inverse() * structure_manager.get_global_mouse_position()
 	var index := roundi((local.x - Game.HALF_TILE_SIZE) / float(Game.TILE_SIZE))
 	return clampi(index, 0, Game.MAP_CELL_COUNT - 1)
 
 
 func _try_place() -> void:
-	if _structure_manager.index_to_structures[_cell_index]:
+	var structure_manager := _game.structure_manager
+	if structure_manager.index_to_structures[_cell_index]:
 		return
 	set_process(false)
 	var structure := _preview
 	_preview = null
 	structure.modulate = Color.WHITE
-	_structure_manager.add_structure(structure, _cell_index)
+	structure_manager.add_structure(structure, _cell_index)
 	queue_free()
 
 
