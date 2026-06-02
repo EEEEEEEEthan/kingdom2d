@@ -93,10 +93,21 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
 
-enum ItemId { SETTINGS }
+enum ItemId { SETTINGS, OAK }
 
 var _control_window: Window
 var _control_window_positioned := false
+var _build_menu: PopupMenu
+
+
+func _ready() -> void:
+	_build_menu = PopupMenu.new()
+	_build_menu.name = &\"BuildSubmenu\"
+	_build_menu.add_item(\"Oak\", ItemId.OAK)
+	_build_menu.id_pressed.connect(_on_build_id_pressed)
+	add_child(_build_menu)
+	add_submenu_item(\"建造\", _build_menu.name)
+	visible = false
 
 
 func _on_menu_pressed() -> void:
@@ -112,6 +123,17 @@ func _on_id_pressed(id: int) -> void:
 	match id as ItemId:
 		ItemId.SETTINGS:
 			_show_control_window(DisplayServer.mouse_get_position())
+
+
+func _on_build_id_pressed(id: int) -> void:
+	match id as ItemId:
+		ItemId.OAK:
+			_start_oak_placement()
+
+
+func _start_oak_placement() -> void:
+	var game := get_parent().get_parent() as Game
+	game.add_child(load(\"res://game/build/oak_build_placement.gd\").new())
 
 
 func _show_control_window(anchor_mouse: Vector2i) -> void:
