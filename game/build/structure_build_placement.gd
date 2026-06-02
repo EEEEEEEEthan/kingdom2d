@@ -15,9 +15,7 @@ func _init(game: Game, structure_config: StructureConfig) -> void:
 	_structure_config = structure_config
 	_preview = _structure_config.instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
-
-
-func _ready() -> void:
+	await ready
 	_preview_juice = _StructureBuildPreviewJuice.new(_preview)
 	add_child(_preview_juice)
 	_update_cell_index_from_mouse()
@@ -61,23 +59,14 @@ func _try_place() -> void:
 	var structure_manager := _game.structure_manager
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
-	set_process(false)
 	_preview_juice.stop()
-	var structure := _preview
-	_preview = null
-	structure.scale = Vector2.ONE
-	structure.modulate = Color.WHITE
-	_preview_juice.remove_child(structure)
-	remove_child(_preview_juice)
-	_preview_juice.queue_free()
-	_preview_juice = null
-	structure_manager.add_structure(structure, structure.cell_index)
+	_preview.scale = Vector2.ONE
+	_preview.modulate = Color.WHITE
+	structure_manager.add_structure(_preview, _preview.cell_index)
 	queue_free()
 
 
 func _cancel() -> void:
-	set_process(false)
-	_preview = null
 	queue_free()
 
 
