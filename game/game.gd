@@ -3,6 +3,7 @@ class_name Game
 
 const MAP_LEFT_X = 0
 const TILE_SIZE = 8
+const HALF_TILE_SIZE = TILE_SIZE / 2
 const MAP_CELL_COUNT = 512
 const MAP_WIDTH = MAP_CELL_COUNT * TILE_SIZE
 const MAP_RIGHT_X = MAP_LEFT_X + MAP_WIDTH

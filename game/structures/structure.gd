@@ -34,7 +34,7 @@ var cell_index: int:
 	set(value):
 		cell_index = value
 		if not is_node_ready(): await ready
-		position = Vector2(value * Game.TILE_SIZE, 0)
+		position = Vector2(value * Game.TILE_SIZE + Game.HALF_TILE_SIZE, 0)
 
 var active: bool:
 	get:
