@@ -21,20 +21,23 @@ var structure_manager: StructureManager:
 		if not structure_manager: structure_manager = %StructureManager
 		return structure_manager
 
+var terrain: Terrain:
+	get:
+		if not terrain: terrain = %Terrain
+		return terrain
+
 func _ready() -> void:
 	if FileAccess.file_exists(SAVE_FILE_PATH):
 		load_game()
 	else:
 		new_game()
 
-func reset_game() -> void:
-	structure_manager.reset()
-
 func new_game() -> void:
+	_clear()
 	GameBuilder.build(self)
 
 func load_game() -> void:
-	reset_game()
+	_clear()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	var data := file.get_var() as Dictionary
 	structure_manager.deserialize(data[_SERKEY_STRUCTURE_MANAGER])
@@ -45,3 +48,6 @@ func save_game() -> void:
 		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
 	}
 	file.store_var(data)
+
+func _clear() -> void:
+	structure_manager.clear()

@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://bfqch5tjt2fd3" path="res://game/terrain/terrain.png" id="1_0rasl"]
 [ext_resource type="Texture2D" uid="uid://bl6nwqv1nb67" path="res://game/terrain/terrain_normal.png" id="2_rx45g"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_uaf13"]
+[ext_resource type="Script" uid="uid://c7lsurn21ti7c" path="res://game/terrain/terrain.gd" id="3_5grhd"]
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_rx45g"]
 diffuse_texture = ExtResource("1_0rasl")
@@ -95,6 +96,7 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 [node name="Terrain" type="TileMapLayer" unique_id=391382551]
 tile_map_data = PackedByteArray("AAAHAP//AAACAAAAAAAGAP//AAAFAAAAAAAFAP//AAAEAAAAAAAEAP//AAADAAAAAAADAP//AAAEAAAAAAACAP//AAACAAAAAAABAP//AAACAAAAAAAAAP//AAAAAAAAAAAIAP//AAAGAAAAAAA=")
 tile_set = SubResource("TileSet_x280b")
+script = ExtResource("3_5grhd")
 
 [node name="Parallaxes" type="Node2D" parent="." unique_id=1214997680]
 show_behind_parent = true

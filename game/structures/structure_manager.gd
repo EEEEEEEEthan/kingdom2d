@@ -8,7 +8,7 @@ var _next_id = 0
 var index_to_structures: Array[Structure] = []
 
 
-func reset() -> void:
+func clear() -> void:
 	for structure in index_to_structures:
 		if structure:
 			structure.queue_free()

@@ -7,6 +7,8 @@ const _OAK_SPAWN_COUNT_MAX = 96
 
 static func build(game) -> void:
 	game.reset_game()
+	for i in Game.MAP_CELL_COUNT:
+		game.terrain.set_terrain(i, Terrain.TerrainType.Land)
 	_spawn_random_oaks(game)
 
 
