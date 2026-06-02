@@ -44,6 +44,10 @@ func get_type_id() -> int:
 	printerr("等待子类override")
 	return 0
 
+func get_title() -> StringName:
+	printerr("等待子类override")
+	return &""
+
 func _deserialize(_data: Dictionary) -> void:
 	pass
 

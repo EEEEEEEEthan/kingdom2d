@@ -9,6 +9,9 @@ script/source = "extends Structure
 func get_type_id() -> int:
 	return Structure.TYPE_OAK
 
+func get_title() -> StringName:
+	return &\"橡树\"
+
 func _serialize() -> Dictionary:
 	return {}
 

@@ -128,12 +128,12 @@ func _on_id_pressed(id: int) -> void:
 func _on_build_id_pressed(id: int) -> void:
 	match id as ItemId:
 		ItemId.OAK:
-			_start_oak_placement()
+			_start_build_placement(Structure.TYPE_OAK)
 
 
-func _start_oak_placement() -> void:
+func _start_build_placement(structure_type_id: int) -> void:
 	var game := get_parent().get_parent() as Game
-	game.add_child(load(\"res://game/build/oak_build_placement.gd\").new())
+	game.add_child(load(\"res://game/build/structure_build_placement.gd\").new(structure_type_id))
 
 
 func _show_control_window(anchor_mouse: Vector2i) -> void:

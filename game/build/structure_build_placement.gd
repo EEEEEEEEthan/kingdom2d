@@ -1,18 +1,23 @@
 extends Node
-class_name OakBuildPlacement
+class_name StructureBuildPlacement
 
 const _PREVIEW_MODULATE := Color(0.45, 0.65, 1.0)
 
+var _structure_type_id: int
 var _game: Game
 var _structure_manager: StructureManager
 var _preview: Structure
 var _cell_index: int
 
 
+func _init(structure_type_id: int) -> void:
+	_structure_type_id = structure_type_id
+
+
 func _ready() -> void:
 	_game = get_parent() as Game
 	_structure_manager = _game.structure_manager
-	_preview = Structure.create(Structure.TYPE_OAK)
+	_preview = Structure.create(_structure_type_id)
 	_preview.modulate = _PREVIEW_MODULATE
 	_structure_manager.add_child(_preview)
 	_update_cell_index_from_mouse()
@@ -54,10 +59,10 @@ func _try_place() -> void:
 	if _structure_manager.index_to_structures[_cell_index]:
 		return
 	set_process(false)
-	var oak := _preview
+	var structure := _preview
 	_preview = null
-	oak.modulate = Color.WHITE
-	_structure_manager.add_structure(oak, _cell_index)
+	structure.modulate = Color.WHITE
+	_structure_manager.add_structure(structure, _cell_index)
 	queue_free()
 
 
