@@ -84,3 +84,4 @@ unfocusable = true
 script = SubResource("GDScript_le0pw")
 
 [node name="Game" parent="." unique_id=532875448 instance=ExtResource("1_le0pw")]
+unique_name_in_owner = true
