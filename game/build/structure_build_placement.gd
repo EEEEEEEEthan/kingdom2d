@@ -16,7 +16,7 @@ func _init(game: Game, structure_config: StructureConfig) -> void:
 	_preview = _structure_config.instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
 	await ready
-	_preview_juice = _StructureBuildPreviewJuice.new(_preview)
+	_preview_juice = await _StructureBuildPreviewJuice.new(_preview)
 	add_child(_preview_juice)
 	_update_cell_index_from_mouse()
 
@@ -60,12 +60,14 @@ func _try_place() -> void:
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
 	_preview.modulate = Color.WHITE
+	_preview_juice.remove_child(_preview)
+	_preview_juice.free()
 	structure_manager.add_structure(_preview, _preview.cell_index)
-	free()
+	queue_free()
 
 
 func _cancel() -> void:
-	free()
+	queue_free()
 
 
 class _StructureBuildPreviewJuice extends Node2D:
@@ -82,9 +84,7 @@ class _StructureBuildPreviewJuice extends Node2D:
 	func _init(preview: Node2D) -> void:
 		_preview = preview
 		add_child(preview)
-
-
-	func _ready() -> void:
+		await ready
 		_start_idle_pulse()
 
 
