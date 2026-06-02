@@ -14,13 +14,16 @@ func _serialize() -> Dictionary:
 
 func _deserialize(_data: Dictionary) -> void:
 	pass
+
+func _on_cell_index_updated() -> void:
+	%Sprite2D.update_texture()
 "
 
 [sub_resource type="Texture2D" id="Texture2D_dxrkv"]
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("2_l17i3")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAAAXNSR0IArs4c6QAAARFJREFUWIXllsENgzAMRR3ULRiC9tgZ2KMSEzEJe5AhukbpoVQKjh3bCbSR+CdQ/GznO4K4fujgrJpGDxdF3ILenaFGyFq4kLVyphwpA/DG1UkFXqOFedbU5XKQXMOAJc3j4nvm5XJncf3QkQb8vJEDpK6BDfjnhCz8biaWnIAjZNmY9I1SqTYDjlZkztkMiFRiQMn/uRrVdgIspnKxqRzRGr4IRQHt3CwAAM/ry8E+tzNJYR1uPScHybE3wXZuovfVhJziYiNUDDLfKtXASAOCzef+b4s3EA5gNT+LDUXliCI5WFpLxVo5Kl6Tg2O59Wn026PxuN8wQx6h1DRQAxtemiLRvFh/Gj0AfO71Fv7LvQEkv2AVFTVKYwAAAABJRU5ErkJggg=="
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAAAXNSR0IArs4c6QAAARtJREFUWIXVV9sNwyAMPKJukSHSfnaG7FEpEzEJe5QhukbpT1IRY95U0PsiwefH2UFErNuCHlBSf9c1OSipi/lKaogEsiHPoihaHxy5szkrqTFFyLT40PvRYDzrEy4RYk+0njxDfazbEpyAFIcpNiUTUzt5yfGoAK26zyWbWkDMpumE1kyADzUJtuhwVvxfCDAyHHF6CDDKIQugToB/ug94Mdon0ELUkA9nj94DHIP5ORkAeF3fApGbVSPYcXz7JT5YHncRAgDMz8l53kUoCR5NhLMh4uciqWGsAFbxpQdWdQF2A3bxi7g2OB+OpY8c2wvZ5vI4+xQfPq5vX0l9Ho3H/UY57AiFukESOPFjXWSSj8Y/fqvXbcniH7wPdWBsC9ckeYwAAAAASUVORK5CYII="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [sub_resource type="Texture2D" id="Texture2D_u5opy"]
@@ -34,11 +37,28 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 diffuse_texture = SubResource("Texture2D_dxrkv")
 normal_texture = SubResource("Texture2D_u5opy")
 
-[node name="Campfire" unique_id=1642746995 instance=ExtResource("1_pj4fb")]
+[sub_resource type="GDScript" id="GDScript_l17i3"]
+script/source = "extends Sprite2D
+
+@export var noise: Noise
+
+func update_texture() -> void:
+	var random = noise.get_noise_1d(global_position.x)
+	var index = clamp(floor(remap(random, 0, 1, 0, 4)), 0, 3)
+	%Sprite2D.region_rect = Rect2i(1 + 16 * index, 1, 14, 15)
+"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_3fkfd"]
+frequency = 1.0
+
+[node name="Oak" unique_id=1642746995 instance=ExtResource("1_pj4fb")]
 script = SubResource("GDScript_pj4fb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
+unique_name_in_owner = true
 texture = SubResource("CanvasTexture_4fuuu")
 offset = Vector2(0, -7)
 region_enabled = true
-region_rect = Rect2(20, 1, 9, 15)
+region_rect = Rect2(1, 1, 14, 15)
+script = SubResource("GDScript_l17i3")
+noise = SubResource("FastNoiseLite_3fkfd")

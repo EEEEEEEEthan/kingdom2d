@@ -2,7 +2,6 @@ extends Node2D
 class_name Structure
 
 const TYPE_OAK = 1
-
 const _KEY_TYPE_ID = 1
 const _KEY_INSTANCE_ID = 2
 const _KEY_DATA = 3
@@ -35,6 +34,7 @@ var cell_index: int:
 		cell_index = value
 		if not is_node_ready(): await ready
 		position = Vector2(value * Game.TILE_SIZE + Game.HALF_TILE_SIZE, 0)
+		_on_cell_index_updated()
 
 var active: bool:
 	get:
@@ -57,3 +57,6 @@ func serialize() -> Dictionary:
 
 func _serialize() -> Dictionary:
 	return {}
+
+func _on_cell_index_updated() -> void:
+	pass
