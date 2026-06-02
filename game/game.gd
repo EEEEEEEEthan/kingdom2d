@@ -31,7 +31,7 @@ func reset_game() -> void:
 	structure_manager.reset()
 
 func new_game() -> void:
-	reset_game()
+	GameBuilder.build(self)
 
 func load_game() -> void:
 	reset_game()
