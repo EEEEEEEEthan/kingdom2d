@@ -94,7 +94,11 @@ func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
 		MOUSE_BUTTON_LEFT:
 			_show_main_panel(mouse_position)
 		MOUSE_BUTTON_RIGHT:
-			_menu.popup(Rect2i(mouse_position, Vector2i.ZERO))
+			var global_mouse := DisplayServer.mouse_get_position()
+			var screen := DisplayServer.get_screen_from_rect(Rect2(global_mouse, Vector2.ONE))
+			var screen_mouse := global_mouse - DisplayServer.screen_get_position(screen)
+			_menu.current_screen = screen
+			_menu.popup(Rect2i(screen_mouse, Vector2i.ZERO))
 
 
 func _on_popup_menu_id_pressed(id: int) -> void:
