@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game_window.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://control_window/control_window.tscn" id="2_control_window"]
 [ext_resource type="PackedScene" uid="uid://bxn51co5pbs21" path="res://tray/tray.tscn" id="3_tray"]
-[ext_resource type="PackedScene" uid="uid://bwjc3qxc2y5sw" path="res://settings/settings.tscn" id="4_settings"]
+[ext_resource type="Script" uid="uid://c5settingsgd001" path="res://settings/settings.gd" id="4_settings"]
 
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends Node
@@ -12,8 +12,9 @@ script/source = "extends Node
 [node name="Main" type="Node" unique_id=1799066687]
 script = SubResource("GDScript_miis5")
 
-[node name="Settings" parent="." unique_id=1918081624 instance=ExtResource("4_settings")]
+[node name="Settings" type="Node" parent="." unique_id=1918081624]
 unique_name_in_owner = true
+script = ExtResource("4_settings")
 
 [node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 unique_name_in_owner = true
