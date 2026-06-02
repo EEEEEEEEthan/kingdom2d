@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfqch5tjt2fd3"
-path="res://.godot/imported/terrain_mask.png-f149a9144f348905d394ec6911da6dfb.ctex"
+uid="uid://bl6nwqv1nb67"
+path="res://.godot/imported/terrain_normal.png-e738157bc6e4e602e26a6e2f5c760074.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://game/terrain/terrain_mask.png"
-dest_files=["res://.godot/imported/terrain_mask.png-f149a9144f348905d394ec6911da6dfb.ctex"]
+source_file="res://game/terrain/terrain_normal.png"
+dest_files=["res://.godot/imported/terrain_normal.png-e738157bc6e4e602e26a6e2f5c760074.ctex"]
 
 [params]
 
