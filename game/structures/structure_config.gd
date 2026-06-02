@@ -1,24 +1,31 @@
 extends RefCounted
 class_name StructureConfig
 
-const ID_OAK := 1
+enum TypeId {
+	OAK = 1,
+}
 
 static var oak: StructureConfig:
 	get:
 		if not oak:
 			oak = StructureConfig.new()
-			oak.id = ID_OAK
+			oak.id = TypeId.OAK
 			oak.name = &"橡树"
-			oak._scene = preload("res://game/structures/oak.tscn")
+			oak._scene_path = &"res://game/structures/oak.tscn"
 		return oak
 			
 static var configs_by_id: Dictionary[int,StructureConfig] = {
 	oak.id: oak
 }
 
-var id: int
+var id: TypeId
 var name: StringName
-var _scene: PackedScene
+var _scene_path: StringName
+var _scene: PackedScene:
+	get:
+		if not _scene:
+			_scene = ResourceLoader.load(_scene_path)
+		return _scene
 
 func instantiate() -> Node2D:
 	var structure: Node2D = _scene.instantiate()
