@@ -33,11 +33,11 @@ func _ready() -> void:
 		new_game()
 
 func new_game() -> void:
-	_clear()
+	clear()
 	GameBuilder.build(self)
 
 func load_game() -> void:
-	_clear()
+	clear()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	var data := file.get_var() as Dictionary
 	structure_manager.deserialize(data[_SERKEY_STRUCTURE_MANAGER])
@@ -49,5 +49,5 @@ func save_game() -> void:
 	}
 	file.store_var(data)
 
-func _clear() -> void:
+func clear() -> void:
 	structure_manager.clear()
