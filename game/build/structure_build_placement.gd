@@ -60,7 +60,7 @@ func _try_place() -> void:
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
 	_preview.modulate = Color.WHITE
-	_preview_juice.release_preview()
+	_preview_juice.dispose()
 	structure_manager.add_structure(_preview, _preview.cell_index)
 	queue_free()
 
@@ -78,6 +78,7 @@ class _StructureBuildPreviewJuice extends Node2D:
 	var _preview: Node2D
 	var _idle_tween: Tween
 	var _snap_tween: Tween
+	var _disposed: bool
 
 	func _init(preview: Node2D) -> void:
 		_preview = preview
@@ -85,7 +86,9 @@ class _StructureBuildPreviewJuice extends Node2D:
 		await ready
 		_start_idle_pulse()
 
-	func release_preview() -> void:
+	func dispose() -> void:
+		if _disposed: return
+		_disposed = true
 		remove_child(_preview)
 		if _idle_tween and _idle_tween.is_valid():
 			_idle_tween.kill()
@@ -93,6 +96,10 @@ class _StructureBuildPreviewJuice extends Node2D:
 			_snap_tween.kill()
 		_preview.scale = Vector2.ONE
 		queue_free()
+
+	func free() -> void:
+		super.free()
+		dispose()
 
 	func play_cell_snap() -> void:
 		if _idle_tween and _idle_tween.is_valid():
