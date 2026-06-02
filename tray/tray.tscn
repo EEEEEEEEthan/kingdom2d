@@ -27,9 +27,6 @@ func _ready() -> void:
 		return
 
 	get_tree().auto_accept_quit = false
-	menu = NodePath()
-	pressed.connect(_on_pressed)
-	_menu.id_pressed.connect(_on_menu_id_pressed)
 
 	await get_tree().process_frame
 	_main_panel = get_tree().current_scene.get_node(^\"MainPanel\") as Window
@@ -100,7 +97,7 @@ func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
 			_menu.popup(Rect2i(mouse_position, Vector2i.ZERO))
 
 
-func _on_menu_id_pressed(id: int) -> void:
+func _on_popup_menu_id_pressed(id: int) -> void:
 	match id as MenuId:
 		MenuId.SHOW_MAIN_PANEL:
 			_show_main_panel(DisplayServer.mouse_get_position())
@@ -114,9 +111,13 @@ icon = ExtResource("2_icon")
 script = SubResource("GDScript_14jt7")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=1884544456]
+unique_name_in_owner = true
 prefer_native_menu = true
 item_count = 2
 item_0/text = "显示设置面板"
 item_0/id = 0
 item_1/text = "退出"
 item_1/id = 1
+
+[connection signal="pressed" from="." to="." method="_on_pressed"]
+[connection signal="id_pressed" from="PopupMenu" to="." method="_on_popup_menu_id_pressed"]
