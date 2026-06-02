@@ -11,9 +11,6 @@ var _preview: Structure
 func _init(game: Game, structure_config: StructureConfig) -> void:
 	_game = game
 	_structure_config = structure_config
-
-
-func _ready() -> void:
 	_preview = _structure_config.instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
 	_game.structure_manager.add_child(_preview)
