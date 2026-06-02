@@ -32,6 +32,11 @@ func new_game() -> void:
 	clear()
 	GameBuilder.build(self)
 
+func reset_game() -> void:
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		DirAccess.open("user://").remove(SAVE_FILE_PATH.get_file())
+	new_game()
+
 func load_game() -> void:
 	clear()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)

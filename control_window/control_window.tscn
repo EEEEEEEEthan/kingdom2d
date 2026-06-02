@@ -7,8 +7,9 @@ script/source = "extends Window
 
 const MAX_GAME_WIDTH := 4096
 
-signal game_visibility_toggled(visible: bool)
-signal scale_changed(scale: int)
+signal game_visibility_toggled(is_visible: bool)
+signal reset_game_requested
+signal scale_changed(new_scale: int)
 signal width_ratio_changed(width_ratio: float)
 
 @export var game_window: Window
@@ -35,6 +36,12 @@ func _on_scale_slider_value_changed(value: float) -> void:
 
 func _on_width_slider_value_changed(value: float) -> void:
 	width_ratio_changed.emit(value)
+
+func _on_reset_game_pressed() -> void:
+	%ResetConfirmDialog.popup_centered()
+
+func _on_reset_confirm_dialog_confirmed() -> void:
+	reset_game_requested.emit()
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
@@ -126,6 +133,14 @@ ticks_on_borders = true
 layout_mode = 2
 text = "重置地图"
 
+[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1983746502]
+unique_name_in_owner = true
+title = "重置地图"
+ok_button_text = "删除"
+dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
+
 [connection signal="toggled" from="VBoxContainer/Button" to="VBoxContainer/Button" method="_on_toggled"]
+[connection signal="pressed" from="VBoxContainer/ResetGame" to="." method="_on_reset_game_pressed"]
+[connection signal="confirmed" from="ResetConfirmDialog" to="." method="_on_reset_confirm_dialog_confirmed"]
 [connection signal="value_changed" from="VBoxContainer/ScaleRow/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/WidthRow/WidthSlider" to="." method="_on_width_slider_value_changed"]

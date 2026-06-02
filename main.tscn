@@ -10,11 +10,15 @@ script/source = "extends Node
 func _on_control_window_game_visibility_toggled(toggled: bool) -> void:
 	%Game.visible = toggled
 
-func _on_control_window_scale_changed(scale: int) -> void:
-	%Game.scale = scale
+func _on_control_window_scale_changed(new_scale: int) -> void:
+	%Game.scale = new_scale
 
 func _on_control_window_width_ratio_changed(width_ratio: float) -> void:
 	%Game.width_ratio = width_ratio
+
+func _on_control_window_reset_game_requested() -> void:
+	var game := %Game.get_node(\"Game\") as Game
+	game.reset_game()
 "
 
 [node name="Main" type="Node" unique_id=1799066687]
@@ -33,3 +37,4 @@ game_window = NodePath("../Game")
 [connection signal="game_visibility_toggled" from="ControlWindow" to="." method="_on_control_window_game_visibility_toggled"]
 [connection signal="scale_changed" from="ControlWindow" to="." method="_on_control_window_scale_changed"]
 [connection signal="width_ratio_changed" from="ControlWindow" to="." method="_on_control_window_width_ratio_changed"]
+[connection signal="reset_game_requested" from="ControlWindow" to="." method="_on_control_window_reset_game_requested"]
