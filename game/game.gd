@@ -12,6 +12,11 @@ const _SERKEY_STRUCTURE_MANAGER = 1
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
 
+var horizon: Node2D:
+	get:
+		if not horizon: horizon = %Horizon
+		return horizon
+
 var structure_manager: StructureManager:
 	get:
 		if not structure_manager: structure_manager = %StructureManager

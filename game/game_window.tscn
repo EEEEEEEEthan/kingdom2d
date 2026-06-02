@@ -63,8 +63,8 @@ func _on_settings_display_scale_changed(new_scale: int) -> void:
 func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
 	width_ratio = new_ratio
 
-func _on_settings_game_window_visible_changed(is_visible: bool) -> void:
-	visible = is_visible
+func _on_settings_game_window_visible_changed(_visible: bool) -> void:
+	visible = _visible
 
 func _on_control_window_reset_game_requested() -> void:
 	%Game.reset_game()

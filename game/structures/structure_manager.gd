@@ -50,7 +50,8 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 	_next_id += 1
 	structure.id = _next_id
 	structure.cell_index = cell_index
-	add_child(structure)
+	if structure.get_parent() != self:
+		add_child(structure)
 	_register_structure(structure)
 
 

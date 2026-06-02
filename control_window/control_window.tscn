@@ -28,8 +28,8 @@ func _on_scale_slider_value_changed(value: float) -> void:
 func _on_width_slider_value_changed(value: float) -> void:
 	settings.game_width_ratio = value
 
-func _on_game_window_visibility_toggled(is_visible: bool) -> void:
-	settings.game_window_visible = is_visible
+func _on_game_window_visibility_toggled(_visible: bool) -> void:
+	settings.game_window_visible = _visible
 
 func _on_reset_game_pressed() -> void:
 	%ResetConfirmDialog.popup_centered()
@@ -134,7 +134,7 @@ ok_button_text = "删除"
 dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 
 [connection signal="toggled" from="VBoxContainer/Button" to="VBoxContainer/Button" method="_on_toggled"]
-[connection signal="pressed" from="VBoxContainer/ResetGame" to="." method="_on_reset_game_pressed"]
-[connection signal="confirmed" from="ResetConfirmDialog" to="." method="_on_reset_confirm_dialog_confirmed"]
 [connection signal="value_changed" from="VBoxContainer/ScaleRow/ScaleSlider" to="." method="_on_scale_slider_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/WidthRow/WidthSlider" to="." method="_on_width_slider_value_changed"]
+[connection signal="pressed" from="VBoxContainer/ResetGame" to="." method="_on_reset_game_pressed"]
+[connection signal="confirmed" from="ResetConfirmDialog" to="." method="_on_reset_confirm_dialog_confirmed"]

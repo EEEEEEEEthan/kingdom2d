@@ -1,4 +1,4 @@
-extends Node
+extends Node2D
 class_name StructureBuildPlacement
 
 const _PREVIEW_MODULATE := Color(0.45, 0.65, 1.0)
@@ -13,7 +13,10 @@ func _init(game: Game, structure_config: StructureConfig) -> void:
 	_structure_config = structure_config
 	_preview = _structure_config.instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
-	_game.structure_manager.add_child(_preview)
+
+
+func _ready() -> void:
+	add_child(_preview)
 	_update_cell_index_from_mouse()
 
 
@@ -37,8 +40,6 @@ func _input(event: InputEvent) -> void:
 
 
 func _update_cell_index_from_mouse() -> void:
-	if not _preview:
-		return
 	_preview.cell_index = _mouse_to_cell_index()
 
 
@@ -57,6 +58,7 @@ func _try_place() -> void:
 	var structure := _preview
 	_preview = null
 	structure.modulate = Color.WHITE
+	remove_child(structure)
 	structure_manager.add_structure(structure, structure.cell_index)
 	queue_free()
 

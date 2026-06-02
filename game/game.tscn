@@ -132,7 +132,7 @@ func _on_build_id_pressed(id: int) -> void:
 
 func _start_build_placement(structure_config: StructureConfig) -> void:
 	var game := get_parent().get_parent() as Game
-	game.add_child(load(\"res://game/build/structure_build_placement.gd\").new(game, structure_config))
+	game.horizon.add_child(load(\"res://game/build/structure_build_placement.gd\").new(game, structure_config))
 
 
 func _show_control_window(anchor_mouse: Vector2i) -> void:
@@ -166,6 +166,7 @@ scale = Vector2(99999, 4)
 texture = SubResource("GradientTexture2D_dxrkv")
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
+unique_name_in_owner = true
 position = Vector2(0, 61)
 
 [node name="Character" type="Sprite2D" parent="Horizon" unique_id=257550443]
