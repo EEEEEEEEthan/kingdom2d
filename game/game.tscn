@@ -91,12 +91,6 @@ position = Vector2(0, 32)
 scale = Vector2(99999, 4)
 texture = SubResource("GradientTexture2D_dxrkv")
 
-[node name="Sunlight" type="DirectionalLight2D" parent="." unique_id=1096293578]
-rotation = -2.0228367
-energy = 0.5
-blend_mode = 2
-height = 64.0
-
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
 position = Vector2(0, 61)
 
