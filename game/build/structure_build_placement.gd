@@ -17,7 +17,7 @@ func _init(structure_type_id: int) -> void:
 func _ready() -> void:
 	_game = get_parent() as Game
 	_structure_manager = _game.structure_manager
-	_preview = Structure.create(_structure_type_id)
+	_preview = StructureConfig.configs_by_id[_structure_type_id].instantiate() as Structure
 	_preview.modulate = _PREVIEW_MODULATE
 	_structure_manager.add_child(_preview)
 	_update_cell_index_from_mouse()

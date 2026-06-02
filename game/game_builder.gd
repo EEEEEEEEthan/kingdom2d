@@ -22,5 +22,5 @@ static func _spawn_random_oaks(game) -> void:
 	empty_cell_indices.shuffle()
 	var placed_count := mini(oak_spawn_count, empty_cell_indices.size())
 	for index in placed_count:
-		var oak := Structure.create(Structure.TYPE_OAK)
+		var oak := StructureConfig.oak.instantiate() as Structure
 		structure_manager.add_structure(oak, empty_cell_indices[index])
