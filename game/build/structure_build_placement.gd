@@ -59,15 +59,13 @@ func _try_place() -> void:
 	var structure_manager := _game.structure_manager
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
-	_preview_juice.stop()
-	_preview.scale = Vector2.ONE
 	_preview.modulate = Color.WHITE
 	structure_manager.add_structure(_preview, _preview.cell_index)
-	queue_free()
+	free()
 
 
 func _cancel() -> void:
-	queue_free()
+	free()
 
 
 class _StructureBuildPreviewJuice extends Node2D:
@@ -101,7 +99,7 @@ class _StructureBuildPreviewJuice extends Node2D:
 		_snap_tween.tween_callback(_start_idle_pulse)
 
 
-	func stop() -> void:
+	func _exit_tree() -> void:
 		if _idle_tween and _idle_tween.is_valid():
 			_idle_tween.kill()
 		if _snap_tween and _snap_tween.is_valid():
