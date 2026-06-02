@@ -6,7 +6,6 @@ const _PREVIEW_MODULATE := Color(0.45, 0.65, 1.0)
 var _structure_config: StructureConfig
 var _game: Game
 var _preview: Structure
-var _cell_index: int
 
 
 func _init(game: Game, structure_config: StructureConfig) -> void:
@@ -43,8 +42,7 @@ func _input(event: InputEvent) -> void:
 func _update_cell_index_from_mouse() -> void:
 	if not _preview:
 		return
-	_cell_index = _mouse_to_cell_index()
-	_preview.cell_index = _cell_index
+	_preview.cell_index = _mouse_to_cell_index()
 
 
 func _mouse_to_cell_index() -> int:
@@ -56,13 +54,13 @@ func _mouse_to_cell_index() -> int:
 
 func _try_place() -> void:
 	var structure_manager := _game.structure_manager
-	if structure_manager.index_to_structures[_cell_index]:
+	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
 	set_process(false)
 	var structure := _preview
 	_preview = null
 	structure.modulate = Color.WHITE
-	structure_manager.add_structure(structure, _cell_index)
+	structure_manager.add_structure(structure, structure.cell_index)
 	queue_free()
 
 
