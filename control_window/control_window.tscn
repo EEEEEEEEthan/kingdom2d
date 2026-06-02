@@ -7,29 +7,29 @@ script/source = "extends Window
 
 const MAX_GAME_WIDTH := 4096
 
-signal game_visibility_toggled(is_visible: bool)
 signal reset_game_requested
-signal scale_changed(new_scale: int)
-signal width_ratio_changed(width_ratio: float)
 
-@export var game_window: Window
+@export var settings: Node
 
 func _ready() -> void:
 	var screen_width := DisplayServer.screen_get_size(current_screen).x
 	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
 	%WidthSlider.max_value = max_ratio
-	if %WidthSlider.value > max_ratio:
-		%WidthSlider.value = max_ratio
-	%ScaleSlider.set_value_no_signal(float(game_window.scale))
-	var width_ratio := minf(game_window.width_ratio, %WidthSlider.max_value)
+	if settings.game_width_ratio > max_ratio:
+		settings.game_width_ratio = max_ratio
+	%ScaleSlider.set_value_no_signal(float(settings.display_scale))
+	var width_ratio := minf(settings.game_width_ratio, %WidthSlider.max_value)
 	%WidthSlider.set_value_no_signal(width_ratio)
-	%Button.set_pressed_no_signal(game_window.visible)
+	%Button.set_pressed_no_signal(settings.game_window_visible)
 
 func _on_scale_slider_value_changed(value: float) -> void:
-	scale_changed.emit(int(value))
+	settings.display_scale = int(value)
 
 func _on_width_slider_value_changed(value: float) -> void:
-	width_ratio_changed.emit(value)
+	settings.game_width_ratio = value
+
+func _on_game_window_visibility_toggled(is_visible: bool) -> void:
+	settings.game_window_visible = is_visible
 
 func _on_reset_game_pressed() -> void:
 	%ResetConfirmDialog.popup_centered()
@@ -46,7 +46,7 @@ region = Rect2(5, 5, 6, 6)
 script/source = "extends CheckButton
 
 func _on_toggled(toggled_on: bool) -> void:
-	owner.game_visibility_toggled.emit(toggled_on)
+	owner._on_game_window_visibility_toggled(toggled_on)
 "
 
 [node name="ControlWindow" type="Window" unique_id=1280178936]

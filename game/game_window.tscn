@@ -57,14 +57,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _dragging:
 		position = DisplayServer.mouse_get_position() - _drag_mouse_offset
 
-func _on_control_window_reset_game_requested() -> void:
-	%Game.reset_game()
-
-func _on_control_window_scale_changed(new_scale: int) -> void:
+func _on_settings_display_scale_changed(new_scale: int) -> void:
 	scale = new_scale
 
-func _on_control_window_width_ratio_changed(width_ratio: float) -> void:
-	%Game.width_ratio = width_ratio
+func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
+	width_ratio = new_ratio
+
+func _on_settings_game_window_visible_changed(is_visible: bool) -> void:
+	visible = is_visible
+
+func _on_control_window_reset_game_requested() -> void:
+	%Game.reset_game()
 "
 
 [node name="Game" type="Window" unique_id=2073799186]
