@@ -31,27 +31,13 @@ var _drag_loop_active := false
 
 
 func _ready() -> void:
-	_center_x = _terrain_center_x()
-	position.x = 0
+	_center_x = Game.MAP_WIDTH * 0.5
+	position.x = _center_x
 	position_smoothing_enabled = true
 
 
 func reset_to_center() -> void:
-	position.x = 0
-
-
-func _terrain_x_range() -> Vector2:
-	var terrain = owner.get_node(\"%Terrain\")
-	var used: Rect2i = terrain.get_used_rect()
-	var tile_w := float(terrain.tile_set.tile_size.x)
-	var min_x: float = terrain.position.x + used.position.x * tile_w
-	var max_x: float = terrain.position.x + (used.position.x + used.size.x) * tile_w
-	return Vector2(min_x, max_x)
-
-
-func _terrain_center_x() -> float:
-	var x_range := _terrain_x_range()
-	return (x_range.x + x_range.y) * 0.5
+	position.x = _center_x
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -78,15 +64,16 @@ func _drag_pan_loop() -> void:
 
 func _view_half_width() -> float:
 	var viewport := get_viewport()
-	if viewport is Window:
-		return float(viewport.content_scale_size.x) * 0.5
-	return viewport.get_visible_rect().size.x * 0.5
+	var viewport_size := viewport.get_visible_rect().size
+	var to_world := viewport.get_canvas_transform().affine_inverse()
+	var world_left := to_world * Vector2.ZERO
+	var world_right := to_world * Vector2(viewport_size.x, 0.0)
+	return absf(world_right.x - world_left.x) * 0.5
 
 
 func _clamp_camera_x(x: float) -> float:
-	var x_range := _terrain_x_range()
 	var half_view := _view_half_width()
-	return clampf(x, x_range.x + half_view, x_range.y - half_view)
+	return clampf(x, half_view, Game.MAP_WIDTH - half_view)
 "
 
 [sub_resource type="Texture2D" id="Texture2D_vasa2"]
