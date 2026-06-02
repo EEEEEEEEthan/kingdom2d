@@ -2,11 +2,9 @@ extends Node
 class_name Game
 
 const TILE_SIZE = 8
-const HALF_TILE_SIZE = TILE_SIZE / 2
+const HALF_TILE_SIZE = round(TILE_SIZE / 2.0)
 const MAP_CELL_COUNT = 512
 const MAP_WIDTH = MAP_CELL_COUNT * TILE_SIZE
-const CAMERA_VIEW_MIN_LEFT_X = 0
-const CAMERA_VIEW_MAX_RIGHT_X = MAP_WIDTH
 const SAVE_FILE_PATH = "user://save.dat"
 
 const _SERKEY_STRUCTURE_MANAGER = 1
