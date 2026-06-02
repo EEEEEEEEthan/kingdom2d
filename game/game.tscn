@@ -76,6 +76,13 @@ func _clamp_camera_x(x: float) -> float:
 	return clampf(x, half_view, Game.MAP_WIDTH - half_view)
 "
 
+[sub_resource type="Texture2D" id="Texture2D_4fuuu"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_h7iqs")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADNJREFUOI1j/P//PwMlgIki3dQwgAWJDfMLIxofF2CkugsY0eTQ+VjBaBiMhgFVXECxAQDEdwkvIM2IYQAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [sub_resource type="Texture2D" id="Texture2D_vasa2"]
 resource_local_to_scene = false
 resource_name = ""
@@ -128,12 +135,11 @@ offset_bottom = -4.0
 grow_vertical = 0
 theme_override_constants/separation = 2
 
-[node name="ResetCamera2" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=341880545]
+[node name="Menu" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=341880545]
 unique_name_in_owner = true
-visible = false
 light_mask = 0
 layout_mode = 2
-icon = SubResource("Texture2D_vasa2")
+icon = SubResource("Texture2D_4fuuu")
 
 [node name="ResetCamera" type="Button" parent="CanvasLayer/VBoxContainer" unique_id=1876362366]
 unique_name_in_owner = true
@@ -141,5 +147,4 @@ light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_vasa2")
 
-[connection signal="pressed" from="CanvasLayer/VBoxContainer/ResetCamera2" to="Camera2D" method="reset_to_center"]
 [connection signal="pressed" from="CanvasLayer/VBoxContainer/ResetCamera" to="Camera2D" method="reset_to_center"]
