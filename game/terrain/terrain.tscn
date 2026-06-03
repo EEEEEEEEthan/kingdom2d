@@ -65,6 +65,16 @@ terrain_set_0/terrain_1/name = "Land"
 terrain_set_0/terrain_1/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_l7s0s")
 
+[sub_resource type="Gradient" id="Gradient_dxrkv"]
+colors = PackedColorArray(0.7117712, 0.80896837, 0.9836268, 1, 0.38431373, 0.5529412, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_5grhd"]
+gradient = SubResource("Gradient_dxrkv")
+width = 16384
+height = 17
+fill_from = Vector2(0, 1)
+fill_to = Vector2(0, 0)
+
 [sub_resource type="Texture2D" id="Texture2D_qbdts"]
 resource_local_to_scene = false
 resource_name = ""
@@ -98,15 +108,23 @@ tile_map_data = PackedByteArray("AAAHAP//AAACAAAAAAAGAP//AAAFAAAAAAAFAP//AAAEAAA
 tile_set = SubResource("TileSet_x280b")
 script = ExtResource("3_5grhd")
 
+[node name="Sprite2D0" type="Sprite2D" parent="." unique_id=13859517]
+unique_name_in_owner = true
+show_behind_parent = true
+scale = Vector2(4, 4)
+texture = SubResource("GradientTexture2D_5grhd")
+offset = Vector2(0, -9)
+
 [node name="Parallaxes" type="Node2D" parent="." unique_id=1214997680]
 show_behind_parent = true
 
-[node name="Parallax2D" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
+[node name="Parallax2D1" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
 scroll_scale = Vector2(0.2, 0.2)
 repeat_size = Vector2(1216, 0)
 repeat_times = 40
 
-[node name="Sprite2D" type="Sprite2D" parent="Parallaxes/Parallax2D" unique_id=1342626762]
+[node name="Sprite2D1" type="Sprite2D" parent="Parallaxes/Parallax2D1" unique_id=1342626762]
+unique_name_in_owner = true
 texture = SubResource("Texture2D_qbdts")
 offset = Vector2(0, -24)
 
@@ -115,7 +133,8 @@ scroll_scale = Vector2(0.4, 0.4)
 repeat_size = Vector2(1120, 0)
 repeat_times = 6
 
-[node name="Sprite2D" type="Sprite2D" parent="Parallaxes/Parallax2D2" unique_id=606335718]
+[node name="Sprite2D2" type="Sprite2D" parent="Parallaxes/Parallax2D2" unique_id=606335718]
+unique_name_in_owner = true
 texture = SubResource("Texture2D_ittvg")
 offset = Vector2(0, -24)
 
@@ -124,7 +143,8 @@ scroll_scale = Vector2(0.6, 0.6)
 repeat_size = Vector2(1088, 0)
 repeat_times = 6
 
-[node name="Sprite2D" type="Sprite2D" parent="Parallaxes/Parallax2D3" unique_id=1712520175]
+[node name="Sprite2D3" type="Sprite2D" parent="Parallaxes/Parallax2D3" unique_id=1712520175]
+unique_name_in_owner = true
 texture = SubResource("Texture2D_uaf13")
 offset = Vector2(0, -16)
 
@@ -133,6 +153,7 @@ scroll_scale = Vector2(0.8, 0.8)
 repeat_size = Vector2(1024, 0)
 repeat_times = 40
 
-[node name="Sprite2D" type="Sprite2D" parent="Parallaxes/Parallax2D4" unique_id=1941642327]
+[node name="Sprite2D4" type="Sprite2D" parent="Parallaxes/Parallax2D4" unique_id=1941642327]
+unique_name_in_owner = true
 texture = SubResource("Texture2D_rx45g")
 offset = Vector2(0, -8)

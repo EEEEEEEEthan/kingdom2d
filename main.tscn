@@ -101,7 +101,7 @@ script = SubResource("GDScript_miis5")
 unique_name_in_owner = true
 script = ExtResource("4_settings")
 
-[node name="Game" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
+[node name="GameWindow" parent="." unique_id=2073799186 instance=ExtResource("1_ig7tw")]
 unique_name_in_owner = true
 anisotropic_filtering_level = 0
 
@@ -113,7 +113,7 @@ settings = NodePath("../Settings")
 
 [node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451 node_paths=PackedStringArray("_game_window")]
 script = SubResource("GDScript_game_window_slide")
-_game_window = NodePath("../Game")
+_game_window = NodePath("../GameWindow")
 
 [node name="QuitConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1203847291]
 unique_name_in_owner = true
@@ -136,11 +136,11 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="display_scale_changed" from="Settings" to="Game" method="_on_settings_display_scale_changed"]
-[connection signal="game_width_ratio_changed" from="Settings" to="Game" method="_on_settings_game_width_ratio_changed"]
-[connection signal="control_window_open_requested" from="Game" to="ControlWindow" method="_on_control_window_open_requested"]
-[connection signal="size_changed" from="Game" to="GameWindowSlideController" method="_on_game_window_size_changed"]
+[connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
+[connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
+[connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
+[connection signal="size_changed" from="GameWindow" to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindowSlideController" method="set_game_shown"]
-[connection signal="reset_game_requested" from="ControlWindow" to="Game" method="_on_control_window_reset_game_requested"]
+[connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="." method="_on_quit_confirm_dialog_confirmed"]

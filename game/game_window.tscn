@@ -25,6 +25,13 @@ var _drag_mouse_offset := Vector2i.ZERO
 		width_ratio = value
 		apply_layout()
 
+@export_range(0, 1) var view_height: float:
+	set(value):
+		view_height = value
+		if not is_node_ready():
+			await ready
+		%Game.view_height = value
+
 func _ready() -> void:
 	apply_layout(true)
 	visible = true
@@ -105,7 +112,7 @@ func _on_game_hud_control_window_open_requested() -> void:
 	control_window_open_requested.emit()
 "
 
-[node name="Game" type="Window" unique_id=2073799186]
+[node name="GameWindow" type="Window" unique_id=2073799186]
 transparent_bg = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true

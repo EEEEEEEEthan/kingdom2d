@@ -6,8 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cu0uoq3b10sk6" path="res://game/structures/structure_manager.tscn" id="6_dakft"]
 
 [sub_resource type="Gradient" id="Gradient_dxrkv"]
-interpolation_mode = 2
-colors = PackedColorArray(0.37254903, 0.8039216, 0.89411765, 1, 1, 1, 1, 0)
+colors = PackedColorArray(0.7117712, 0.80896837, 0.9836268, 1, 0.38431373, 0.5529412, 1, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_dxrkv"]
 gradient = SubResource("Gradient_dxrkv")

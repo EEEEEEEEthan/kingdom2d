@@ -27,6 +27,13 @@ var terrain: Terrain:
 		if not terrain: terrain = %Terrain
 		return terrain
 
+@export var view_height: float:
+	set(value):
+		view_height = value
+		if not is_node_ready():
+			await ready
+		%Terrain.view_height = value
+
 func _ready() -> void:
 	if FileAccess.file_exists(SAVE_FILE_PATH):
 		load_game()
