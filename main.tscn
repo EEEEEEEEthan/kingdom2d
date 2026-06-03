@@ -15,72 +15,6 @@ func _on_quit_confirm_dialog_confirmed() -> void:
 	get_tree().quit()
 "
 
-[sub_resource type="GDScript" id="GDScript_game_window_slide"]
-script/source = "extends Node
-
-var target_y: float = 0.0
-var pos: Vector2
-var _pos_y_velocity: float = 0.0
-var _desired_shown := true
-
-const SLIDE_SMOOTH_TIME := 0.2
-
-func _ready() -> void:
-	set_process(false)
-	pos = %GameWindow.position
-
-func set_game_shown(shown: bool) -> void:
-	_desired_shown = shown
-	_pos_y_velocity = 0.0
-	_sync_slide_targets()
-	set_process(true)
-
-
-func _on_game_window_size_changed() -> void:
-	_sync_slide_targets()
-
-
-func _sync_slide_targets() -> void:
-	pos = Vector2(%GameWindow.position)
-	if _desired_shown:
-		target_y = float(%GameWindow.compute_docked_global_position().y)
-	else:
-		target_y = float(%GameWindow.compute_hidden_below_global_position().y)
-
-
-func _process(delta: float) -> void:
-	var damped: Dictionary = _smooth_damp_float(
-		pos.y,
-		target_y,
-		_pos_y_velocity,
-		SLIDE_SMOOTH_TIME,
-		delta,
-	)
-	pos.y = damped.value
-	_pos_y_velocity = damped.velocity
-	%GameWindow.position = Vector2i(pos)
-
-func _smooth_damp_float(
-	current: float,
-	target: float,
-	velocity: float,
-	smooth_time: float,
-	delta: float,
-) -> Dictionary:
-	var time: float = maxf(0.0001, smooth_time)
-	var omega: float = 2.0 / time
-	var x: float = omega * delta
-	var e: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
-	var change: float = current - target
-	var temp: float = (velocity + omega * change) * delta
-	var new_velocity: float = (velocity - omega * temp) * e
-	var output: float = target + (change + temp) * e
-	if (target - current) * (output - target) > 0.0:
-		output = target
-		new_velocity = 0.0
-	return {&\"value\": output, &\"velocity\": new_velocity}
-"
-
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
 script/source = "extends ConfirmationDialog
 
@@ -122,9 +56,6 @@ settings = NodePath("../Settings")
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 
-[node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451]
-script = SubResource("GDScript_game_window_slide")
-
 [node name="QuitConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1203847291]
 unique_name_in_owner = true
 transparent_bg = true
@@ -149,8 +80,7 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
-[connection signal="size_changed" from="GameWindow" to="GameWindowSlideController" method="_on_game_window_size_changed"]
-[connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindowSlideController" method="set_game_shown"]
+[connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindow" method="set_game_shown"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="." method="_on_quit_confirm_dialog_confirmed"]
