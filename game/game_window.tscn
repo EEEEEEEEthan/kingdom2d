@@ -10,12 +10,10 @@ signal control_window_open_requested
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
-const OFFSCREEN_POSITION := Vector2i(-100000, -100000)
 
+var suppress_dock_position_in_layout := false
 var _dragging := false
 var _drag_mouse_offset := Vector2i.ZERO
-var _shown := true
-var _saved_position := Vector2i.ZERO
 
 @export var scale: int = 1:
 	set(value):
@@ -31,21 +29,26 @@ func _ready() -> void:
 	apply_layout(true)
 	visible = true
 
-func set_game_shown(shown: bool) -> void:
-	if _shown == shown:
-		return
-	if shown:
-		_shown = true
-		position = _saved_position
-		apply_layout()
-	else:
-		_saved_position = position
-		position = OFFSCREEN_POSITION
-		_shown = false
+func compute_docked_global_position() -> Vector2i:
+	var screen := current_screen
+	var screen_pos := DisplayServer.screen_get_position(screen)
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var height := BASE_HEIGHT * scale
+	return Vector2i(
+		screen_pos.x,
+		usable.position.y + usable.size.y - height,
+	)
+
+
+func compute_hidden_below_global_position() -> Vector2i:
+	var docked_global_position := compute_docked_global_position()
+	var screen := current_screen
+	var screen_pos := DisplayServer.screen_get_position(screen)
+	var screen_size := DisplayServer.screen_get_size(screen)
+	return Vector2i(docked_global_position.x, screen_pos.y + screen_size.y)
+
 
 func apply_layout(align_to_bottom: bool = false) -> void:
-	if not _shown:
-		return
 	var screen_size := DisplayServer.screen_get_size(current_screen)
 	var width := mini(maxi(1, int(round(screen_size.x * width_ratio))), MAX_WIDTH)
 	var height := BASE_HEIGHT * scale
@@ -53,14 +56,12 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 	%ViewportContainer.stretch_shrink = scale
 	var hud_scale := clampi(scale, 1, 2)
 	var new_size := Vector2i(width, height)
+	if suppress_dock_position_in_layout:
+		size = new_size
+		_apply_hud_scale(hud_scale)
+		return
 	if align_to_bottom:
-		var screen := current_screen
-		var screen_pos := DisplayServer.screen_get_position(screen)
-		var usable := DisplayServer.screen_get_usable_rect(screen)
-		position = Vector2i(
-			screen_pos.x,
-			usable.position.y + usable.size.y - height,
-		)
+		position = compute_docked_global_position()
 		size = new_size
 	else:
 		var bottom_center := Vector2(position.x + size.x / 2.0, position.y + size.y)
