@@ -20,32 +20,31 @@ script/source = "extends Node
 
 const SLIDE_SPEED_PIXELS_PER_SECOND := 2400.0
 
-@export var _game_window: Window
 var _desired_shown := true
 var _target_global_position := Vector2i.ZERO
 
 
 func _ready() -> void:
-	_game_window = %Game
 	set_process(false)
 
 
 func _refresh_target_global_position() -> void:
 	if _desired_shown:
-		_target_global_position = _game_window.compute_docked_global_position()
+		_target_global_position = %GameWindow.compute_docked_global_position()
 	else:
-		_target_global_position = _game_window.compute_hidden_below_global_position()
+		_target_global_position = %GameWindow.compute_hidden_below_global_position()
 
 
 func set_game_shown(shown: bool) -> void:
 	if _desired_shown == shown and not is_processing():
 		return
 	_desired_shown = shown
-	_game_window.suppress_dock_position_in_layout = true
-	_game_window.apply_layout(true)
+	%GameWindow.suppress_dock_position_in_layout = true
+	%GameWindow.apply_layout(true)
 	_refresh_target_global_position()
-	if shown and _game_window.position.y >= _game_window.compute_hidden_below_global_position().y:
-		_game_window.position = _game_window.compute_hidden_below_global_position()
+	if shown and %GameWindow.position.y >= %GameWindow.compute_hidden_below_global_position().y:
+		%GameWindow.position = %GameWindow.compute_hidden_below_global_position()
+	_apply_view_height_from_position(%GameWindow.position.y)
 	set_process(true)
 
 
@@ -54,20 +53,28 @@ func _on_game_window_size_changed() -> void:
 
 
 func _process(delta: float) -> void:
-	var current_global_position := Vector2(_game_window.position)
+	var current_global_position := Vector2(%GameWindow.position)
 	var target_global_position := Vector2(_target_global_position)
 	var next_global_position := current_global_position.move_toward(
 		target_global_position,
 		SLIDE_SPEED_PIXELS_PER_SECOND * delta,
 	)
-	_game_window.position = Vector2i(next_global_position)
+	%GameWindow.position = Vector2i(next_global_position)
+	_apply_view_height_from_position(next_global_position.y)
 	if Vector2i(next_global_position) == _target_global_position:
 		_finish_slide()
 
 
+func _apply_view_height_from_position(global_y: float) -> void:
+	var hidden_y := float(%GameWindow.compute_hidden_below_global_position().y)
+	var docked_y := float(%GameWindow.compute_docked_global_position().y)
+	%GameWindow.view_height = inverse_lerp(hidden_y, docked_y, global_y)
+
+
 func _finish_slide() -> void:
 	set_process(false)
-	_game_window.suppress_dock_position_in_layout = not _desired_shown
+	%GameWindow.view_height = 1.0 if _desired_shown else 0.0
+	%GameWindow.suppress_dock_position_in_layout = not _desired_shown
 "
 
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
@@ -111,9 +118,8 @@ settings = NodePath("../Settings")
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 
-[node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451 node_paths=PackedStringArray("_game_window")]
+[node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451]
 script = SubResource("GDScript_game_window_slide")
-_game_window = NodePath("../GameWindow")
 
 [node name="QuitConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1203847291]
 unique_name_in_owner = true
