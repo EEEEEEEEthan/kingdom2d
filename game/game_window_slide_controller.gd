@@ -2,10 +2,14 @@ extends Node
 
 var _slide_pos_y: float
 var _slide_target_y: float = 0.0
+var _slide_y_docked: float
+var _slide_y_hidden: float
 var _slide_pos_y_velocity: float = 0.0
 var _desired_shown := true
 
 const SLIDE_SMOOTH_TIME := 0.2
+
+@onready var _game: Game = %Game
 
 var _game_window: Window:
 	get:
@@ -14,7 +18,8 @@ var _game_window: Window:
 		return _game_window
 
 func _ready() -> void:
-	_slide_pos_y = float(_game_window.position.y)
+	_slide_pos_y = float(_game_window.compute_hidden_below_global_position().y)
+	_sync_slide_targets()
 
 
 func set_game_shown(shown: bool) -> void:
@@ -30,10 +35,12 @@ func _on_game_window_size_changed() -> void:
 
 func _sync_slide_targets() -> void:
 	_slide_pos_y = float(_game_window.position.y)
+	_slide_y_docked = float(_game_window.compute_docked_global_position().y)
+	_slide_y_hidden = float(_game_window.compute_hidden_below_global_position().y)
 	if _desired_shown:
-		_slide_target_y = float(_game_window.compute_docked_global_position().y)
+		_slide_target_y = _slide_y_docked
 	else:
-		_slide_target_y = float(_game_window.compute_hidden_below_global_position().y)
+		_slide_target_y = _slide_y_hidden
 
 
 func _process(delta: float) -> void:
@@ -51,3 +58,5 @@ func _process(delta: float) -> void:
 		_slide_pos_y_velocity = 0.0
 	var pos := _game_window.position
 	_game_window.position = Vector2i(pos.x, int(_slide_pos_y))
+	var progress := inverse_lerp(_slide_y_docked, _slide_y_hidden, _slide_pos_y)
+	_game.view_height = 1.0 - clampf(progress, 0.0, 1.0)
