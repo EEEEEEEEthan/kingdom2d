@@ -46,19 +46,11 @@ enum ItemId { SETTINGS, QUIT }
 
 const MENU_CONTENT_SCALE := 2.0
 
-var _build_menu: PopupMenu
-
-
 func _ready() -> void:
-	_build_menu = PopupMenu.new()
-	_build_menu.name = &\"BuildSubmenu\"
 	for structure_config in StructureConfig.configs_by_id.values():
-		_build_menu.add_item(structure_config.name, structure_config.id)
-	_build_menu.id_pressed.connect(_on_build_id_pressed)
-	_build_menu.about_to_popup.connect(_on_build_menu_about_to_popup)
-	add_child(_build_menu)
+		%BuildSubmenu.add_item(structure_config.name, structure_config.id)
 	_apply_menu_content_scale()
-	add_submenu_item(\"建造\", _build_menu.name)
+	add_submenu_item(\"建造\", %BuildSubmenu.name)
 	add_separator()
 	add_item(\"退出\", ItemId.QUIT)
 	visible = false
@@ -70,8 +62,7 @@ func apply_menu_content_scale() -> void:
 
 func _apply_menu_content_scale() -> void:
 	_apply_window_content_scale(self)
-	if is_instance_valid(_build_menu):
-		_apply_window_content_scale(_build_menu)
+	_apply_window_content_scale(%BuildSubmenu)
 
 
 func _apply_window_content_scale(menu: Window) -> void:
@@ -81,7 +72,7 @@ func _apply_window_content_scale(menu: Window) -> void:
 
 
 func _on_build_menu_about_to_popup() -> void:
-	_apply_window_content_scale(_build_menu)
+	_apply_window_content_scale(%BuildSubmenu)
 
 
 func _on_menu_pressed() -> void:
@@ -163,8 +154,13 @@ item_0/text = "设置"
 item_0/id = 0
 script = SubResource("GDScript_popup_menu")
 
+[node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
+unique_name_in_owner = true
+
 [connection signal="pressed" from="HudRoot/VBoxContainer/Menu" to="PopupMenu" method="_on_menu_pressed"]
 [connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="." method="_on_reset_camera_pressed"]
 [connection signal="build_requested" from="PopupMenu" to="." method="_on_build_requested"]
 [connection signal="control_window_open_requested" from="PopupMenu" to="." method="_on_popup_control_window_open_requested"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
+[connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
+[connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
