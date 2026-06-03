@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c6xxc447w21ld"]
 
 [ext_resource type="PackedScene" uid="uid://dpvh6vuxwydj5" path="res://game/game.tscn" id="1_le0pw"]
+[ext_resource type="Script" uid="uid://cn4l2at7dt1re" path="res://game/game_window_slide_controller.gd" id="1_slide"]
 [ext_resource type="PackedScene" uid="uid://be5pvkd42sklo" path="res://game/game_hud.tscn" id="2_hud"]
 
 [sub_resource type="GDScript" id="GDScript_le0pw"]
@@ -14,13 +15,6 @@ const MAX_WIDTH := 4096
 var suppress_dock_position_in_layout := false
 var _dragging := false
 var _drag_mouse_offset := Vector2i.ZERO
-
-var _slide_pos: Vector2
-var _slide_target_y: float = 0.0
-var _slide_pos_y_velocity: float = 0.0
-var _desired_shown := true
-
-const SLIDE_SMOOTH_TIME := 0.2
 
 @export var scale: int = 1:
 	set(value):
@@ -40,64 +34,8 @@ const SLIDE_SMOOTH_TIME := 0.2
 		%Game.view_height = value
 
 func _ready() -> void:
-	set_process(false)
 	apply_layout(true)
-	_slide_pos = Vector2(position)
 	visible = true
-
-
-func set_game_shown(shown: bool) -> void:
-	_desired_shown = shown
-	suppress_dock_position_in_layout = not shown
-	_slide_pos_y_velocity = 0.0
-	_sync_slide_targets()
-	set_process(true)
-
-
-func _on_game_window_size_changed() -> void:
-	_sync_slide_targets()
-
-
-func _sync_slide_targets() -> void:
-	_slide_pos = Vector2(position)
-	if _desired_shown:
-		_slide_target_y = float(compute_docked_global_position().y)
-	else:
-		_slide_target_y = float(compute_hidden_below_global_position().y)
-
-
-func _process(delta: float) -> void:
-	var damped: Dictionary = _smooth_damp_float(
-		_slide_pos.y,
-		_slide_target_y,
-		_slide_pos_y_velocity,
-		SLIDE_SMOOTH_TIME,
-		delta,
-	)
-	_slide_pos.y = damped.value
-	_slide_pos_y_velocity = damped.velocity
-	position = Vector2i(_slide_pos)
-
-
-func _smooth_damp_float(
-	current: float,
-	target: float,
-	velocity: float,
-	smooth_time: float,
-	delta: float,
-) -> Dictionary:
-	var time: float = maxf(0.0001, smooth_time)
-	var omega: float = 2.0 / time
-	var x: float = omega * delta
-	var e: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
-	var change: float = current - target
-	var temp: float = (velocity + omega * change) * delta
-	var new_velocity: float = (velocity - omega * temp) * e
-	var output: float = target + (change + temp) * e
-	if (target - current) * (output - target) > 0.0:
-		output = target
-		new_velocity = 0.0
-	return {&\"value\": output, &\"velocity\": new_velocity}
 
 func compute_docked_global_position() -> Vector2i:
 	var screen := current_screen
@@ -192,6 +130,9 @@ transparent = true
 unfocusable = true
 script = SubResource("GDScript_le0pw")
 
+[node name="GameWindowSlideController" type="Node" parent="." unique_id=1957756263]
+script = ExtResource("1_slide")
+
 [node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=-447676268]
 unique_name_in_owner = true
 anchors_preset = 15
@@ -216,5 +157,5 @@ unique_name_in_owner = true
 [node name="GameHud" parent="." unique_id=1968099236 node_paths=PackedStringArray("game") instance=ExtResource("2_hud")]
 game = NodePath("../ViewportContainer/GameViewport/Game")
 
+[connection signal="size_changed" from="." to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="control_window_open_requested" from="GameHud" to="." method="_on_game_hud_control_window_open_requested"]
-[connection signal="size_changed" from="." to="." method="_on_game_window_size_changed"]
