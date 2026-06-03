@@ -26,13 +26,6 @@ var _drag_mouse_offset := Vector2i.ZERO
 		width_ratio = value
 		apply_layout()
 
-@export_range(0, 1) var view_height: float:
-	set(value):
-		view_height = value
-		if not is_node_ready():
-			await ready
-		%Game.view_height = value
-
 func _ready() -> void:
 	apply_layout(true)
 	visible = true
@@ -101,7 +94,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_dragging = false
 	elif event is InputEventMouseMotion and _dragging:
-		position = DisplayServer.mouse_get_position() - _drag_mouse_offset
+		var mouse := DisplayServer.mouse_get_position()
+		position = Vector2i(mouse.x - _drag_mouse_offset.x, position.y)
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
 	scale = new_scale
