@@ -77,13 +77,12 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="display_layout_changed" from="ControlWindow" to="GameWindow/AutoHideController" method="force_show"]
-[connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
-[connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="auto_hide_changed" from="Settings" to="GameWindow/AutoHideController" method="configure_auto_hide"]
 [connection signal="auto_hide_delay_seconds_changed" from="Settings" to="GameWindow/AutoHideController" method="configure_auto_hide_delay"]
+[connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
+[connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
-[connection signal="visibility_control_changed" from="ControlWindow" to="GameWindow/AutoHideController" method="configure_visibility_control"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
+[connection signal="visibility_control_changed" from="ControlWindow" to="GameWindow/AutoHideController" method="configure_visibility_control"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="." method="_on_quit_confirm_dialog_confirmed"]
