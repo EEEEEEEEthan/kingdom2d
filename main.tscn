@@ -20,7 +20,7 @@ script/source = "extends Node
 
 const SLIDE_SPEED_PIXELS_PER_SECOND := 2400.0
 
-var _game_window: Window
+@export var _game_window: Window
 var _desired_shown := true
 var _target_global_position := Vector2i.ZERO
 
@@ -30,19 +30,27 @@ func _ready() -> void:
 	set_process(false)
 
 
+func _refresh_target_global_position() -> void:
+	if _desired_shown:
+		_target_global_position = _game_window.compute_docked_global_position()
+	else:
+		_target_global_position = _game_window.compute_hidden_below_global_position()
+
+
 func set_game_shown(shown: bool) -> void:
 	if _desired_shown == shown and not is_processing():
 		return
 	_desired_shown = shown
 	_game_window.suppress_dock_position_in_layout = true
 	_game_window.apply_layout(true)
-	if shown:
-		_target_global_position = _game_window.compute_docked_global_position()
-		if _game_window.position.y >= _game_window.compute_hidden_below_global_position().y:
-			_game_window.position = _game_window.compute_hidden_below_global_position()
-	else:
-		_target_global_position = _game_window.compute_hidden_below_global_position()
+	_refresh_target_global_position()
+	if shown and _game_window.position.y >= _game_window.compute_hidden_below_global_position().y:
+		_game_window.position = _game_window.compute_hidden_below_global_position()
 	set_process(true)
+
+
+func _on_game_window_size_changed() -> void:
+	_refresh_target_global_position()
 
 
 func _process(delta: float) -> void:
@@ -103,8 +111,9 @@ settings = NodePath("../Settings")
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 
-[node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451]
+[node name="GameWindowSlideController" type="Node" parent="." unique_id=1982736451 node_paths=PackedStringArray("_game_window")]
 script = SubResource("GDScript_game_window_slide")
+_game_window = NodePath("../Game")
 
 [node name="QuitConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1203847291]
 unique_name_in_owner = true
@@ -130,6 +139,7 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="display_scale_changed" from="Settings" to="Game" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="Game" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="Game" to="ControlWindow" method="_on_control_window_open_requested"]
+[connection signal="size_changed" from="Game" to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindowSlideController" method="set_game_shown"]
 [connection signal="reset_game_requested" from="ControlWindow" to="Game" method="_on_control_window_reset_game_requested"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
