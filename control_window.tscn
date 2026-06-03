@@ -98,6 +98,10 @@ script/source = "extends HSlider
 
 func _ready() -> void:
 	set_value_no_signal(float(owner.settings.display_scale))
+	owner.settings.display_scale_changed.connect(_on_settings_display_scale_changed)
+
+func _on_settings_display_scale_changed(new_scale: int) -> void:
+	set_value_no_signal(float(new_scale))
 
 func _on_value_changed(new_value: float) -> void:
 	owner.settings.display_scale = int(new_value)

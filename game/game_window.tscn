@@ -282,6 +282,75 @@ func _is_mouse_in_show_trigger(mouse: Vector2i) -> bool:
 	return zone.has_point(mouse)
 "
 
+[sub_resource type="GDScript" id="GDScript_display_scale_wheel"]
+script/source = "extends Node
+
+const MIN_DISPLAY_SCALE := 1
+const MAX_DISPLAY_SCALE := 8
+const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
+
+var _settings: Settings
+var _control_window: Window
+
+var _game_window: Window:
+	get:
+		return owner as Window
+
+
+func _ready() -> void:
+	await get_tree().process_frame
+	var main := _game_window.get_parent()
+	_settings = main.get_node(^\"%Settings\") as Settings
+	_control_window = main.get_node(^\"%ControlWindow\") as Window
+	_register_window_hooks(main)
+
+
+func _register_window_hooks(node: Node) -> void:
+	for child in node.get_children():
+		if child is Window and child != _game_window:
+			_attach_hook(child as Window)
+		_register_window_hooks(child)
+
+
+func _attach_hook(window: Window) -> void:
+	if window.get_node_or_null(HOOK_NODE_NAME):
+		return
+	var hook := WheelHook.new()
+	hook.name = HOOK_NODE_NAME
+	hook.controller = self
+	window.add_child(hook)
+
+
+func _input(event: InputEvent) -> void:
+	_try_apply_display_scale_wheel(event)
+
+
+func _try_apply_display_scale_wheel(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if not mouse_button.ctrl_pressed:
+		return
+	if mouse_button.button_index != MOUSE_BUTTON_WHEEL_UP and mouse_button.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+		return
+	if not mouse_button.pressed:
+		return
+	var delta := 1 if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP else -1
+	var new_scale := clampi(_settings.display_scale + delta, MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE)
+	if new_scale == _settings.display_scale:
+		return
+	_settings.display_scale = new_scale
+	_control_window.notify_display_layout_changed()
+	get_viewport().set_input_as_handled()
+
+
+class WheelHook extends Node:
+	var controller: Node
+
+	func _input(event: InputEvent) -> void:
+		controller._try_apply_display_scale_wheel(event)
+"
+
 [node name="GameWindow" type="Window" unique_id=2073799186]
 transparent_bg = true
 snap_2d_transforms_to_pixel = true
@@ -301,6 +370,9 @@ script = SubResource("GDScript_slide")
 
 [node name="AutoHideController" type="Node" parent="." unique_id=1957756264]
 script = SubResource("GDScript_auto_hide")
+
+[node name="DisplayScaleWheelController" type="Node" parent="." unique_id=1957756265]
+script = SubResource("GDScript_display_scale_wheel")
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=-447676268]
 unique_name_in_owner = true
