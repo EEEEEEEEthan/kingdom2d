@@ -6,6 +6,7 @@
 script/source = "extends Window
 
 signal reset_game_requested
+signal game_visibibility_toggled(toggled_on: bool)
 
 @export var settings: Node
 
@@ -28,6 +29,11 @@ func _on_control_window_open_requested() -> void:
 
 func _on_reset_confirm_dialog_confirmed() -> void:
 	reset_game_requested.emit()
+
+func _on_game_visible_toggled(toggled_on: bool) -> void:
+	game_visibibility_toggled.emit(toggled_on)
+	if toggled_on:
+		await get_tree().create_timer(0.1).timeout
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
@@ -39,10 +45,6 @@ script/source = "extends CheckButton
 
 func _ready() -> void:
 	set_pressed_no_signal(true)
-
-func _on_toggled(toggled_on: bool) -> void:
-	var game_window := get_tree().current_scene.get_node(^\"Game\") as Window
-	game_window.visible = toggled_on
 "
 
 [sub_resource type="GDScript" id="GDScript_scale_slider"]
@@ -189,7 +191,7 @@ dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
 [connection signal="close_requested" from="." to="." method="hide"]
-[connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="VBoxContainer/GridContainer/GameVisible" method="_on_toggled"]
+[connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="." method="_on_game_visible_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]
