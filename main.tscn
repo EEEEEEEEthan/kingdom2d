@@ -50,6 +50,9 @@ script = ExtResource("4_settings")
 unique_name_in_owner = true
 anisotropic_filtering_level = 0
 
+[node name="DisplayScaleWheelController" parent="GameWindow" index="2" node_paths=PackedStringArray("settings")]
+settings = NodePath("../../Settings")
+
 [node name="ControlWindow" parent="." unique_id=413646671 node_paths=PackedStringArray("settings") instance=ExtResource("2_control_window")]
 unique_name_in_owner = true
 settings = NodePath("../Settings")
@@ -79,6 +82,8 @@ script = SubResource("GDScript_quit_confirm")
 
 [connection signal="auto_hide_changed" from="Settings" to="GameWindow/AutoHideController" method="configure_auto_hide"]
 [connection signal="auto_hide_delay_seconds_changed" from="Settings" to="GameWindow/AutoHideController" method="configure_auto_hide_delay"]
+[connection signal="display_scale_changed" from="Settings" to="ControlWindow" method="notify_display_layout_changed"]
+[connection signal="game_width_ratio_changed" from="Settings" to="ControlWindow" method="notify_display_layout_changed"]
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]

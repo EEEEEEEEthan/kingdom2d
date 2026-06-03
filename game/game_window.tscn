@@ -289,8 +289,7 @@ const MIN_DISPLAY_SCALE := 1
 const MAX_DISPLAY_SCALE := 8
 const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
 
-var _settings: Settings
-var _control_window: Window
+@export var settings: Settings
 
 var _game_window: Window:
 	get:
@@ -299,10 +298,7 @@ var _game_window: Window:
 
 func _ready() -> void:
 	await get_tree().process_frame
-	var main := _game_window.get_parent()
-	_settings = main.get_node(^\"%Settings\") as Settings
-	_control_window = main.get_node(^\"%ControlWindow\") as Window
-	_register_window_hooks(main)
+	_register_window_hooks(_game_window.get_parent())
 
 
 func _register_window_hooks(node: Node) -> void:
@@ -336,11 +332,10 @@ func _try_apply_display_scale_wheel(event: InputEvent) -> void:
 	if not mouse_button.pressed:
 		return
 	var delta := 1 if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP else -1
-	var new_scale := clampi(_settings.display_scale + delta, MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE)
-	if new_scale == _settings.display_scale:
+	var new_scale := clampi(settings.display_scale + delta, MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE)
+	if new_scale == settings.display_scale:
 		return
-	_settings.display_scale = new_scale
-	_control_window.notify_display_layout_changed()
+	settings.display_scale = new_scale
 	get_viewport().set_input_as_handled()
 
 
