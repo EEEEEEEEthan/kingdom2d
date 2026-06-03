@@ -18,62 +18,112 @@ func _on_quit_confirm_dialog_confirmed() -> void:
 [sub_resource type="GDScript" id="GDScript_game_window_slide"]
 script/source = "extends Node
 
-const SLIDE_SPEED_PIXELS_PER_SECOND := 2400.0
+const SLIDE_SMOOTH_TIME := 0.5
+const SLIDE_SNAP_POSITION_Y := 0.5
+const SLIDE_SNAP_VIEW_HEIGHT := 0.001
+const SLIDE_SNAP_VELOCITY := 0.01
 
 var _desired_shown := true
-var _target_global_position := Vector2i.ZERO
+var _slide_position_y_velocity := 0.0
+var _slide_view_height_velocity := 0.0
 
 
 func _ready() -> void:
 	set_process(false)
 
 
-func _refresh_target_global_position() -> void:
-	if _desired_shown:
-		_target_global_position = %GameWindow.compute_docked_global_position()
-	else:
-		_target_global_position = %GameWindow.compute_hidden_below_global_position()
-
-
 func set_game_shown(shown: bool) -> void:
 	if _desired_shown == shown and not is_processing():
 		return
 	_desired_shown = shown
+	_slide_position_y_velocity = 0.0
+	_slide_view_height_velocity = 0.0
 	%GameWindow.suppress_dock_position_in_layout = true
 	%GameWindow.apply_layout(true)
-	_refresh_target_global_position()
-	if shown and %GameWindow.position.y >= %GameWindow.compute_hidden_below_global_position().y:
-		%GameWindow.position = %GameWindow.compute_hidden_below_global_position()
-	_apply_view_height_from_position(%GameWindow.position.y)
+	if shown:
+		var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
+		%GameWindow.position = hidden_position
+		%GameWindow.view_height = 0.0
+	else:
+		var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
+		%GameWindow.position = docked_position
+		%GameWindow.view_height = 1.0
 	set_process(true)
 
 
-func _on_game_window_size_changed() -> void:
-	_refresh_target_global_position()
-
-
 func _process(delta: float) -> void:
-	var current_global_position := Vector2(%GameWindow.position)
-	var target_global_position := Vector2(_target_global_position)
-	var next_global_position := current_global_position.move_toward(
-		target_global_position,
-		SLIDE_SPEED_PIXELS_PER_SECOND * delta,
+	var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
+	var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
+	var target_position_y: float = (
+		float(docked_position.y) if _desired_shown else float(hidden_position.y)
 	)
-	%GameWindow.position = Vector2i(next_global_position)
-	_apply_view_height_from_position(next_global_position.y)
-	if Vector2i(next_global_position) == _target_global_position:
+	var target_view_height: float = 1.0 if _desired_shown else 0.0
+	var current_position_y: float = float(%GameWindow.position.y)
+	var current_view_height: float = %GameWindow.view_height
+	var damped_position_y: Dictionary = _smooth_damp_float(
+		current_position_y,
+		target_position_y,
+		_slide_position_y_velocity,
+		SLIDE_SMOOTH_TIME,
+		delta,
+	)
+	var damped_view_height: Dictionary = _smooth_damp_float(
+		current_view_height,
+		target_view_height,
+		_slide_view_height_velocity,
+		SLIDE_SMOOTH_TIME,
+		delta,
+	)
+	_slide_position_y_velocity = damped_position_y.velocity
+	_slide_view_height_velocity = damped_view_height.velocity
+	%GameWindow.position = Vector2i(
+		docked_position.x,
+		int(round(damped_position_y.value)),
+	)
+	%GameWindow.view_height = damped_view_height.value
+	var settled := (
+		absf(damped_position_y.value - target_position_y) < SLIDE_SNAP_POSITION_Y
+		and absf(damped_view_height.value - target_view_height) < SLIDE_SNAP_VIEW_HEIGHT
+		and absf(_slide_position_y_velocity) < SLIDE_SNAP_VELOCITY
+		and absf(_slide_view_height_velocity) < SLIDE_SNAP_VELOCITY
+	)
+	if settled:
 		_finish_slide()
 
 
-func _apply_view_height_from_position(global_y: float) -> void:
-	var hidden_y := float(%GameWindow.compute_hidden_below_global_position().y)
-	var docked_y := float(%GameWindow.compute_docked_global_position().y)
-	%GameWindow.view_height = inverse_lerp(hidden_y, docked_y, global_y)
+func _smooth_damp_float(
+	current: float,
+	target: float,
+	velocity: float,
+	smooth_time: float,
+	delta: float,
+) -> Dictionary:
+	var time: float = maxf(0.0001, smooth_time)
+	var omega: float = 2.0 / time
+	var x: float = omega * delta
+	var exp: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var change: float = current - target
+	var temp: float = (velocity + omega * change) * delta
+	var new_velocity: float = (velocity - omega * temp) * exp
+	var output: float = target + (change + temp) * exp
+	if (target - current) * (output - target) > 0.0:
+		output = target
+		new_velocity = 0.0
+	return {&\"value\": output, &\"velocity\": new_velocity}
 
 
 func _finish_slide() -> void:
 	set_process(false)
-	%GameWindow.view_height = 1.0 if _desired_shown else 0.0
+	_slide_position_y_velocity = 0.0
+	_slide_view_height_velocity = 0.0
+	var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
+	var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
+	if _desired_shown:
+		%GameWindow.position = docked_position
+		%GameWindow.view_height = 1.0
+	else:
+		%GameWindow.position = hidden_position
+		%GameWindow.view_height = 0.0
 	%GameWindow.suppress_dock_position_in_layout = not _desired_shown
 "
 
@@ -145,7 +195,6 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
-[connection signal="size_changed" from="GameWindow" to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindowSlideController" method="set_game_shown"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
