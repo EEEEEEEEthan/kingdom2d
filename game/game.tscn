@@ -96,8 +96,10 @@ texture = SubResource("Texture2D_dxrkv")
 unique_name_in_owner = true
 position = Vector2(0, 3)
 
-[node name="StructureManager" parent="Horizon" unique_id=1469177200 instance=ExtResource("6_dakft")]
+[node name="StructureManager" parent="Horizon/Terrain" unique_id=1469177200 instance=ExtResource("6_dakft")]
 unique_name_in_owner = true
+show_behind_parent = true
+position = Vector2(0, -3)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
