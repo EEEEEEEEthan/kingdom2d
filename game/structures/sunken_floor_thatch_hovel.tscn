@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://ovbuq3a475aa"]
+
+[ext_resource type="PackedScene" uid="uid://bh0xjukljktdb" path="res://game/structures/base_structure.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_lq6bd"]
+
+[sub_resource type="GDScript" id="GDScript_sunken_floor_thatch_hovel"]
+script/source = "extends Structure
+
+func _serialize() -> Dictionary:
+	return {}
+
+func _deserialize(_data: Dictionary) -> void:
+	pass
+"
+
+[sub_resource type="Texture2D" id="Texture2D_lquwl"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_lq6bd")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAANCAYAAACZ3F9/AAAAAXNSR0IArs4c6QAAAHFJREFUKJFj7A+zZiAHsOAQ/4/GZ0RXwIRL0/XH3xiuP/6GyyCsGpE1oLDxacQwGZccho3YbMAmhtWpxABkjShO2fOcmWHPc2Z09XA1KDbCnISsAcZGdy5MI75AwWor3EZcwY7NRRhOJQXAkhxGkiIEABk4K68A+uzoAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_1bvp3"]
+diffuse_texture = SubResource("Texture2D_lquwl")
+
+[node name="SunkenFloorThatchHovel" unique_id=1642746995 instance=ExtResource("1_base")]
+script = SubResource("GDScript_sunken_floor_thatch_hovel")
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
+unique_name_in_owner = true
+texture = SubResource("CanvasTexture_1bvp3")
+offset = Vector2(0, -5)

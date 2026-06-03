@@ -4,6 +4,7 @@ class_name StructureConfig
 enum TypeId {
 	NONE = 0,
 	OAK = 1,
+	SUNKEN_FLOOR_THATCH_HOVEL = 2,
 }
 
 static var oak: StructureConfig:
@@ -14,9 +15,19 @@ static var oak: StructureConfig:
 			oak.name = &"橡树"
 			oak._scene_path = &"res://game/structures/oak.tscn"
 		return oak
-			
-static var configs_by_id: Dictionary[TypeId,StructureConfig] = {
-	oak.id: oak
+
+static var sunken_floor_thatch_hovel: StructureConfig:
+	get:
+		if not sunken_floor_thatch_hovel:
+			sunken_floor_thatch_hovel = StructureConfig.new()
+			sunken_floor_thatch_hovel.id = TypeId.SUNKEN_FLOOR_THATCH_HOVEL
+			sunken_floor_thatch_hovel.name = &"半穴茅舍"
+			sunken_floor_thatch_hovel._scene_path = &"res://game/structures/sunken_floor_thatch_hovel.tscn"
+		return sunken_floor_thatch_hovel
+
+static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
+	oak.id: oak,
+	sunken_floor_thatch_hovel.id: sunken_floor_thatch_hovel,
 }
 
 var id: TypeId = TypeId.NONE
