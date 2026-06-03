@@ -21,21 +21,31 @@ script/source = "extends Node
 var target_y: float = 0.0
 var pos: Vector2
 var _pos_y_velocity: float = 0.0
+var _desired_shown := true
 
-const SLIDE_SMOOTH_TIME := 0.5
+const SLIDE_SMOOTH_TIME := 0.2
 
 func _ready() -> void:
 	set_process(false)
 	pos = %GameWindow.position
 
 func set_game_shown(shown: bool) -> void:
-	pos = Vector2(%GameWindow.position)
+	_desired_shown = shown
 	_pos_y_velocity = 0.0
-	if shown:
+	_sync_slide_targets()
+	set_process(true)
+
+
+func _on_game_window_size_changed() -> void:
+	_sync_slide_targets()
+
+
+func _sync_slide_targets() -> void:
+	pos = Vector2(%GameWindow.position)
+	if _desired_shown:
 		target_y = float(%GameWindow.compute_docked_global_position().y)
 	else:
 		target_y = float(%GameWindow.compute_hidden_below_global_position().y)
-	set_process(true)
 
 
 func _process(delta: float) -> void:
@@ -139,6 +149,7 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
+[connection signal="size_changed" from="GameWindow" to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="game_visibibility_toggled" from="ControlWindow" to="GameWindowSlideController" method="set_game_shown"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
