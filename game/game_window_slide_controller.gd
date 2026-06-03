@@ -14,7 +14,6 @@ var _game_window: Window:
 		return _game_window
 
 func _ready() -> void:
-	set_process(false)
 	_slide_pos_y = float(_game_window.position.y)
 
 
@@ -23,7 +22,6 @@ func set_game_shown(shown: bool) -> void:
 	_game_window.suppress_dock_position_in_layout = not shown
 	_slide_pos_y_velocity = 0.0
 	_sync_slide_targets()
-	set_process(true)
 
 
 func _on_game_window_size_changed() -> void:
