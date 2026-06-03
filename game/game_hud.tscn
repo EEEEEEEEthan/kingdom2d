@@ -21,6 +21,8 @@ script/source = "extends PopupMenu
 
 enum ItemId { SETTINGS, QUIT }
 
+const MENU_CONTENT_SCALE := 2.0
+
 var _control_window: Window
 var _control_window_positioned := false
 var _build_menu: PopupMenu
@@ -32,20 +34,44 @@ func _ready() -> void:
 	for structure_config in StructureConfig.configs_by_id.values():
 		_build_menu.add_item(structure_config.name, structure_config.id)
 	_build_menu.id_pressed.connect(_on_build_id_pressed)
+	_build_menu.about_to_popup.connect(_on_build_menu_about_to_popup)
 	add_child(_build_menu)
+	_apply_menu_content_scale()
 	add_submenu_item(\"建造\", _build_menu.name)
 	add_separator()
 	add_item(\"退出\", ItemId.QUIT)
 	visible = false
 
 
+func apply_menu_content_scale() -> void:
+	_apply_menu_content_scale()
+
+
+func _apply_menu_content_scale() -> void:
+	_apply_window_content_scale(self)
+	if is_instance_valid(_build_menu):
+		_apply_window_content_scale(_build_menu)
+
+
+func _apply_window_content_scale(menu: Window) -> void:
+	menu.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	menu.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
+	menu.content_scale_factor = MENU_CONTENT_SCALE
+
+
+func _on_build_menu_about_to_popup() -> void:
+	_apply_window_content_scale(_build_menu)
+
+
 func _on_menu_pressed() -> void:
+	_apply_menu_content_scale()
 	var menu := %Menu
 	var global_pos: Vector2i = menu.get_screen_position()
 	var screen := DisplayServer.get_screen_from_rect(Rect2(global_pos, Vector2.ONE))
 	var screen_pos: Vector2i = global_pos - DisplayServer.screen_get_position(screen) + Vector2i(64, 0)
 	current_screen = screen
 	popup(Rect2i(screen_pos, Vector2i.ZERO))
+	call_deferred(\"_apply_menu_content_scale\")
 
 
 func _on_id_pressed(id: int) -> void:
@@ -139,6 +165,7 @@ oversampling_override = 1.0
 position = Vector2i(29, 0)
 size = Vector2i(108, 100)
 visible = true
+content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
 item_count = 1
