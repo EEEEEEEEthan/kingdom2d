@@ -93,7 +93,7 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
 
-enum ItemId { SETTINGS }
+enum ItemId { SETTINGS, QUIT }
 
 var _control_window: Window
 var _control_window_positioned := false
@@ -108,6 +108,8 @@ func _ready() -> void:
 	_build_menu.id_pressed.connect(_on_build_id_pressed)
 	add_child(_build_menu)
 	add_submenu_item(\"建造\", _build_menu.name)
+	add_separator()
+	add_item(\"退出\", ItemId.QUIT)
 	visible = false
 
 
@@ -124,6 +126,8 @@ func _on_id_pressed(id: int) -> void:
 	match id as ItemId:
 		ItemId.SETTINGS:
 			_show_control_window(DisplayServer.mouse_get_position())
+		ItemId.QUIT:
+			get_tree().current_scene.request_quit()
 
 
 func _on_build_id_pressed(id: int) -> void:

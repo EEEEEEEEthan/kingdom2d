@@ -106,7 +106,7 @@ func _on_popup_menu_id_pressed(id: int) -> void:
 		MenuId.SHOW_CONTROL_WINDOW:
 			_show_control_window(DisplayServer.mouse_get_position())
 		MenuId.QUIT:
-			get_tree().quit()
+			get_tree().current_scene.request_quit()
 "
 
 [node name="Tray" type="StatusIndicator" unique_id=497099990]
