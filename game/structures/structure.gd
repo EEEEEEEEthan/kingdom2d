@@ -6,7 +6,7 @@ const _KEY_INSTANCE_ID = 2
 const _KEY_DATA = 3
 const _KEY_CELL_INDEX = 4
 
-var config
+var config: StructureConfig
 var id: int
 var cell_index: int:
 	get:
@@ -23,7 +23,7 @@ var active: bool:
 
 
 static func deserialize(data: Dictionary, parent: Node) -> Structure:
-	var type_id := data[_KEY_TYPE_ID] as int
+	var type_id := data[_KEY_TYPE_ID] as StructureConfig.TypeId
 	var structure_config = StructureConfig.configs_by_id.get(type_id)
 	if not structure_config:
 		printerr("type_id not found: %s" % type_id)
@@ -35,27 +35,19 @@ static func deserialize(data: Dictionary, parent: Node) -> Structure:
 	structure._deserialize(data[_KEY_DATA])
 	return structure
 
-
-func get_type_id() -> int:
-	return config.id
-
-
 func _deserialize(_data: Dictionary) -> void:
 	pass
 
-
 func serialize() -> Dictionary:
 	return {
-		_KEY_TYPE_ID: get_type_id(),
+		_KEY_TYPE_ID: int(config.id),
 		_KEY_INSTANCE_ID: id,
 		_KEY_DATA: _serialize(),
 		_KEY_CELL_INDEX: cell_index,
 	}
 
-
 func _serialize() -> Dictionary:
 	return {}
-
 
 func _on_cell_index_updated() -> void:
 	pass

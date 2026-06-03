@@ -153,10 +153,10 @@ func _show_control_window(anchor_mouse: Vector2i) -> void:
 func _place_control_window_near_mouse(mouse: Vector2i) -> void:
 	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
 	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var size := _control_window.size
+	var _size := _control_window.size
 	var pos := mouse
-	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - size.x))
-	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - size.y))
+	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - _size.x))
+	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - _size.y))
 	_control_window.current_screen = screen
 	_control_window.position = pos
 "

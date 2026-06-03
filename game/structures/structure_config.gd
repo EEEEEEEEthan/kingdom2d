@@ -2,6 +2,7 @@ extends RefCounted
 class_name StructureConfig
 
 enum TypeId {
+	NONE = 0,
 	OAK = 1,
 }
 
@@ -14,11 +15,11 @@ static var oak: StructureConfig:
 			oak._scene_path = &"res://game/structures/oak.tscn"
 		return oak
 			
-static var configs_by_id: Dictionary[int,StructureConfig] = {
+static var configs_by_id: Dictionary[TypeId,StructureConfig] = {
 	oak.id: oak
 }
 
-var id: TypeId
+var id: TypeId = TypeId.NONE
 var name: StringName
 var _scene_path: StringName
 var _scene: PackedScene:

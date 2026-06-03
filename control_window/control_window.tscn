@@ -8,6 +8,9 @@ script/source = "extends Window
 signal reset_game_requested
 
 @export var settings: Node
+
+func _on_reset_confirm_dialog_confirmed() -> void:
+	reset_game_requested.emit()
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
@@ -63,9 +66,6 @@ script/source = "extends ConfirmationDialog
 
 func _ready() -> void:
 	visible = false
-
-func _on_confirmed() -> void:
-	owner.reset_game_requested.emit()
 "
 
 [node name="ControlWindow" type="Window" unique_id=1280178936]
@@ -173,4 +173,4 @@ script = SubResource("GDScript_reset_confirm")
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]
-[connection signal="confirmed" from="ResetConfirmDialog" to="ResetConfirmDialog" method="_on_confirmed"]
+[connection signal="confirmed" from="ResetConfirmDialog" to="." method="_on_reset_confirm_dialog_confirmed"]
