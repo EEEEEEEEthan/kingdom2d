@@ -6,12 +6,14 @@
 script/source = "extends Window
 
 signal reset_game_requested
-signal game_visibibility_toggled(toggled_on: bool)
+signal visibility_control_changed(auto_hide: bool, game_shown: bool)
 
 @export var settings: Node
 
 func _ready() -> void:
 	visible = false
+	_update_visibility_ui()
+	_emit_visibility_control()
 
 func _on_control_window_open_requested() -> void:
 	var pos := DisplayServer.mouse_get_position()
@@ -30,15 +32,35 @@ func _on_control_window_open_requested() -> void:
 func _on_reset_confirm_dialog_confirmed() -> void:
 	reset_game_requested.emit()
 
-func _on_game_visible_toggled(toggled_on: bool) -> void:
-	game_visibibility_toggled.emit(toggled_on)
-	if toggled_on:
-		await get_tree().create_timer(0.1).timeout
+func _update_visibility_ui() -> void:
+	var manual_control : bool = not %AutoHide.button_pressed
+	%GameVisibleLabel.visible = manual_control
+	%GameVisible.visible = manual_control
+
+
+func _emit_visibility_control() -> void:
+	visibility_control_changed.emit(
+		%AutoHide.button_pressed,
+		%GameVisible.button_pressed,
+	)
+
+
+func _on_auto_hide_toggled(_toggled_on: bool) -> void:
+	_update_visibility_ui()
+	_emit_visibility_control()
+
+
+func _on_game_visible_toggled(_toggled_on: bool) -> void:
+	_emit_visibility_control()
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
 atlas = ExtResource("1_k4ubr")
 region = Rect2(5, 5, 6, 6)
+
+[sub_resource type="GDScript" id="GDScript_manual_visibility"]
+script/source = "extends CheckButton
+"
 
 [sub_resource type="GDScript" id="GDScript_game_visible"]
 script/source = "extends CheckButton
@@ -126,9 +148,19 @@ grow_vertical = 2
 layout_mode = 2
 columns = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408642]
+[node name="ManualVisibilityLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408641]
 layout_mode = 2
-text = "显示游戏"
+text = "手动切换显隐"
+
+[node name="ManualVisibility" type="CheckButton" parent="VBoxContainer/GridContainer" unique_id=1362798756]
+unique_name_in_owner = true
+layout_mode = 2
+script = SubResource("GDScript_manual_visibility")
+
+[node name="GameVisibleLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408642]
+unique_name_in_owner = true
+layout_mode = 2
+text = "显示/隐藏"
 
 [node name="GameVisible" type="CheckButton" parent="VBoxContainer/GridContainer" unique_id=1362798757]
 unique_name_in_owner = true
@@ -183,7 +215,6 @@ oversampling_override = 1.0
 title = "重置地图"
 position = Vector2i(0, 36)
 size = Vector2i(412, 160)
-visible = true
 content_scale_stretch = 1
 content_scale_factor = 2.0
 ok_button_text = "删除"
@@ -191,6 +222,7 @@ dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
 [connection signal="close_requested" from="." to="." method="hide"]
+[connection signal="toggled" from="VBoxContainer/GridContainer/ManualVisibility" to="." method="_on_manual_visibility_toggled"]
 [connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="." method="_on_game_visible_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]

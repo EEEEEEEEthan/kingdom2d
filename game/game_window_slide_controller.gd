@@ -7,7 +7,13 @@ var _slide_y_hidden: float
 var _slide_pos_y_velocity: float = 0.0
 var _desired_shown := true
 
+var _manual_visibility := false
+var _game_visible_setting := true
+var _outside_safe_timer := 0.0
+
 const SLIDE_SMOOTH_TIME := 0.2
+const HIDE_DELAY_SEC := 3.0
+const SHOW_TRIGGER_ABOVE_PX := 5
 
 @onready var _game: Game = %Game
 
@@ -26,11 +32,68 @@ func _ready() -> void:
 	_sync_slide_targets()
 
 
+func configure_visibility_control(manual_visibility: bool, game_shown: bool) -> void:
+	_manual_visibility = manual_visibility
+	_game_visible_setting = game_shown
+	_outside_safe_timer = 0.0
+	_apply_visibility_policy()
+
+
 func set_game_shown(shown: bool) -> void:
 	_desired_shown = shown
 	_game_window.suppress_dock_position_in_layout = not shown
 	_slide_pos_y_velocity = 0.0
 	_sync_slide_targets()
+
+
+func _apply_visibility_policy() -> void:
+	if _manual_visibility:
+		set_game_shown(_game_visible_setting)
+
+
+func _update_auto_hide(delta: float) -> void:
+	var mouse := DisplayServer.mouse_get_position()
+	if _desired_shown:
+		if _is_mouse_in_safe_zone(mouse):
+			_outside_safe_timer = 0.0
+		else:
+			_outside_safe_timer += delta
+			if _outside_safe_timer >= HIDE_DELAY_SEC:
+				set_game_shown(false)
+	else:
+		if _is_mouse_in_show_trigger(mouse):
+			set_game_shown(true)
+		else:
+			_outside_safe_timer = 0.0
+
+
+func _is_mouse_in_safe_zone(mouse: Vector2i) -> bool:
+	var window_position := _game_window.position
+	var window_size := _game_window.size
+	var screen_bottom := _screen_bottom_global_y()
+	if window_position.y >= screen_bottom:
+		return false
+	var zone := Rect2i(window_position.x, window_position.y, window_size.x, screen_bottom - window_position.y)
+	return zone.has_point(mouse)
+
+
+func _screen_bottom_global_y() -> int:
+	var screen := _game_window.current_screen
+	var screen_origin := DisplayServer.screen_get_position(screen)
+	return screen_origin.y + DisplayServer.screen_get_size(screen).y
+
+
+func _is_mouse_in_show_trigger(mouse: Vector2i) -> bool:
+	var docked: Vector2i = _game_window.compute_docked_global_position()
+	var window_size := _game_window.size
+	var screen_bottom := _screen_bottom_global_y()
+	var zone := Rect2i(
+		docked.x,
+		screen_bottom - SHOW_TRIGGER_ABOVE_PX,
+		window_size.x,
+		SHOW_TRIGGER_ABOVE_PX,
+	)
+	return zone.has_point(mouse)
 
 
 func _on_game_window_size_changed() -> void:
@@ -48,6 +111,8 @@ func _sync_slide_targets() -> void:
 
 
 func _process(delta: float) -> void:
+	if not _manual_visibility:
+		_update_auto_hide(delta)
 	var current: float = _slide_pos_y
 	var target: float = _slide_target_y
 	var omega: float = 2.0 / maxf(0.0001, SLIDE_SMOOTH_TIME)

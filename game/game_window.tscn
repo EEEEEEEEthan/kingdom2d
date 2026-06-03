@@ -46,10 +46,9 @@ func compute_hidden_below_global_position() -> Vector2i:
 	var screen := current_screen
 	var screen_pos := DisplayServer.screen_get_position(screen)
 	var screen_size := DisplayServer.screen_get_size(screen)
-	var height := BASE_HEIGHT * scale
 	return Vector2i(
 		docked_global_position.x,
-		screen_pos.y + screen_size.y + height,
+		screen_pos.y + screen_size.y,
 	)
 
 
