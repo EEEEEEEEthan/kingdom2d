@@ -18,78 +18,37 @@ func _on_quit_confirm_dialog_confirmed() -> void:
 [sub_resource type="GDScript" id="GDScript_game_window_slide"]
 script/source = "extends Node
 
+var target_y: float = 0.0
+var pos: Vector2
+var _pos_y_velocity: float = 0.0
+
 const SLIDE_SMOOTH_TIME := 0.5
-const SLIDE_SNAP_POSITION_Y := 0.5
-const SLIDE_SNAP_VIEW_HEIGHT := 0.001
-const SLIDE_SNAP_VELOCITY := 0.01
-
-var _desired_shown := true
-var _slide_position_y_velocity := 0.0
-var _slide_view_height_velocity := 0.0
-
 
 func _ready() -> void:
 	set_process(false)
-
+	pos = %GameWindow.position
 
 func set_game_shown(shown: bool) -> void:
-	if _desired_shown == shown and not is_processing():
-		return
-	_desired_shown = shown
-	_slide_position_y_velocity = 0.0
-	_slide_view_height_velocity = 0.0
-	%GameWindow.suppress_dock_position_in_layout = true
-	%GameWindow.apply_layout(true)
+	pos = Vector2(%GameWindow.position)
+	_pos_y_velocity = 0.0
 	if shown:
-		var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
-		%GameWindow.position = hidden_position
-		%GameWindow.view_height = 0.0
+		target_y = float(%GameWindow.compute_docked_global_position().y)
 	else:
-		var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
-		%GameWindow.position = docked_position
-		%GameWindow.view_height = 1.0
+		target_y = float(%GameWindow.compute_hidden_below_global_position().y)
 	set_process(true)
 
 
 func _process(delta: float) -> void:
-	var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
-	var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
-	var target_position_y: float = (
-		float(docked_position.y) if _desired_shown else float(hidden_position.y)
-	)
-	var target_view_height: float = 1.0 if _desired_shown else 0.0
-	var current_position_y: float = float(%GameWindow.position.y)
-	var current_view_height: float = %GameWindow.view_height
-	var damped_position_y: Dictionary = _smooth_damp_float(
-		current_position_y,
-		target_position_y,
-		_slide_position_y_velocity,
+	var damped: Dictionary = _smooth_damp_float(
+		pos.y,
+		target_y,
+		_pos_y_velocity,
 		SLIDE_SMOOTH_TIME,
 		delta,
 	)
-	var damped_view_height: Dictionary = _smooth_damp_float(
-		current_view_height,
-		target_view_height,
-		_slide_view_height_velocity,
-		SLIDE_SMOOTH_TIME,
-		delta,
-	)
-	_slide_position_y_velocity = damped_position_y.velocity
-	_slide_view_height_velocity = damped_view_height.velocity
-	%GameWindow.position = Vector2i(
-		docked_position.x,
-		int(round(damped_position_y.value)),
-	)
-	%GameWindow.view_height = damped_view_height.value
-	var settled := (
-		absf(damped_position_y.value - target_position_y) < SLIDE_SNAP_POSITION_Y
-		and absf(damped_view_height.value - target_view_height) < SLIDE_SNAP_VIEW_HEIGHT
-		and absf(_slide_position_y_velocity) < SLIDE_SNAP_VELOCITY
-		and absf(_slide_view_height_velocity) < SLIDE_SNAP_VELOCITY
-	)
-	if settled:
-		_finish_slide()
-
+	pos.y = damped.value
+	_pos_y_velocity = damped.velocity
+	%GameWindow.position = Vector2i(pos)
 
 func _smooth_damp_float(
 	current: float,
@@ -101,30 +60,15 @@ func _smooth_damp_float(
 	var time: float = maxf(0.0001, smooth_time)
 	var omega: float = 2.0 / time
 	var x: float = omega * delta
-	var exp: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var e: float = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
 	var change: float = current - target
 	var temp: float = (velocity + omega * change) * delta
-	var new_velocity: float = (velocity - omega * temp) * exp
-	var output: float = target + (change + temp) * exp
+	var new_velocity: float = (velocity - omega * temp) * e
+	var output: float = target + (change + temp) * e
 	if (target - current) * (output - target) > 0.0:
 		output = target
 		new_velocity = 0.0
 	return {&\"value\": output, &\"velocity\": new_velocity}
-
-
-func _finish_slide() -> void:
-	set_process(false)
-	_slide_position_y_velocity = 0.0
-	_slide_view_height_velocity = 0.0
-	var hidden_position: Vector2i = %GameWindow.compute_hidden_below_global_position()
-	var docked_position: Vector2i = %GameWindow.compute_docked_global_position()
-	if _desired_shown:
-		%GameWindow.position = docked_position
-		%GameWindow.view_height = 1.0
-	else:
-		%GameWindow.position = hidden_position
-		%GameWindow.view_height = 0.0
-	%GameWindow.suppress_dock_position_in_layout = not _desired_shown
 "
 
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
