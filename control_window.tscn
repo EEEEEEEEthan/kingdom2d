@@ -21,10 +21,11 @@ region = Rect2(5, 5, 6, 6)
 script/source = "extends CheckButton
 
 func _ready() -> void:
-	set_pressed_no_signal(owner.settings.game_window_visible)
+	set_pressed_no_signal(true)
 
 func _on_toggled(toggled_on: bool) -> void:
-	owner.settings.game_window_visible = toggled_on
+	var game_window := get_tree().current_scene.get_node(^\"Game\") as Window
+	game_window.set_visible_animated(toggled_on)
 "
 
 [sub_resource type="GDScript" id="GDScript_scale_slider"]
@@ -113,6 +114,7 @@ text = "显示游戏"
 [node name="GameVisible" type="CheckButton" parent="VBoxContainer/GridContainer" unique_id=1362798757]
 unique_name_in_owner = true
 layout_mode = 2
+button_pressed = true
 script = SubResource("GDScript_game_visible")
 
 [node name="ScaleLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=1322494843]

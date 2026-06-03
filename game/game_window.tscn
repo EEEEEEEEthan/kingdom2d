@@ -23,12 +23,22 @@ var _drag_mouse_offset := Vector2i.ZERO
 
 func _ready() -> void:
 	apply_layout(true)
+	visible = true
+	await set_visible_animated(true)
+
+func set_visible_animated(vis: bool) -> void:
+	if vis:
+		visible = true
+	await %ViewportContainer.apply_visible_transition(vis)
+	if not vis:
+		visible = false
 
 func apply_layout(align_to_bottom: bool = false) -> void:
 	var screen_size := DisplayServer.screen_get_size(current_screen)
 	var width := mini(maxi(1, int(round(screen_size.x * width_ratio))), MAX_WIDTH)
 	var height := BASE_HEIGHT * scale
-	content_scale_factor = float(scale)
+	content_scale_factor = 1.0
+	%ViewportContainer.stretch_shrink = scale
 	var new_size := Vector2i(width, height)
 	if align_to_bottom:
 		var screen := current_screen
@@ -63,11 +73,82 @@ func _on_settings_display_scale_changed(new_scale: int) -> void:
 func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
 	width_ratio = new_ratio
 
-func _on_settings_game_window_visible_changed(_visible: bool) -> void:
-	visible = _visible
-
 func _on_control_window_reset_game_requested() -> void:
 	%Game.reset_game()
+"
+
+[sub_resource type="Shader" id="Shader_dissolve"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform float progress : hint_range(0.0, 1.0) = 1.0;
+uniform float noise_strength : hint_range(0.0, 0.5) = 0.12;
+
+float hash21(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+void fragment() {
+	vec2 tex_size = vec2(textureSize(TEXTURE, 0));
+	ivec2 pixel = ivec2(floor(UV * tex_size));
+	vec2 pixel_center_uv = (vec2(pixel) + vec2(0.5)) / tex_size;
+	vec4 color = texture(TEXTURE, pixel_center_uv);
+
+	float noise_px = hash21(vec2(pixel)) * noise_strength * tex_size.x * 0.5;
+	float reveal_edge = progress * (tex_size.x + noise_strength * tex_size.x);
+
+	if (float(pixel.x) + 0.5 + noise_px > reveal_edge) {
+		discard;
+	}
+	COLOR = color;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dissolve"]
+resource_local_to_scene = true
+shader = SubResource("Shader_dissolve")
+shader_parameter/progress = 1.0
+shader_parameter/noise_strength = 0.12
+
+[sub_resource type="GDScript" id="GDScript_viewport_container"]
+script/source = "extends SubViewportContainer
+
+const DISSOLVE_DURATION := 0.35
+
+var _progress := 0.0
+var _target_progress := 0.0
+
+func _ready() -> void:
+	_progress = 0.0
+	_target_progress = 0.0
+	_apply_progress()
+	set_process(false)
+
+func apply_visible_transition(vis: bool) -> void:
+	var target := 1.0 if vis else 0.0
+	_target_progress = target
+	if is_equal_approx(_progress, target):
+		return
+	set_process(true)
+	while not is_equal_approx(_progress, _target_progress):
+		await get_tree().process_frame
+	if not is_equal_approx(_target_progress, target):
+		return
+
+func _process(delta: float) -> void:
+	var step := delta / DISSOLVE_DURATION
+	if _progress < _target_progress:
+		_progress = minf(_progress + step, _target_progress)
+	elif _progress > _target_progress:
+		_progress = maxf(_progress - step, _target_progress)
+	_apply_progress()
+	if is_equal_approx(_progress, _target_progress):
+		set_process(false)
+
+func _apply_progress() -> void:
+	(material as ShaderMaterial).set_shader_parameter(\"progress\", _progress)
 "
 
 [node name="Game" type="Window" unique_id=2073799186]
@@ -83,5 +164,25 @@ transparent = true
 unfocusable = true
 script = SubResource("GDScript_le0pw")
 
-[node name="Game" parent="." unique_id=532875448 instance=ExtResource("1_le0pw")]
+[node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=-447676268]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_dissolve")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+script = SubResource("GDScript_viewport_container")
+
+[node name="GameViewport" type="SubViewport" parent="ViewportContainer" unique_id=810840986]
+transparent_bg = true
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+canvas_item_default_texture_filter = 0
+size = Vector2i(2048, 64)
+render_target_update_mode = 4
+
+[node name="Game" parent="ViewportContainer/GameViewport" unique_id=532875448 instance=ExtResource("1_le0pw")]
 unique_name_in_owner = true

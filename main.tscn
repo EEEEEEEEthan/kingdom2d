@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dkui3dlb4vu1c"]
 
 [ext_resource type="PackedScene" uid="uid://c6xxc447w21ld" path="res://game/game_window.tscn" id="1_ig7tw"]
-[ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://control_window/control_window.tscn" id="2_control_window"]
+[ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://control_window.tscn" id="2_control_window"]
 [ext_resource type="PackedScene" uid="uid://bxn51co5pbs21" path="res://tray/tray.tscn" id="3_tray"]
-[ext_resource type="Script" uid="uid://ddj5nrgnc82rs" path="res://settings/settings.gd" id="4_settings"]
+[ext_resource type="Script" uid="uid://ddj5nrgnc82rs" path="res://settings.gd" id="4_settings"]
 
 [sub_resource type="GDScript" id="GDScript_miis5"]
 script/source = "extends Node
@@ -13,6 +13,7 @@ func request_quit() -> void:
 
 
 func _on_quit_confirm_dialog_confirmed() -> void:
+	await %Game.set_visible_animated(false)
 	get_tree().quit()
 "
 
@@ -67,7 +68,7 @@ canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "退出"
 position = Vector2i(0, 36)
-size = Vector2i(212, 108)
+size = Vector2i(212, 160)
 visible = true
 transient = false
 unresizable = true
@@ -81,6 +82,5 @@ script = SubResource("GDScript_quit_confirm")
 
 [connection signal="display_scale_changed" from="Settings" to="Game" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="Game" method="_on_settings_game_width_ratio_changed"]
-[connection signal="game_window_visible_changed" from="Settings" to="Game" method="_on_settings_game_window_visible_changed"]
 [connection signal="reset_game_requested" from="ControlWindow" to="Game" method="_on_control_window_reset_game_requested"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="." method="_on_quit_confirm_dialog_confirmed"]
