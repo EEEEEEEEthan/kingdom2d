@@ -18,7 +18,11 @@ var _game_window: Window:
 		return _game_window
 
 func _ready() -> void:
+	if not _game_window.is_node_ready():
+		await _game_window.ready
 	_slide_pos_y = float(_game_window.compute_hidden_below_global_position().y)
+	var pos := _game_window.position
+	_game_window.position = Vector2i(pos.x, int(_slide_pos_y))
 	_sync_slide_targets()
 
 
