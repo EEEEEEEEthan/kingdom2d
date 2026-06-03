@@ -9,13 +9,13 @@ signal reset_game_requested
 signal visibility_control_changed(auto_hide: bool, game_shown: bool)
 signal display_layout_changed
 
-@export var settings: Node
-
 func _ready() -> void:
 	visible = false
-	%AutoHide.set_pressed_no_signal(settings.auto_hide)
+	%AutoHide.set_pressed_no_signal(Settings.auto_hide)
 	_update_visibility_ui()
 	_emit_visibility_control()
+	Settings.display_scale_changed.connect(notify_display_layout_changed)
+	Settings.game_width_ratio_changed.connect(notify_display_layout_changed)
 
 func _on_control_window_open_requested() -> void:
 	var pos := DisplayServer.mouse_get_position()
@@ -50,14 +50,14 @@ func _emit_visibility_control() -> void:
 	)
 
 
-func notify_display_layout_changed() -> void:
+func notify_display_layout_changed(_unused = null) -> void:
 	%GameVisible.set_pressed_no_signal(true)
 	_emit_visibility_control()
 	display_layout_changed.emit()
 
 
 func _on_auto_hide_toggled(_toggled_on: bool) -> void:
-	settings.auto_hide = %AutoHide.button_pressed
+	Settings.auto_hide = %AutoHide.button_pressed
 	if not %AutoHide.button_pressed:
 		%GameVisible.set_pressed_no_signal(true)
 	_update_visibility_ui()
@@ -87,24 +87,24 @@ func _ready() -> void:
 script/source = "extends HSlider
 
 func _ready() -> void:
-	set_value_no_signal(owner.settings.auto_hide_delay_seconds)
+	set_value_no_signal(Settings.auto_hide_delay_seconds)
 
 func _on_value_changed(new_value: float) -> void:
-	owner.settings.auto_hide_delay_seconds = new_value
+	Settings.auto_hide_delay_seconds = new_value
 "
 
 [sub_resource type="GDScript" id="GDScript_scale_slider"]
 script/source = "extends HSlider
 
 func _ready() -> void:
-	set_value_no_signal(float(owner.settings.display_scale))
-	owner.settings.display_scale_changed.connect(_on_settings_display_scale_changed)
+	set_value_no_signal(float(Settings.display_scale))
+	Settings.display_scale_changed.connect(_on_settings_display_scale_changed)
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
 	set_value_no_signal(float(new_scale))
 
 func _on_value_changed(new_value: float) -> void:
-	owner.settings.display_scale = int(new_value)
+	Settings.display_scale = int(new_value)
 "
 
 [sub_resource type="GDScript" id="GDScript_width_slider"]
@@ -116,12 +116,12 @@ func _ready() -> void:
 	var screen_width := DisplayServer.screen_get_size(owner.current_screen).x
 	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
 	max_value = max_ratio
-	if owner.settings.game_width_ratio > max_ratio:
-		owner.settings.game_width_ratio = max_ratio
-	set_value_no_signal(minf(owner.settings.game_width_ratio, max_value))
+	if Settings.game_width_ratio > max_ratio:
+		Settings.game_width_ratio = max_ratio
+	set_value_no_signal(minf(Settings.game_width_ratio, max_value))
 
 func _on_value_changed(new_value: float) -> void:
-	owner.settings.game_width_ratio = new_value
+	Settings.game_width_ratio = new_value
 "
 
 [sub_resource type="GDScript" id="GDScript_reset_game"]

@@ -1,5 +1,4 @@
 extends Node
-class_name Settings
 
 signal display_scale_changed(new_scale: int)
 signal game_width_ratio_changed(new_ratio: float)
