@@ -39,6 +39,12 @@ func configure_visibility_control(auto_hide: bool, game_shown: bool) -> void:
 	_apply_visibility_policy()
 
 
+func configure_auto_hide(auto_hide: bool) -> void:
+	_auto_hide = auto_hide
+	_outside_safe_timer = 0.0
+	_apply_visibility_policy()
+
+
 func configure_auto_hide_delay(seconds: float) -> void:
 	_auto_hide_delay_seconds = seconds
 	_outside_safe_timer = 0.0
