@@ -76,13 +76,6 @@ region = Rect2(5, 5, 6, 6)
 script/source = "extends CheckButton
 "
 
-[sub_resource type="GDScript" id="GDScript_game_visible"]
-script/source = "extends CheckButton
-
-func _ready() -> void:
-	set_pressed_no_signal(true)
-"
-
 [sub_resource type="GDScript" id="GDScript_auto_hide_delay_slider"]
 script/source = "extends HSlider
 
@@ -91,6 +84,13 @@ func _ready() -> void:
 
 func _on_value_changed(new_value: float) -> void:
 	Settings.auto_hide_delay_seconds = new_value
+"
+
+[sub_resource type="GDScript" id="GDScript_game_visible"]
+script/source = "extends CheckButton
+
+func _ready() -> void:
+	set_pressed_no_signal(true)
 "
 
 [sub_resource type="GDScript" id="GDScript_scale_slider"]
@@ -267,8 +267,8 @@ script = SubResource("GDScript_reset_confirm")
 
 [connection signal="close_requested" from="." to="." method="hide"]
 [connection signal="toggled" from="VBoxContainer/GridContainer/AutoHide" to="." method="_on_auto_hide_toggled"]
-[connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="." method="_on_game_visible_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/AutoHideDelaySlider" to="VBoxContainer/GridContainer/AutoHideDelaySlider" method="_on_value_changed"]
+[connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="." method="_on_game_visible_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]
