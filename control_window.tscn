@@ -9,6 +9,8 @@ signal reset_game_requested
 
 @export var settings: Node
 
+func _ready() -> void:
+	visible = false
 
 func _on_control_window_open_requested() -> void:
 	var pos := DisplayServer.mouse_get_position()
@@ -186,6 +188,7 @@ ok_button_text = "删除"
 dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
+[connection signal="close_requested" from="." to="." method="hide"]
 [connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="VBoxContainer/GridContainer/GameVisible" method="_on_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]

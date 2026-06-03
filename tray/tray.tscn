@@ -17,34 +17,19 @@ var _tray_supported := (
 const ENGINE_ROOT_OFFSCREEN_POS := Vector2i(-32000, -32000)
 const ENGINE_ROOT_SIZE := Vector2i(1, 1)
 
-var _control_window: Window
-
 @onready var _menu: PopupMenu = $PopupMenu
 
 
 func _ready() -> void:
-	visible = false
 	if not _tray_supported:
 		return
 
 	get_tree().auto_accept_quit = false
 
 	await get_tree().process_frame
-	_control_window = get_tree().current_scene.get_node(^\"ControlWindow\") as Window
-	_control_window.close_requested.connect(_on_control_window_close_requested)
-
 	_pin_engine_root_offscreen()
 	await get_tree().process_frame
 	_pin_engine_root_offscreen()
-	get_window().close_requested.connect(_on_engine_root_close_requested)
-	_hide_to_tray()
-
-
-func _notification(what: int) -> void:
-	if not _tray_supported:
-		return
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		_hide_to_tray()
 
 
 func _pin_engine_root_offscreen() -> void:
@@ -54,20 +39,6 @@ func _pin_engine_root_offscreen() -> void:
 	root.max_size = ENGINE_ROOT_SIZE
 	root.size = ENGINE_ROOT_SIZE
 	root.position = ENGINE_ROOT_OFFSCREEN_POS
-
-
-func _on_engine_root_close_requested() -> void:
-	_hide_to_tray()
-
-
-func _on_control_window_close_requested() -> void:
-	_hide_to_tray()
-
-
-func _hide_to_tray() -> void:
-	_control_window.hide()
-	_pin_engine_root_offscreen()
-	visible = true
 
 
 func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
