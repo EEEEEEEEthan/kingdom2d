@@ -1,0 +1,147 @@
+[gd_scene format=3 uid="uid://be5pvkd42sklo"]
+
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_tex"]
+
+[sub_resource type="Texture2D" id="Texture2D_menu"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADNJREFUOI1j/P//PwMlgIki3dQwgAWJDfMLIxofF2CkugsY0eTQ+VjBaBiMhgFVXECxAQDEdwkvIM2IYQAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="Texture2D" id="Texture2D_reset"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGdJREFUOI21UssKwDAM0rH//2V32WEEE1dKAz00wUdsKQk7dYW53tPWPQDdnasO6ECJwKmxzH47iOUInFqbQRdiBS45sEpN70wGW68gzO/OSpJCHD+RI/gqVLDtOwfdvtbNtEK0DwAPMoUTLchY33wAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="GDScript" id="GDScript_popup_menu"]
+script/source = "extends PopupMenu
+
+enum ItemId { SETTINGS, QUIT }
+
+var _control_window: Window
+var _control_window_positioned := false
+var _build_menu: PopupMenu
+
+
+func _ready() -> void:
+	_build_menu = PopupMenu.new()
+	_build_menu.name = &\"BuildSubmenu\"
+	for structure_config in StructureConfig.configs_by_id.values():
+		_build_menu.add_item(structure_config.name, structure_config.id)
+	_build_menu.id_pressed.connect(_on_build_id_pressed)
+	add_child(_build_menu)
+	add_submenu_item(\"建造\", _build_menu.name)
+	add_separator()
+	add_item(\"退出\", ItemId.QUIT)
+	visible = false
+
+
+func _on_menu_pressed() -> void:
+	var menu := %Menu
+	var global_pos: Vector2i = menu.get_screen_position()
+	var screen := DisplayServer.get_screen_from_rect(Rect2(global_pos, Vector2.ONE))
+	var screen_pos: Vector2i = global_pos - DisplayServer.screen_get_position(screen) + Vector2i(64, 0)
+	current_screen = screen
+	popup(Rect2i(screen_pos, Vector2i.ZERO))
+
+
+func _on_id_pressed(id: int) -> void:
+	match id as ItemId:
+		ItemId.SETTINGS:
+			_show_control_window(DisplayServer.mouse_get_position())
+		ItemId.QUIT:
+			get_tree().current_scene.request_quit()
+
+
+func _on_build_id_pressed(id: int) -> void:
+	_start_build_placement(StructureConfig.configs_by_id[id as StructureConfig.TypeId])
+
+
+func _start_build_placement(structure_config: StructureConfig) -> void:
+	var game := _get_game()
+	game.horizon.add_child(load(\"res://game/build/structure_build_placement.gd\").new(game, structure_config))
+
+
+func _get_game() -> Game:
+	var game_window := get_parent().get_parent()
+	return game_window.get_node(^\"%Game\") as Game
+
+
+func _show_control_window(anchor_mouse: Vector2i) -> void:
+	if not _control_window:
+		_control_window = get_tree().current_scene.get_node(^\"ControlWindow\") as Window
+	if not _control_window_positioned:
+		_place_control_window_near_mouse(anchor_mouse)
+		_control_window_positioned = true
+	_control_window.show()
+	_control_window.mode = Window.MODE_WINDOWED
+	_control_window.grab_focus()
+
+
+func _place_control_window_near_mouse(mouse: Vector2i) -> void:
+	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var _size := _control_window.size
+	var pos := mouse
+	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - _size.x))
+	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - _size.y))
+	_control_window.current_screen = screen
+	_control_window.position = pos
+"
+
+[node name="GameHud" type="CanvasLayer" unique_id=914645458]
+unique_name_in_owner = true
+
+[node name="HudRoot" type="Control" parent="." unique_id=1922932436]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HudRoot" unique_id=1493286413]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -28.0
+offset_right = 28.0
+offset_bottom = -4.0
+grow_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="Menu" type="Button" parent="HudRoot/VBoxContainer" unique_id=1968301569]
+unique_name_in_owner = true
+light_mask = 0
+layout_mode = 2
+icon = SubResource("Texture2D_menu")
+
+[node name="ResetCamera" type="Button" parent="HudRoot/VBoxContainer" unique_id=67090867]
+unique_name_in_owner = true
+light_mask = 0
+layout_mode = 2
+icon = SubResource("Texture2D_reset")
+
+[node name="PopupMenu" type="PopupMenu" parent="." unique_id=133706543]
+unique_name_in_owner = true
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+position = Vector2i(29, 0)
+size = Vector2i(108, 100)
+visible = true
+content_scale_stretch = 1
+content_scale_factor = 2.0
+item_count = 1
+item_0/text = "设置"
+item_0/id = 0
+script = SubResource("GDScript_popup_menu")
