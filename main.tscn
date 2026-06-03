@@ -79,6 +79,7 @@ script = SubResource("GDScript_quit_confirm")
 
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
+[connection signal="auto_hide_delay_seconds_changed" from="Settings" to="GameWindow/GameWindowSlideController" method="configure_auto_hide_delay"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
 [connection signal="visibility_control_changed" from="ControlWindow" to="GameWindow/GameWindowSlideController" method="configure_visibility_control"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]

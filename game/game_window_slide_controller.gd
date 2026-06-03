@@ -7,12 +7,12 @@ var _slide_y_hidden: float
 var _slide_pos_y_velocity: float = 0.0
 var _desired_shown := true
 
-var _manual_visibility := false
+var _auto_hide := true
 var _game_visible_setting := true
+var _auto_hide_delay_seconds := 2.0
 var _outside_safe_timer := 0.0
 
 const SLIDE_SMOOTH_TIME := 0.2
-const HIDE_DELAY_SEC := 3.0
 const SHOW_TRIGGER_ABOVE_PX := 5
 
 @onready var _game: Game = %Game
@@ -32,11 +32,16 @@ func _ready() -> void:
 	_sync_slide_targets()
 
 
-func configure_visibility_control(manual_visibility: bool, game_shown: bool) -> void:
-	_manual_visibility = manual_visibility
+func configure_visibility_control(auto_hide: bool, game_shown: bool) -> void:
+	_auto_hide = auto_hide
 	_game_visible_setting = game_shown
 	_outside_safe_timer = 0.0
 	_apply_visibility_policy()
+
+
+func configure_auto_hide_delay(seconds: float) -> void:
+	_auto_hide_delay_seconds = seconds
+	_outside_safe_timer = 0.0
 
 
 func set_game_shown(shown: bool) -> void:
@@ -47,7 +52,7 @@ func set_game_shown(shown: bool) -> void:
 
 
 func _apply_visibility_policy() -> void:
-	if _manual_visibility:
+	if not _auto_hide:
 		set_game_shown(_game_visible_setting)
 
 
@@ -58,7 +63,7 @@ func _update_auto_hide(delta: float) -> void:
 			_outside_safe_timer = 0.0
 		else:
 			_outside_safe_timer += delta
-			if _outside_safe_timer >= HIDE_DELAY_SEC:
+			if _outside_safe_timer >= _auto_hide_delay_seconds:
 				set_game_shown(false)
 	else:
 		if _is_mouse_in_show_trigger(mouse):
@@ -111,7 +116,7 @@ func _sync_slide_targets() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _manual_visibility:
+	if _auto_hide:
 		_update_auto_hide(delta)
 	var current: float = _slide_pos_y
 	var target: float = _slide_target_y
