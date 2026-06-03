@@ -7,6 +7,7 @@ script/source = "extends Window
 
 signal reset_game_requested
 signal visibility_control_changed(auto_hide: bool, game_shown: bool)
+signal display_layout_changed
 
 @export var settings: Node
 
@@ -47,6 +48,12 @@ func _emit_visibility_control() -> void:
 		%AutoHide.button_pressed,
 		%GameVisible.button_pressed,
 	)
+
+
+func notify_display_layout_changed() -> void:
+	%GameVisible.set_pressed_no_signal(true)
+	_emit_visibility_control()
+	display_layout_changed.emit()
 
 
 func _on_auto_hide_toggled(_toggled_on: bool) -> void:
@@ -92,6 +99,7 @@ func _ready() -> void:
 
 func _on_value_changed(new_value: float) -> void:
 	owner.settings.display_scale = int(new_value)
+	owner.notify_display_layout_changed()
 "
 
 [sub_resource type="GDScript" id="GDScript_width_slider"]
@@ -109,6 +117,7 @@ func _ready() -> void:
 
 func _on_value_changed(new_value: float) -> void:
 	owner.settings.game_width_ratio = new_value
+	owner.notify_display_layout_changed()
 "
 
 [sub_resource type="GDScript" id="GDScript_reset_game"]

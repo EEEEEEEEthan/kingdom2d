@@ -31,9 +31,11 @@ func _ready() -> void:
 	_game_window.position = Vector2i(pos.x, int(_slide_pos_y))
 	_sync_slide_targets()
 	await get_tree().process_frame
+	force_show()
+
+func force_show() -> void:
 	_outside_safe_timer = -5
 	set_game_shown(true)
-
 
 func configure_visibility_control(auto_hide: bool, game_shown: bool) -> void:
 	_auto_hide = auto_hide
@@ -54,7 +56,6 @@ func configure_auto_hide_delay(seconds: float) -> void:
 
 
 func set_game_shown(shown: bool) -> void:
-	print("set_game_shown %s" % shown)
 	_desired_shown = shown
 	_game_window.suppress_dock_position_in_layout = not shown
 	_slide_pos_y_velocity = 0.0
@@ -62,7 +63,6 @@ func set_game_shown(shown: bool) -> void:
 
 
 func _apply_visibility_policy() -> void:
-	print("_apply_visibility_policy")
 	if not _auto_hide:
 		set_game_shown(_game_visible_setting)
 
@@ -113,7 +113,6 @@ func _is_mouse_in_show_trigger(mouse: Vector2i) -> bool:
 
 
 func _on_game_window_size_changed() -> void:
-	print("_on_game_window_size_changed")
 	_sync_slide_targets()
 
 

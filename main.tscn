@@ -77,6 +77,7 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
+[connection signal="display_layout_changed" from="ControlWindow" to="GameWindow/GameWindowSlideController" method="force_show"]
 [connection signal="display_scale_changed" from="Settings" to="GameWindow" method="_on_settings_display_scale_changed"]
 [connection signal="game_width_ratio_changed" from="Settings" to="GameWindow" method="_on_settings_game_width_ratio_changed"]
 [connection signal="auto_hide_changed" from="Settings" to="GameWindow/GameWindowSlideController" method="configure_auto_hide"]
