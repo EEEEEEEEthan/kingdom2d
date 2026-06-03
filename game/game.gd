@@ -58,3 +58,9 @@ func save_game() -> void:
 func clear() -> void:
 	structure_manager.clear()
 	terrain.clear()
+
+func reset_camera() -> void:
+	%Camera2D.reset_to_center()
+
+func start_build_placement(structure_config: StructureConfig) -> void:
+	horizon.add_child(StructureBuildPlacement.new(self, structure_config))

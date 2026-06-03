@@ -205,10 +205,8 @@ render_target_update_mode = 4
 [node name="Game" parent="ViewportContainer/GameViewport" unique_id=532875448 instance=ExtResource("1_le0pw")]
 unique_name_in_owner = true
 
-[node name="GameHud" parent="." unique_id=1968099236 instance=ExtResource("2_hud")]
+[node name="GameHud" parent="." unique_id=1968099236 node_paths=PackedStringArray("game") instance=ExtResource("2_hud")]
 unique_name_in_owner = true
+game = NodePath("../ViewportContainer/GameViewport/Game")
 
-[connection signal="pressed" from="GameHud/HudRoot/VBoxContainer/Menu" to="GameHud/PopupMenu" method="_on_menu_pressed"]
-[connection signal="pressed" from="GameHud/HudRoot/VBoxContainer/ResetCamera" to="ViewportContainer/GameViewport/Game/Camera2D" method="reset_to_center"]
-[connection signal="control_window_open_requested" from="GameHud/PopupMenu" to="." method="_on_game_hud_control_window_open_requested"]
-[connection signal="id_pressed" from="GameHud/PopupMenu" to="GameHud/PopupMenu" method="_on_id_pressed"]
+[connection signal="control_window_open_requested" from="GameHud" to="." method="_on_game_hud_control_window_open_requested"]

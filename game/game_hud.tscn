@@ -2,6 +2,26 @@
 
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_tex"]
 
+[sub_resource type="GDScript" id="GDScript_game_hud"]
+script/source = "extends CanvasLayer
+
+signal control_window_open_requested
+
+@export var game: Game
+
+
+func _on_reset_camera_pressed() -> void:
+	game.reset_camera()
+
+
+func _on_popup_control_window_open_requested() -> void:
+	control_window_open_requested.emit()
+
+
+func _on_build_requested(structure_config: StructureConfig) -> void:
+	game.start_build_placement(structure_config)
+"
+
 [sub_resource type="Texture2D" id="Texture2D_menu"]
 resource_local_to_scene = false
 resource_name = ""
@@ -20,6 +40,7 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 script/source = "extends PopupMenu
 
 signal control_window_open_requested
+signal build_requested(structure_config: StructureConfig)
 
 enum ItemId { SETTINGS, QUIT }
 
@@ -83,21 +104,12 @@ func _on_id_pressed(id: int) -> void:
 
 
 func _on_build_id_pressed(id: int) -> void:
-	_start_build_placement(StructureConfig.configs_by_id[id as StructureConfig.TypeId])
-
-
-func _start_build_placement(structure_config: StructureConfig) -> void:
-	var game := _get_game()
-	game.horizon.add_child(load(\"res://game/build/structure_build_placement.gd\").new(game, structure_config))
-
-
-func _get_game() -> Game:
-	var game_window := get_parent().get_parent()
-	return game_window.get_node(^\"%Game\") as Game
+	build_requested.emit(StructureConfig.configs_by_id[id as StructureConfig.TypeId])
 "
 
 [node name="GameHud" type="CanvasLayer" unique_id=914645458]
 unique_name_in_owner = true
+script = SubResource("GDScript_game_hud")
 
 [node name="HudRoot" type="Control" parent="." unique_id=1922932436]
 layout_mode = 3
@@ -141,7 +153,7 @@ anisotropic_filtering_level = 0
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 position = Vector2i(29, 0)
-size = Vector2i(108, 100)
+size = Vector2i(128, 100)
 visible = true
 content_scale_mode = 1
 content_scale_stretch = 1
@@ -150,3 +162,9 @@ item_count = 1
 item_0/text = "设置"
 item_0/id = 0
 script = SubResource("GDScript_popup_menu")
+
+[connection signal="pressed" from="HudRoot/VBoxContainer/Menu" to="PopupMenu" method="_on_menu_pressed"]
+[connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="." method="_on_reset_camera_pressed"]
+[connection signal="build_requested" from="PopupMenu" to="." method="_on_build_requested"]
+[connection signal="control_window_open_requested" from="PopupMenu" to="." method="_on_popup_control_window_open_requested"]
+[connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
