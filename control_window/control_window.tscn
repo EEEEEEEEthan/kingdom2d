@@ -61,6 +61,9 @@ func _on_pressed() -> void:
 [sub_resource type="GDScript" id="GDScript_reset_confirm"]
 script/source = "extends ConfirmationDialog
 
+func _ready() -> void:
+	visible = false
+
 func _on_confirmed() -> void:
 	owner.reset_game_requested.emit()
 "
