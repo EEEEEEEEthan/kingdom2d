@@ -5,6 +5,8 @@
 [sub_resource type="GDScript" id="GDScript_14jt7"]
 script/source = "extends StatusIndicator
 
+signal control_window_open_requested
+
 enum MenuId { SHOW_CONTROL_WINDOW, QUIT }
 
 var _tray_supported := (
@@ -16,7 +18,6 @@ const ENGINE_ROOT_OFFSCREEN_POS := Vector2i(-32000, -32000)
 const ENGINE_ROOT_SIZE := Vector2i(1, 1)
 
 var _control_window: Window
-var _control_window_positioned := false
 
 @onready var _menu: PopupMenu = $PopupMenu
 
@@ -69,30 +70,10 @@ func _hide_to_tray() -> void:
 	visible = true
 
 
-func _show_control_window(anchor_mouse: Vector2i) -> void:
-	if not _control_window_positioned:
-		_place_control_window_near_mouse(anchor_mouse)
-		_control_window_positioned = true
-	_control_window.show()
-	_control_window.mode = Window.MODE_WINDOWED
-	_control_window.grab_focus()
-
-
-func _place_control_window_near_mouse(mouse: Vector2i) -> void:
-	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
-	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var size := _control_window.size
-	var pos := mouse
-	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - size.x))
-	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - size.y))
-	_control_window.current_screen = screen
-	_control_window.position = pos
-
-
-func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
+func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
 	match mouse_button:
 		MOUSE_BUTTON_LEFT:
-			_show_control_window(mouse_position)
+			control_window_open_requested.emit()
 		MOUSE_BUTTON_RIGHT:
 			var global_mouse := DisplayServer.mouse_get_position()
 			var screen := DisplayServer.get_screen_from_rect(Rect2(global_mouse, Vector2.ONE))
@@ -104,9 +85,16 @@ func _on_pressed(mouse_button: int, mouse_position: Vector2i) -> void:
 func _on_popup_menu_id_pressed(id: int) -> void:
 	match id as MenuId:
 		MenuId.SHOW_CONTROL_WINDOW:
-			_show_control_window(DisplayServer.mouse_get_position())
+			control_window_open_requested.emit()
 		MenuId.QUIT:
 			get_tree().current_scene.request_quit()
+"
+
+[sub_resource type="GDScript" id="GDScript_k6dh4"]
+script/source = "extends PopupMenu
+
+func _ready() -> void:
+	visible = false
 "
 
 [node name="Tray" type="StatusIndicator" unique_id=497099990]
@@ -116,12 +104,15 @@ script = SubResource("GDScript_14jt7")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=1884544456]
 unique_name_in_owner = true
+oversampling_override = 1.0
+visible = true
 prefer_native_menu = true
 item_count = 2
 item_0/text = "设置"
 item_0/id = 0
 item_1/text = "退出"
 item_1/id = 1
+script = SubResource("GDScript_k6dh4")
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]
 [connection signal="id_pressed" from="PopupMenu" to="." method="_on_popup_menu_id_pressed"]

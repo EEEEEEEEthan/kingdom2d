@@ -19,12 +19,12 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
 
+signal control_window_open_requested
+
 enum ItemId { SETTINGS, QUIT }
 
 const MENU_CONTENT_SCALE := 2.0
 
-var _control_window: Window
-var _control_window_positioned := false
 var _build_menu: PopupMenu
 
 
@@ -77,7 +77,7 @@ func _on_menu_pressed() -> void:
 func _on_id_pressed(id: int) -> void:
 	match id as ItemId:
 		ItemId.SETTINGS:
-			_show_control_window(DisplayServer.mouse_get_position())
+			control_window_open_requested.emit()
 		ItemId.QUIT:
 			get_tree().current_scene.request_quit()
 
@@ -94,28 +94,6 @@ func _start_build_placement(structure_config: StructureConfig) -> void:
 func _get_game() -> Game:
 	var game_window := get_parent().get_parent()
 	return game_window.get_node(^\"%Game\") as Game
-
-
-func _show_control_window(anchor_mouse: Vector2i) -> void:
-	if not _control_window:
-		_control_window = get_tree().current_scene.get_node(^\"ControlWindow\") as Window
-	if not _control_window_positioned:
-		_place_control_window_near_mouse(anchor_mouse)
-		_control_window_positioned = true
-	_control_window.show()
-	_control_window.mode = Window.MODE_WINDOWED
-	_control_window.grab_focus()
-
-
-func _place_control_window_near_mouse(mouse: Vector2i) -> void:
-	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
-	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var _size := _control_window.size
-	var pos := mouse
-	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - _size.x))
-	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - _size.y))
-	_control_window.current_screen = screen
-	_control_window.position = pos
 "
 
 [node name="GameHud" type="CanvasLayer" unique_id=914645458]

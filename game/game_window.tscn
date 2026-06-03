@@ -6,6 +6,8 @@
 [sub_resource type="GDScript" id="GDScript_le0pw"]
 script/source = "extends Window
 
+signal control_window_open_requested
+
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
 
@@ -87,6 +89,10 @@ func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
 
 func _on_control_window_reset_game_requested() -> void:
 	%Game.reset_game()
+
+
+func _on_game_hud_control_window_open_requested() -> void:
+	control_window_open_requested.emit()
 "
 
 [sub_resource type="Shader" id="Shader_dissolve"]
@@ -204,4 +210,5 @@ unique_name_in_owner = true
 
 [connection signal="pressed" from="GameHud/HudRoot/VBoxContainer/Menu" to="GameHud/PopupMenu" method="_on_menu_pressed"]
 [connection signal="pressed" from="GameHud/HudRoot/VBoxContainer/ResetCamera" to="ViewportContainer/GameViewport/Game/Camera2D" method="reset_to_center"]
+[connection signal="control_window_open_requested" from="GameHud/PopupMenu" to="." method="_on_game_hud_control_window_open_requested"]
 [connection signal="id_pressed" from="GameHud/PopupMenu" to="GameHud/PopupMenu" method="_on_id_pressed"]
