@@ -3,6 +3,15 @@
 [ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="1_e1x85"]
 [ext_resource type="FontFile" uid="uid://qfevkebvpaa3" path="res://fusion-pixel-10px-monospaced-zh_hant.otf" id="2_cjfk0"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dxngw"]
+resource_name = "FlatPanel"
+bg_color = Color(0.56078434, 0.3372549, 0.23137255, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0.56078434, 0.3372549, 0.23137255, 1)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_h7iqs"]
 atlas = ExtResource("1_e1x85")
 region = Rect2(33, 1, 14, 14)
@@ -118,12 +127,9 @@ texture_margin_top = 4.0
 texture_margin_right = 3.0
 texture_margin_bottom = 4.0
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_6q1gq"]
-atlas = ExtResource("1_e1x85")
-region = Rect2(7, 24, 2, 2)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3n26i"]
-texture = SubResource("AtlasTexture_6q1gq")
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cjfk0"]
+resource_name = "FlatActivePanel"
+bg_color = Color(0.8509804, 0.627451, 0.4, 1)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yi2p1"]
 atlas = ExtResource("1_e1x85")
@@ -213,6 +219,7 @@ region_rect = Rect2(0, 0, 14, 14)
 [resource]
 default_font = ExtResource("2_cjfk0")
 default_font_size = 10
+AcceptDialog/styles/panel = SubResource("StyleBoxFlat_dxngw")
 Button/styles/disabled = SubResource("StyleBoxTexture_vasa2")
 Button/styles/focus = SubResource("StyleBoxTexture_cjfk0")
 Button/styles/hover = SubResource("StyleBoxTexture_cjfk0")
@@ -235,7 +242,7 @@ HSlider/icons/tick = SubResource("AtlasTexture_6cw85")
 HSlider/styles/grabber_area = SubResource("StyleBoxTexture_vj6dk")
 HSlider/styles/grabber_area_highlight = SubResource("StyleBoxTexture_ttqs8")
 HSlider/styles/slider = SubResource("StyleBoxTexture_wdt2l")
-PopupMenu/styles/hover = SubResource("StyleBoxTexture_3n26i")
+PopupMenu/styles/hover = SubResource("StyleBoxFlat_cjfk0")
 PopupMenu/styles/panel = SubResource("StyleBoxTexture_o2i74")
 TabContainer/constants/side_margin = 3
 TabContainer/constants/tab_separation = 0

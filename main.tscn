@@ -19,6 +19,9 @@ func _on_quit_confirm_dialog_confirmed() -> void:
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
 script/source = "extends ConfirmationDialog
 
+func _ready() -> void:
+	visible = false
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and visible:
 		_place_near_global_mouse()
@@ -58,8 +61,16 @@ settings = NodePath("../Settings")
 unique_name_in_owner = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
 title = "退出"
+position = Vector2i(0, 36)
+size = Vector2i(212, 108)
+visible = true
 always_on_top = true
+content_scale_stretch = 1
+content_scale_factor = 2.0
 ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
