@@ -8,6 +8,9 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	if not _uses_system_tray():
 		return
+	%Tray.game_show_requested.connect(func ():
+		%GameWindow.closed = false
+		%GameWindow.pined = true)
 	await get_tree().process_frame
 	_pin_engine_root_offscreen()
 	await get_tree().process_frame

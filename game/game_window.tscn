@@ -82,6 +82,7 @@ const SHOW_TRIGGER_ABOVE_PX := 5
 const AUTO_HIDE_DELAY_SECONDS := 1.0
 const STARTUP_PEEK_SECONDS := 5.0
 
+signal closed_changed(closed: bool)
 signal pined_changed(pined: bool)
 
 var closed := false:
@@ -89,6 +90,7 @@ var closed := false:
 		if closed == value:
 			return
 		closed = value
+		closed_changed.emit(closed)
 		if not closed and not pined:
 			_hover_shown = false
 		_apply_state()
