@@ -24,6 +24,13 @@ func _on_pressed() -> void:
 	owner.reset_camera()
 "
 
+[sub_resource type="Texture2D" id="Texture2D_mdi0g"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOI2dkkEOACEIA63Z/38ZT2wQoYhc1EhHKGKYEJHRDTRENhG6+RpiROf5INYK5AYQibfwLXhDqDiqAGZlYurB318lzgAMcnhyY2IqZgBNrtoJAf4lCvGAbO7pRCyg+jTHHYANUH6aqoKnWFdXGiWCVOlqAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
 
@@ -89,38 +96,49 @@ unique_name_in_owner = true
 script = ExtResource("1_game_hud")
 
 [node name="HudRoot" type="Control" parent="." unique_id=1922932436]
+unique_name_in_owner = true
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
 mouse_filter = 2
 
-[node name="Buttons" type="VBoxContainer" parent="HudRoot" unique_id=1493286413]
-unique_name_in_owner = true
+[node name="GameButtons" type="HBoxContainer" parent="HudRoot" unique_id=365840526]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 4.0
 offset_top = -28.0
-offset_right = 28.0
+offset_right = 54.0
 offset_bottom = -4.0
 grow_vertical = 0
 theme_override_constants/separation = 2
 
-[node name="Menu" type="Button" parent="HudRoot/Buttons" unique_id=1968301569]
+[node name="Menu" type="Button" parent="HudRoot/GameButtons" unique_id=1968301569]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_menu")
 
-[node name="ResetCamera" type="Button" parent="HudRoot/Buttons" unique_id=67090867]
+[node name="ResetCamera" type="Button" parent="HudRoot/GameButtons" unique_id=67090867]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_reset")
+script = SubResource("GDScript_reset_camera")
+
+[node name="WindowButtons" type="HBoxContainer" parent="HudRoot" unique_id=1005426779]
+layout_mode = 1
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 28.0
+offset_bottom = 28.0
+theme_override_constants/separation = 2
+
+[node name="Pin" type="Button" parent="HudRoot/WindowButtons" unique_id=534034900]
+light_mask = 0
+layout_mode = 2
+toggle_mode = true
+icon = SubResource("Texture2D_mdi0g")
 script = SubResource("GDScript_reset_camera")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=133706543]
@@ -142,8 +160,9 @@ script = SubResource("GDScript_popup_menu")
 [node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
 unique_name_in_owner = true
 
-[connection signal="pressed" from="HudRoot/Buttons/Menu" to="PopupMenu" method="_on_menu_pressed"]
-[connection signal="pressed" from="HudRoot/Buttons/ResetCamera" to="HudRoot/Buttons/ResetCamera" method="_on_pressed"]
+[connection signal="pressed" from="HudRoot/GameButtons/Menu" to="PopupMenu" method="_on_menu_pressed"]
+[connection signal="pressed" from="HudRoot/GameButtons/ResetCamera" to="HudRoot/GameButtons/ResetCamera" method="_on_pressed"]
+[connection signal="pressed" from="HudRoot/WindowButtons/Pin" to="HudRoot/WindowButtons/Pin" method="_on_pressed"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
