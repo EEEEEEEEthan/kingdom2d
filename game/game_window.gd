@@ -24,6 +24,7 @@ func _ready() -> void:
 	width_ratio = Settings.game_width_ratio
 	Settings.display_scale_changed.connect(_on_settings_display_scale_changed)
 	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
+	%GameHud.bar_dismiss_requested.connect($AutoHideController.dismiss_to_hidden)
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
 	apply_layout(true)

@@ -1,7 +1,12 @@
 extends CanvasLayer
 
+signal bar_dismiss_requested
 signal control_window_open_requested
 signal quit_requested
+
+
+func dismiss_bar() -> void:
+	bar_dismiss_requested.emit()
 
 @export var game: Game
 
