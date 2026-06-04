@@ -7,7 +7,7 @@
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("1_bwt3b")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAYAAAALCAYAAABcUvyWAAAAAXNSR0IArs4c6QAAAFRJREFUGJVj7A+zZsAGmJDY/6GYgYGBgYHllog+Q2ukAYrq6uUXGFigjP9oOhmZGHAA8iUYP7x5wfDhzQsGBgYGRgYGBgYWKAcOYHycRrEgsRmRJQDBiBZdGuW2MAAAAABJRU5ErkJggg=="
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAICAYAAADeM14FAAAAAXNSR0IArs4c6QAAADJJREFUCJlj7A+zZkAGTFD6PxQzML47PAsmwMDAwMDIUr38AlYtcMDy4c0LAipghsEEAOJJCzUMlDMeAAAAAElFTkSuQmCC"
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [node name="Character" type="Node2D" unique_id=1482639207]
@@ -15,4 +15,4 @@ script = ExtResource("1_85w1m")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
 texture = SubResource("Texture2D_ewbhm")
-offset = Vector2(0, -5)
+offset = Vector2(0, -3)

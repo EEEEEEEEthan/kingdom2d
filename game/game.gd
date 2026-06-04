@@ -8,6 +8,8 @@ const MAP_WIDTH = MAP_CELL_COUNT * TILE_SIZE
 const SAVE_FILE_PATH = "user://save.dat"
 
 const _SERKEY_STRUCTURE_MANAGER = 1
+const _SERKEY_CHARACTER_MANAGER = 2
+const _SERKEY_TERRAIN = 3
 
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
@@ -60,13 +62,17 @@ func load_game() -> void:
 	clear()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	var data := file.get_var() as Dictionary
-	structure_manager.deserialize(data[_SERKEY_STRUCTURE_MANAGER])
+	terrain.deserialize(data.get(_SERKEY_TERRAIN, {}))
+	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}))
+	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
 
 func save_game() -> void:
 	print("save_game")
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
 	var data = {
 		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
+		_SERKEY_CHARACTER_MANAGER: character_manager.serialize(),
+		_SERKEY_TERRAIN: terrain.serialize(),
 	}
 	file.store_var(data)
 

@@ -7,8 +7,12 @@ enum TerrainType {
 	Water,
 }
 
+const _KEY_TERRAIN_TYPE = 1
+
 const TERRAIN_SET := 0
 const GROUND_ROW_Y := -1
+
+var _terrain_type: TerrainType = TerrainType.Land
 
 var _sprites: Array:
 	get:
@@ -37,7 +41,16 @@ var _sprites: Array:
 			pos.y = y
 			_sprites[i].position = pos
 
+func serialize() -> Dictionary:
+	return {
+		_KEY_TERRAIN_TYPE: _terrain_type,
+	}
+
+func deserialize(data: Dictionary) -> void:
+	fill_terrain(data.get(_KEY_TERRAIN_TYPE, 0) as TerrainType)
+
 func fill_terrain(type: TerrainType) -> void:
+	_terrain_type = type
 	var terrain_index: int
 	match type:
 		TerrainType.Land:

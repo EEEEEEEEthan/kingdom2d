@@ -20,6 +20,7 @@ func create_character() -> Character:
 	var character = _instantiate_character()
 	_next_id += 1
 	character.id = _next_id
+	characters[character.id] = character
 	return character
 
 func _instantiate_character() -> Character:
@@ -36,7 +37,8 @@ func serialize() -> Dictionary:
 	}
 
 func deserialize(data: Dictionary) -> void:
-	_next_id = data[_KEY_NEXT_ID]
-	for d in data[_KEY_CHARACTERS]:
+	_next_id = data.get(_KEY_NEXT_ID, 0)
+	for d in data.get(_KEY_CHARACTERS, []):
 		var chr = _instantiate_character()
 		chr.deserialize(d)
+		characters[chr.id] = chr
