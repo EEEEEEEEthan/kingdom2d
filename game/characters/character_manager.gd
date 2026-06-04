@@ -9,7 +9,12 @@ var characters: Dictionary[int, Character]
 
 func clear() -> void:
 	for child in get_children():
-		child.queue_free()
+		if child is InstancePlaceholder:
+			continue
+		remove_child(child)
+		child.free()
+	_next_id = 0
+	characters.clear()
 
 func create_character() -> Character:
 	var character = _instantiate_character()

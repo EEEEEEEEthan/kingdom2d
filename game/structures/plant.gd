@@ -1,9 +1,10 @@
+@tool
 extends Structure
 class_name Plant
 
 const _KEY_GROWTH = 1
 
-var growth: float:
+@export_range(0, 1) var growth: float:
 	set(value):
 		growth = value
 		if not is_node_ready(): await ready

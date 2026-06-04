@@ -3,6 +3,10 @@ class_name GameBuilder
 
 const _OAK_SPAWN_COUNT_MIN = 24
 const _OAK_SPAWN_COUNT_MAX = 96
+const _BUSH_SPAWN_COUNT_MIN = 48
+const _BUSH_SPAWN_COUNT_MAX = 160
+const _BUSH_NOISE_FREQUENCY = 0.012
+const _BUSH_NOISE_CLUSTER_POWER = 4.0
 const _CHARACTER_SPAWN_COUNT = 8
 const _CHARACTER_SPAWN_RADIUS = 8
 
@@ -13,6 +17,7 @@ static func build(game) -> void:
 	_spawn_sovereign_banner(game)
 	_spawn_initial_characters(game)
 	_spawn_random_oaks(game)
+	_spawn_clustered_bushes(game)
 
 
 static func _map_center_cell_index() -> int:
@@ -58,3 +63,41 @@ static func _spawn_random_oaks(game) -> void:
 	for index in placed_count:
 		var oak := StructureConfig.oak.instantiate() as Structure
 		structure_manager.add_structure(oak, empty_cell_indices[index])
+
+
+static func _spawn_clustered_bushes(game) -> void:
+	randomize()
+	var structure_manager := game.structure_manager as StructureManager
+	var bush_spawn_count := randi_range(_BUSH_SPAWN_COUNT_MIN, _BUSH_SPAWN_COUNT_MAX)
+	var noise := FastNoiseLite.new()
+	noise.seed = randi()
+	noise.frequency = _BUSH_NOISE_FREQUENCY
+	var weighted_cells: Array[Dictionary] = []
+	for cell_index in game.MAP_CELL_COUNT:
+		if structure_manager.index_to_structures[cell_index]:
+			continue
+		var normalized_noise := (noise.get_noise_1d(float(cell_index)) + 1.0) * 0.5
+		var weight: float = pow(normalized_noise, _BUSH_NOISE_CLUSTER_POWER)
+		weighted_cells.append({"cell_index": cell_index, "weight": weight})
+	var placed_count := mini(bush_spawn_count, weighted_cells.size())
+	for _spawn_index in placed_count:
+		var cell_index := _pick_weighted_cell_index(weighted_cells)
+		var bush := StructureConfig.bush.instantiate() as Structure
+		structure_manager.add_structure(bush, cell_index)
+
+
+static func _pick_weighted_cell_index(weighted_cells: Array[Dictionary]) -> int:
+	var total_weight := 0.0
+	for entry in weighted_cells:
+		total_weight += entry["weight"]
+	var roll := randf() * total_weight
+	var accumulated_weight := 0.0
+	for entry_index in weighted_cells.size():
+		var entry := weighted_cells[entry_index]
+		accumulated_weight += entry["weight"]
+		if roll <= accumulated_weight:
+			var cell_index: int = entry["cell_index"]
+			weighted_cells.remove_at(entry_index)
+			return cell_index
+	var last_entry: Dictionary = weighted_cells.pop_back()
+	return last_entry["cell_index"] as int
