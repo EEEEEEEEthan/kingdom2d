@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://yqr3qh2batnx"]
+
+[ext_resource type="Script" uid="uid://160qmm3vyqp6" path="res://game/characters/character_manager.gd" id="1_ae1ed"]
+
+[node name="CharacterManager" type="Node2D" unique_id=2133390750]
+show_behind_parent = true
+script = ExtResource("1_ae1ed")
+
+[node name="CharacterPlaceHolder" parent="." unique_id=1482639207 instance_placeholder="res://game/characters/character.tscn"]
+unique_name_in_owner = true

@@ -3,7 +3,6 @@ class_name GameBuilder
 
 const _OAK_SPAWN_COUNT_MIN = 24
 const _OAK_SPAWN_COUNT_MAX = 96
-const _CHARACTER_SCENE = preload("res://game/characters/character.tscn")
 const _CHARACTER_SPAWN_COUNT = 8
 const _CHARACTER_SPAWN_RADIUS = 8
 
@@ -41,10 +40,9 @@ static func _spawn_initial_characters(game) -> void:
 	candidate_cell_indices.shuffle()
 	var spawn_count := mini(_CHARACTER_SPAWN_COUNT, candidate_cell_indices.size())
 	for index in spawn_count:
-		var character := _CHARACTER_SCENE.instantiate() as Character
+		var character := character_manager.create_character()
 		var cell_index := candidate_cell_indices[index]
 		character.position.x = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE
-		character_manager.add_character(character)
 
 
 static func _spawn_random_oaks(game) -> void:
