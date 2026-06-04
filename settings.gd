@@ -2,16 +2,12 @@ extends Node
 
 signal display_scale_changed(new_scale: int)
 signal game_width_ratio_changed(new_ratio: float)
-signal auto_hide_changed(auto_hide: bool)
-signal auto_hide_delay_seconds_changed(new_delay_seconds: float)
 
 const SETTINGS_FILE_PATH = "user://settings.cfg"
 
 const _SECTION_DISPLAY = "display"
 const _KEY_DISPLAY_SCALE = "display_scale"
 const _KEY_GAME_WIDTH_RATIO = "game_width_ratio"
-const _KEY_AUTO_HIDE = "auto_hide"
-const _KEY_AUTO_HIDE_DELAY_SECONDS = "auto_hide_delay_seconds"
 
 var _is_restoring_from_disk := false
 
@@ -29,20 +25,6 @@ var game_width_ratio: float = 1.0:
 			_save_to_disk()
 		game_width_ratio_changed.emit(value)
 
-var auto_hide: bool = true:
-	set(value):
-		auto_hide = value
-		if not _is_restoring_from_disk:
-			_save_to_disk()
-		auto_hide_changed.emit(value)
-
-var auto_hide_delay_seconds: float = 2.0:
-	set(value):
-		auto_hide_delay_seconds = value
-		if not _is_restoring_from_disk:
-			_save_to_disk()
-		auto_hide_delay_seconds_changed.emit(value)
-
 
 func _ready() -> void:
 	if not FileAccess.file_exists(SETTINGS_FILE_PATH):
@@ -53,8 +35,6 @@ func _ready() -> void:
 	_is_restoring_from_disk = true
 	display_scale = config.get_value(_SECTION_DISPLAY, _KEY_DISPLAY_SCALE, display_scale)
 	game_width_ratio = config.get_value(_SECTION_DISPLAY, _KEY_GAME_WIDTH_RATIO, game_width_ratio)
-	auto_hide = config.get_value(_SECTION_DISPLAY, _KEY_AUTO_HIDE, auto_hide)
-	auto_hide_delay_seconds = config.get_value(_SECTION_DISPLAY, _KEY_AUTO_HIDE_DELAY_SECONDS, auto_hide_delay_seconds)
 	_is_restoring_from_disk = false
 
 
@@ -62,6 +42,4 @@ func _save_to_disk() -> void:
 	var config := ConfigFile.new()
 	config.set_value(_SECTION_DISPLAY, _KEY_DISPLAY_SCALE, display_scale)
 	config.set_value(_SECTION_DISPLAY, _KEY_GAME_WIDTH_RATIO, game_width_ratio)
-	config.set_value(_SECTION_DISPLAY, _KEY_AUTO_HIDE, auto_hide)
-	config.set_value(_SECTION_DISPLAY, _KEY_AUTO_HIDE_DELAY_SECONDS, auto_hide_delay_seconds)
 	config.save(SETTINGS_FILE_PATH)

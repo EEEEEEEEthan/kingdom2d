@@ -48,17 +48,8 @@ func _on_pressed() -> void:
 [sub_resource type="GDScript" id="GDScript_pin"]
 script/source = "extends Button
 
-func _ready() -> void:
-	_sync_from_settings()
-	Settings.auto_hide_changed.connect(_sync_from_settings)
-
-
-func _sync_from_settings(_unused = null) -> void:
-	set_pressed_no_signal(not Settings.auto_hide)
-
-
 func _on_toggled(toggled_on: bool) -> void:
-	Settings.auto_hide = not toggled_on
+	owner.auto_hide_pin_toggled.emit(toggled_on)
 "
 
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
@@ -180,6 +171,7 @@ unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 toggle_mode = true
+button_pressed = true
 icon = SubResource("Texture2D_mdi0g")
 script = SubResource("GDScript_pin")
 

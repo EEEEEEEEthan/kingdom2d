@@ -7,33 +7,6 @@
 atlas = ExtResource("1_k4ubr")
 region = Rect2(5, 5, 6, 6)
 
-[sub_resource type="GDScript" id="GDScript_auto_hide_delay_slider"]
-script/source = "extends HSlider
-
-func _ready() -> void:
-	set_value_no_signal(Settings.auto_hide_delay_seconds)
-
-func _on_value_changed(new_value: float) -> void:
-	Settings.auto_hide_delay_seconds = new_value
-"
-
-[sub_resource type="GDScript" id="GDScript_auto_hide"]
-script/source = "extends CheckButton
-
-func _on_toggled(toggled_on: bool) -> void:
-	owner.on_auto_hide_toggled(toggled_on)
-"
-
-[sub_resource type="GDScript" id="GDScript_game_visible"]
-script/source = "extends CheckButton
-
-func _ready() -> void:
-	set_pressed_no_signal(true)
-
-func _on_toggled(toggled_on: bool) -> void:
-	owner.on_game_visible_toggled(toggled_on)
-"
-
 [sub_resource type="GDScript" id="GDScript_scale_slider"]
 script/source = "extends HSlider
 
@@ -120,42 +93,6 @@ grow_vertical = 2
 layout_mode = 2
 columns = 2
 
-[node name="AutoHideLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408641]
-layout_mode = 2
-text = "自动隐藏"
-
-[node name="AutoHide" type="CheckButton" parent="VBoxContainer/GridContainer" unique_id=1362798756]
-unique_name_in_owner = true
-layout_mode = 2
-button_pressed = true
-script = SubResource("GDScript_auto_hide")
-
-[node name="AutoHideDelayLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408643]
-unique_name_in_owner = true
-layout_mode = 2
-text = "自动隐藏时间"
-
-[node name="AutoHideDelaySlider" type="HSlider" parent="VBoxContainer/GridContainer" unique_id=912326888]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-max_value = 5.0
-value = 2.0
-tick_count = 6
-ticks_on_borders = true
-script = SubResource("GDScript_auto_hide_delay_slider")
-
-[node name="GameVisibleLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408642]
-unique_name_in_owner = true
-layout_mode = 2
-text = "显示/隐藏"
-
-[node name="GameVisible" type="CheckButton" parent="VBoxContainer/GridContainer" unique_id=1362798757]
-unique_name_in_owner = true
-layout_mode = 2
-button_pressed = true
-script = SubResource("GDScript_game_visible")
-
 [node name="ScaleLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=1322494843]
 layout_mode = 2
 text = "缩放"
@@ -210,9 +147,6 @@ dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
 [connection signal="close_requested" from="." to="." method="hide"]
-[connection signal="toggled" from="VBoxContainer/GridContainer/AutoHide" to="VBoxContainer/GridContainer/AutoHide" method="_on_toggled"]
-[connection signal="value_changed" from="VBoxContainer/GridContainer/AutoHideDelaySlider" to="VBoxContainer/GridContainer/AutoHideDelaySlider" method="_on_value_changed"]
-[connection signal="toggled" from="VBoxContainer/GridContainer/GameVisible" to="VBoxContainer/GridContainer/GameVisible" method="_on_toggled"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]
