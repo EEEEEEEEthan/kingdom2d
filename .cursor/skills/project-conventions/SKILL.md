@@ -5,7 +5,7 @@ description: kingdom2d 项目规范
 
 # kingdom2d 项目规范
 
-除**继承场景**外：每个 `.tscn` 根节点脚本为同文件夹同名 `.gd`（外部资源），不用 builtin；场景内其他节点优先 builtin（可访问本场景内任意节点含私有成员），除非有复用可能
+除**继承场景**外：根脚本为同文件夹同名 `.gd`（尽量薄，作对外边界）；具体功能在 tscn 内子节点 builtin 实现（可访问场景内含私有成员），除非有复用可能
 [entries/tscn-root-script-same-name-gd.md](entries/tscn-root-script-same-name-gd.md)
 
 每个 `.tscn` 不访问场景树外节点/其它 tscn；与父级等通讯用信号；Autoload 可直接访问

@@ -1,31 +1,7 @@
 [gd_scene format=3 uid="uid://be5pvkd42sklo"]
 
+[ext_resource type="Script" path="res://game/game_hud.gd" id="1_game_hud"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_tex"]
-
-[sub_resource type="GDScript" id="GDScript_game_hud"]
-script/source = "extends CanvasLayer
-
-signal control_window_open_requested
-signal quit_requested
-
-@export var game: Game
-
-
-func _on_reset_camera_pressed() -> void:
-	game.reset_camera()
-
-
-func _on_popup_control_window_open_requested() -> void:
-	control_window_open_requested.emit()
-
-
-func _on_popup_quit_requested() -> void:
-	quit_requested.emit()
-
-
-func _on_build_requested(structure_config: StructureConfig) -> void:
-	game.start_build_placement(structure_config)
-"
 
 [sub_resource type="Texture2D" id="Texture2D_menu"]
 resource_local_to_scene = false
@@ -106,7 +82,7 @@ func _on_build_id_pressed(id: int) -> void:
 
 [node name="GameHud" type="CanvasLayer" unique_id=914645458]
 unique_name_in_owner = true
-script = SubResource("GDScript_game_hud")
+script = ExtResource("1_game_hud")
 
 [node name="HudRoot" type="Control" parent="." unique_id=1922932436]
 layout_mode = 3
