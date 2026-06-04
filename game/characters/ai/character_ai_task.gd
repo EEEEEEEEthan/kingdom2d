@@ -16,6 +16,8 @@ static func deserialize(data: Dictionary) -> CharacterAiTask:
 	match type_id:
 		CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
 			return CharacterAiWaitDurationTask.new(payload)
+		CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
+			return CharacterAiMoveToWorldXTask.new(payload)
 		_:
 			printerr("CharacterAiTask type_id not found: %s" % type_id)
 			return null
