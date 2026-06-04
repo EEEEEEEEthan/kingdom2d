@@ -62,8 +62,8 @@ func _on_menu_pressed() -> void:
 	var global_mouse := DisplayServer.mouse_get_position()
 	var screen := DisplayServer.get_screen_from_rect(Rect2(global_mouse, Vector2.ONE))
 	current_screen = screen
-	var owner_window := get_parent().get_window()
-	var local_mouse := global_mouse - owner_window.position
+	var host_window := owner.get_viewport().get_window()
+	var local_mouse := global_mouse - host_window.position
 	popup_on_parent(Rect2i(Vector2i(local_mouse), Vector2i.ZERO))
 	call_deferred(\"_apply_menu_content_scale\")
 

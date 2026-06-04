@@ -7,10 +7,6 @@
 atlas = ExtResource("1_k4ubr")
 region = Rect2(5, 5, 6, 6)
 
-[sub_resource type="GDScript" id="GDScript_auto_hide"]
-script/source = "extends CheckButton
-"
-
 [sub_resource type="GDScript" id="GDScript_auto_hide_delay_slider"]
 script/source = "extends HSlider
 
@@ -119,7 +115,6 @@ text = "自动隐藏"
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-script = SubResource("GDScript_auto_hide")
 
 [node name="AutoHideDelayLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=969408643]
 unique_name_in_owner = true

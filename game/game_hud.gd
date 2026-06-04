@@ -6,6 +6,14 @@ signal quit_requested
 @export var game: Game
 
 
+func apply_hud_scale(hud_scale: int) -> void:
+	var vbox := %VBoxContainer
+	var s := float(hud_scale)
+	vbox.scale = Vector2.ONE
+	vbox.pivot_offset = Vector2(0, vbox.get_combined_minimum_size().y)
+	vbox.scale = Vector2(s, s)
+
+
 func _on_reset_camera_pressed() -> void:
 	game.reset_camera()
 

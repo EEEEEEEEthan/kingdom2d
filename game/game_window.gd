@@ -7,8 +7,6 @@ const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
 
 var suppress_dock_position_in_layout := false
-var _dragging := false
-var _drag_mouse_offset := Vector2i.ZERO
 
 @export var scale: int = 1:
 	set(value):
@@ -75,26 +73,7 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 
 
 func _apply_hud_scale(hud_scale: int) -> void:
-	var vbox: VBoxContainer = %GameHud.get_node(^"%VBoxContainer")
-	var s := float(hud_scale)
-	vbox.scale = Vector2.ONE
-	vbox.pivot_offset = Vector2(0, vbox.get_combined_minimum_size().y)
-	vbox.scale = Vector2(s, s)
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		var mouse_button := event as InputEventMouseButton
-		if mouse_button.button_index != MOUSE_BUTTON_RIGHT:
-			return
-		if mouse_button.pressed:
-			_dragging = true
-			_drag_mouse_offset = DisplayServer.mouse_get_position() - position
-		else:
-			_dragging = false
-	elif event is InputEventMouseMotion and _dragging:
-		var mouse := DisplayServer.mouse_get_position()
-		position = Vector2i(mouse.x - _drag_mouse_offset.x, position.y)
+	%GameHud.apply_hud_scale(hud_scale)
 
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
