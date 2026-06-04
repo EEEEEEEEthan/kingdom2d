@@ -3,7 +3,8 @@
 [ext_resource type="Script" uid="uid://bgkb425iiewla" path="res://game/game.gd" id="1_dxrkv"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
-[ext_resource type="PackedScene" uid="uid://cu0uoq3b10sk6" path="res://game/structures/structure_manager.tscn" id="6_dakft"]
+[ext_resource type="Script" uid="uid://1sagu8e7pmqf" path="res://game/structures/structure_manager.gd" id="4_4fuuu"]
+[ext_resource type="Script" uid="uid://160qmm3vyqp6" path="res://game/characters/character_manager.gd" id="5_dxrkv"]
 
 [sub_resource type="Gradient" id="Gradient_dxrkv"]
 colors = PackedColorArray(0.7117712, 0.80896837, 0.9836268, 1, 0.38431373, 0.5529412, 1, 0)
@@ -105,10 +106,17 @@ texture = SubResource("Texture2D_dxrkv")
 unique_name_in_owner = true
 position = Vector2(0, 3)
 
-[node name="StructureManager" parent="Horizon/Terrain" unique_id=1469177200 instance=ExtResource("6_dakft")]
+[node name="StructureManager" type="Node2D" parent="Horizon/Terrain" unique_id=1469177200]
 unique_name_in_owner = true
 show_behind_parent = true
 position = Vector2(0, -3)
+script = ExtResource("4_4fuuu")
+
+[node name="CharacterManager" type="Node2D" parent="Horizon/Terrain" unique_id=2030535147]
+unique_name_in_owner = true
+show_behind_parent = true
+position = Vector2(0, -3)
+script = ExtResource("5_dxrkv")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true

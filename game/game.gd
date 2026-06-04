@@ -27,6 +27,11 @@ var terrain: Terrain:
 		if not terrain: terrain = %Terrain
 		return terrain
 
+var character_manager: CharacterManager:
+	get:
+		if not character_manager: character_manager = %CharacterManager
+		return character_manager
+
 @export var view_height: float:
 	set(value):
 		view_height = value
@@ -64,6 +69,7 @@ func save_game() -> void:
 
 func clear() -> void:
 	structure_manager.clear()
+	character_manager.clear()
 	terrain.clear()
 
 func reset_camera() -> void:

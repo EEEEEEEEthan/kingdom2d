@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://djg0ohhsjkoxc"]
+
+[ext_resource type="Script" uid="uid://blk7dkr6ylt2w" path="res://game/characters/character.gd" id="1_85w1m"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_bwt3b"]
+
+[sub_resource type="Texture2D" id="Texture2D_ewbhm"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_bwt3b")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAYAAAALCAYAAABcUvyWAAAAAXNSR0IArs4c6QAAAFRJREFUGJVj7A+zZsAGmJDY/6GYgYGBgYHllog+Q2ukAYrq6uUXGFigjP9oOhmZGHAA8iUYP7x5wfDhzQsGBgYGRgYGBgYWKAcOYHycRrEgsRmRJQDBiBZdGuW2MAAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[node name="Character" type="Node2D" unique_id=1482639207]
+script = ExtResource("1_85w1m")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
+texture = SubResource("Texture2D_ewbhm")
+offset = Vector2(0, -5)

@@ -54,7 +54,7 @@ script = SubResource("GDScript_pj4fb")
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 unique_name_in_owner = true
 texture = SubResource("CanvasTexture_4fuuu")
-offset = Vector2(0, -7)
+offset = Vector2(0, -8)
 region_enabled = true
 region_rect = Rect2(1, 1, 14, 15)
 script = SubResource("GDScript_l17i3")

@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://cu0uoq3b10sk6"]
-
-[ext_resource type="Script" uid="uid://1sagu8e7pmqf" path="res://game/structures/structure_manager.gd" id="1_nbm08"]
-
-[node name="Structures" type="Node2D" unique_id=1469177200]
-script = ExtResource("1_nbm08")

@@ -29,4 +29,4 @@ script = SubResource("GDScript_sovereign_banner")
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 unique_name_in_owner = true
 texture = SubResource("CanvasTexture_placeholder")
-offset = Vector2(0, -6)
+offset = Vector2(0, -7)
