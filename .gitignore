@@ -1,3 +1,4 @@
 /.godot/
 /.engine/
 /.export/
+.env
