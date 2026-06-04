@@ -120,7 +120,7 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
 [connection signal="visibility_control_changed" from="ControlWindow" to="GameWindow/AutoHideController" method="configure_visibility_control"]
-[connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="open_near_mouse"]
+[connection signal="game_show_requested" from="Tray" to="GameWindow/AutoHideController" method="disable_auto_hide_and_show"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]

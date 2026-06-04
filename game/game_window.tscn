@@ -124,6 +124,13 @@ func dismiss_to_hidden() -> void:
 	Settings.auto_hide = false
 
 
+func disable_auto_hide_and_show() -> void:
+	_manual_active = true
+	_outside_safe_timer = 0.0
+	Settings.auto_hide = false
+	_slide_controller.active = true
+
+
 func configure_auto_hide(auto_hide: bool) -> void:
 	_auto_hide = auto_hide
 	_outside_safe_timer = 0.0
