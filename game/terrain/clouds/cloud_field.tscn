@@ -13,4 +13,5 @@ shader_parameter/speed_range = Vector2(0.6, 1.4)
 material = SubResource("ShaderMaterial_548jp")
 script = ExtResource("1_02ett")
 field_size = Vector2(4096, 8)
+cloud_count = 16
 scroll_speed_range = Vector2(0.5, 1)

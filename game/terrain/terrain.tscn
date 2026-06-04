@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bl6nwqv1nb67" path="res://game/terrain/terrain_normal.png" id="2_rx45g"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_uaf13"]
 [ext_resource type="Script" uid="uid://c7lsurn21ti7c" path="res://game/terrain/terrain.gd" id="3_5grhd"]
-[ext_resource type="PackedScene" uid="uid://ceck4jevjpmxp" path="res://game/terrain/clouds/cloud.tscn" id="4_ci4kj"]
+[ext_resource type="PackedScene" uid="uid://4ga80fnd4r6o" path="res://game/terrain/clouds/cloud_field.tscn" id="4_ci4kj"]
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_rx45g"]
 diffuse_texture = ExtResource("1_0rasl")
@@ -123,8 +123,10 @@ show_behind_parent = true
 scroll_scale = Vector2(0.15, 0.15)
 scroll_offset = Vector2(0, 2)
 
-[node name="Cloud1" parent="Parallaxes/Parallax2DCloud1" unique_id=1544576738 instance=ExtResource("4_ci4kj")]
-position = Vector2(0, -35)
+[node name="CloudField" parent="Parallaxes/Parallax2DCloud1" unique_id=1878045251 instance=ExtResource("4_ci4kj")]
+position = Vector2(-128, -36)
+field_size = Vector2(4352, 8)
+cloud_count = 8
 
 [node name="Parallax2DMountain1" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
 scroll_scale = Vector2(0.2, 0.2)
@@ -140,6 +142,11 @@ offset = Vector2(0, -24)
 [node name="Parallax2DCloud2" type="Parallax2D" parent="Parallaxes" unique_id=204465630]
 scroll_scale = Vector2(0.25, 0.25)
 scroll_offset = Vector2(0, 2)
+
+[node name="CloudField2" parent="Parallaxes/Parallax2DCloud2" unique_id=353350965 instance=ExtResource("4_ci4kj")]
+position = Vector2(-128, -43)
+field_size = Vector2(4352, 8)
+cloud_count = 8
 
 [node name="Parallax2DMountain2" type="Parallax2D" parent="Parallaxes" unique_id=2035051536]
 scroll_scale = Vector2(0.4, 0.4)
