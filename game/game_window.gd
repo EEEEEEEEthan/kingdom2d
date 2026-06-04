@@ -84,9 +84,7 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 	var new_size := Vector2i(width, height)
 	if suppress_dock_position_in_layout:
 		size = new_size
-		%GameHud.hud_scale = hud_scale
-		return
-	if align_to_bottom:
+	elif align_to_bottom:
 		position = compute_docked_global_position()
 		size = new_size
 	else:
@@ -94,6 +92,8 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 		position = Vector2(bottom_center.x - new_size.x / 2.0, bottom_center.y - new_size.y)
 		size = new_size
 	%GameHud.hud_scale = hud_scale
+	if not align_to_bottom:
+		force_show()
 
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
@@ -102,6 +102,12 @@ func _on_settings_display_scale_changed(new_scale: int) -> void:
 
 func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
 	width_ratio = new_ratio
+
+
+func force_show() -> void:
+	if not is_node_ready():
+		return
+	$AutoHideController.force_show()
 
 
 func reset_game() -> void:

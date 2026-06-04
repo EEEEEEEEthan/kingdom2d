@@ -144,6 +144,14 @@ func _apply_state() -> void:
 		_slide_controller.active = _hover_shown
 
 
+func force_show() -> void:
+	if closed or pined:
+		return
+	_outside_safe_timer = 0.0
+	_hover_shown = true
+	_slide_controller.active = true
+
+
 func _process(delta: float) -> void:
 	var mouse := DisplayServer.mouse_get_position()
 	if _slide_controller.active:
