@@ -2,7 +2,6 @@
 extends Node2D
 
 const SCROLL_SPEED_META := &"scroll_speed"
-const CLOUD_SCENE_FALLBACK := preload("res://game/terrain/clouds/cloud.tscn")
 
 @export var field_size := Vector2(720.0, 100.0):
 	set(value):
