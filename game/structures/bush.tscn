@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://dachjie01okqa"]
+
+[ext_resource type="PackedScene" uid="uid://bh0xjukljktdb" path="res://game/structures/base_structure.tscn" id="1_ohp2f"]
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_5rvfu"]
+
+[sub_resource type="GDScript" id="GDScript_pj4fb"]
+script/source = "extends Structure
+
+func _serialize() -> Dictionary:
+	return {}
+
+func _deserialize(_data: Dictionary) -> void:
+	pass
+"
+
+[sub_resource type="Texture2D" id="Texture2D_dxrkv"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_5rvfu")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAPZJREFUeJzt1sERgjAQheGH2I9Hi7AKjlZlPRTlxBO67CSGgBLQ/5thRhcSs5sFlIC/1tReQMzlelrtt6oWYM1EUxYVYAsJLHWovYDamp3sYjCfc10bMudH47fWAcEcNuaveTc+quvb6DWfLkAsAX+udK5ZTMKSpNv57ueW9N0OCJq2o7n41GuD9Ep8SHj4bgvS9e3z8M8AP3ETiafuwdLd8vNUGZ/rgFgbzm7Ltfj2T8WkcQGWtmB1vv1t3McGW3sLLGKTtDueikvj/wEluxp7Duxy/DEzaYldjv+pW2AOClB7AQAAAAAAAAAAAAAAAAAAAADwDQ8PD0fBVstujAAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="Texture2D" id="Texture2D_u5opy"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("2_5rvfu")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAAAXNSR0IArs4c6QAAAllJREFUWIW9V7GR2zAQXOhVgAI7RwksgTP2yynSz1ACS0AJKoHRx4gpa0YlsATkTliBzgEBiDwAJCW9vZGEwe7d7R0ASVR9hzXUkgAA2pX3aIgid4m3xp3tK+iU+FyD86vqF/bLqQEAiH0vR1vmPsKbch/lZTVK5i0ZQLUkHE7HuGABDE1HXmwtMVL2PfIAQKn1aePcoemebUDUUKqjEk8c7CcAQMpvkcgL52iGDgCE0/c1NoYxeMDQdCgZF7gTDi86wps40+BHwOvMNHI8YGIAAMB9BwBqhp+l+EVBVsTmArYkP0XO/IxO0oDAm645zY+A/ENN/1GKPd/asgWfkFXnJPgWXsAa/3Q4Lo70FkzN2/uuvwx3feWuilgsPsDaRRMWNfjkbHkF/imeNY5PkpPLOqXJedqAJHH9rNL/Q3L88NoERAdq/fz4y5Zx1RfoPKCx5wkM7ndx86EZXwdlzw8l9wCEtRdS6sfiJmXPQF28BLMaJQ6fgGRDa0AONxizE9ZeqMUt2fdVXQw5WHsh7dKXsJYEq94FMB5BWRdfy5kJvmEixxFVNe947QNfrxTOOTlfdN2+wRswg8aOLxULkDUlJtfXt1TTEYw3vzU7EfgcoaCCBnmeyHEApJkDY/F+Y9HiFQgAwhhAmzgxAr4LW2DM/bPXyCKn5zTBaUKILzVBaspykglwelYzOdzgxhEvZp6ZgKATp6c1u1kHp12Ydi8XP8R2/KixHBg34ccYXqfqj9j3/f1n7+FUvNw2X/OZJMYEzW1WQO48lrgBoYtTnaof/7PwRq4h8P4CYuQmtp1vgBAAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
+diffuse_texture = SubResource("Texture2D_dxrkv")
+normal_texture = SubResource("Texture2D_u5opy")
+
+[sub_resource type="GDScript" id="GDScript_l17i3"]
+script/source = "extends Sprite2D
+"
+
+[node name="Bush" unique_id=1642746995 instance=ExtResource("1_ohp2f")]
+script = SubResource("GDScript_pj4fb")
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
+unique_name_in_owner = true
+texture = SubResource("CanvasTexture_4fuuu")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(1, 1, 14, 15)
+script = SubResource("GDScript_l17i3")

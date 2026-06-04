@@ -6,6 +6,7 @@ enum TypeId {
 	OAK = 1,
 	SUNKEN_FLOOR_THATCH_HOVEL = 2,
 	SOVEREIGN_BANNER = 3,
+	BUSH = 4,
 }
 
 static var oak: StructureConfig:
@@ -35,10 +36,20 @@ static var sovereign_banner: StructureConfig:
 			sovereign_banner._scene_path = &"res://game/structures/sovereign_banner.tscn"
 		return sovereign_banner
 
+static var bush: StructureConfig:
+	get:
+		if not bush:
+			bush = StructureConfig.new()
+			bush.id = TypeId.BUSH
+			bush.name = &"灌木"
+			bush._scene_path = &"res://game/structures/bush.tscn"
+		return bush
+
 static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	oak.id: oak,
 	sunken_floor_thatch_hovel.id: sunken_floor_thatch_hovel,
 	sovereign_banner.id: sovereign_banner,
+	bush.id: bush,
 }
 
 var id: TypeId = TypeId.NONE
