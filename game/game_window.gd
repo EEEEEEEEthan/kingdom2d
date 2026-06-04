@@ -60,7 +60,7 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 	var new_size := Vector2i(width, height)
 	if suppress_dock_position_in_layout:
 		size = new_size
-		_apply_hud_scale(hud_scale)
+		%GameHud.hud_scale = hud_scale
 		return
 	if align_to_bottom:
 		position = compute_docked_global_position()
@@ -69,11 +69,7 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 		var bottom_center := Vector2(position.x + size.x / 2.0, position.y + size.y)
 		position = Vector2(bottom_center.x - new_size.x / 2.0, bottom_center.y - new_size.y)
 		size = new_size
-	_apply_hud_scale(hud_scale)
-
-
-func _apply_hud_scale(hud_scale: int) -> void:
-	%GameHud.apply_hud_scale(hud_scale)
+	%GameHud.hud_scale = hud_scale
 
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
