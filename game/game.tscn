@@ -39,6 +39,10 @@ func reset_to_center() -> void:
 	position.x = _center_x
 
 
+func is_map_center_off_screen() -> bool:
+	return not _view_rect().has_point(Vector2(_center_x, position.y))
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
 		return
@@ -61,13 +65,18 @@ func _drag_pan_loop() -> void:
 	_drag_loop_active = false
 
 
-func _view_half_width() -> float:
+func _view_rect() -> Rect2:
 	var viewport := get_viewport()
 	var viewport_size := viewport.get_visible_rect().size
 	var to_world := viewport.get_canvas_transform().affine_inverse()
-	var world_left := to_world * Vector2.ZERO
-	var world_right := to_world * Vector2(viewport_size.x, 0.0)
-	return absf(world_right.x - world_left.x) * 0.5
+	var world_top_left := to_world * Vector2.ZERO
+	var world_bottom_right := to_world * viewport_size
+	var rect_origin := world_top_left.min(world_bottom_right)
+	return Rect2(rect_origin, world_top_left.max(world_bottom_right) - rect_origin)
+
+
+func _view_half_width() -> float:
+	return _view_rect().size.x * 0.5
 
 
 func _clamp_camera_x(x: float) -> float:

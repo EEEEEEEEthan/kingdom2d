@@ -11,6 +11,21 @@ func sync_pin_from_pined(pined: bool) -> void:
 @export var game: Game
 
 
+func _ready() -> void:
+	_sync_reset_camera_visible()
+
+
+func _process(_delta: float) -> void:
+	_sync_reset_camera_visible()
+
+
+func _sync_reset_camera_visible() -> void:
+	var should_show := game.is_map_center_off_screen()
+	if %ResetCamera.visible == should_show:
+		return
+	%ResetCamera.visible = should_show
+
+
 var hud_scale: int = 1:
 	set(value):
 		hud_scale = value

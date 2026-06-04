@@ -69,5 +69,9 @@ func clear() -> void:
 func reset_camera() -> void:
 	%Camera2D.reset_to_center()
 
+
+func is_map_center_off_screen() -> bool:
+	return %Camera2D.is_map_center_off_screen()
+
 func start_build_placement(structure_config: StructureConfig) -> void:
 	horizon.add_child(await StructureBuildPlacement.new(self, structure_config))

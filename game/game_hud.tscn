@@ -141,6 +141,7 @@ icon = SubResource("Texture2D_menu")
 
 [node name="ResetCamera" type="Button" parent="HudRoot/GameButtons" unique_id=67090867]
 unique_name_in_owner = true
+visible = false
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_reset")
