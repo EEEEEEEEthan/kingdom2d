@@ -1,6 +1,5 @@
 extends Window
 
-signal close_button_pressed
 signal control_window_open_requested
 signal quit_requested
 
@@ -43,7 +42,6 @@ func _ready() -> void:
 	width_ratio = Settings.game_width_ratio
 	Settings.display_scale_changed.connect(_on_settings_display_scale_changed)
 	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
-	%GameHud.close_button_pressed.connect(func() -> void: close_button_pressed.emit())
 	%GameHud.auto_hide_pin_toggled.connect(func(pressed: bool) -> void: pined = pressed)
 	$AutoHideController.closed_changed.connect(func(value: bool) -> void: closed = value)
 	$AutoHideController.pined_changed.connect(func(value: bool) -> void: pined = value)

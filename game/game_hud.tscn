@@ -3,6 +3,20 @@
 [ext_resource type="Script" uid="uid://d1xf7cnq6qyc5" path="res://game/game_hud.gd" id="1_game_hud"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_tex"]
 
+[sub_resource type="Texture2D" id="Texture2D_mdi0g"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG9JREFUOI2Vk0EOACEIA+nG/3+ZPZlAhSo9acKMiBEW4u42DQZQLMRefEMYtH8SMJwkNwHDxvvVAGVxVccCBZVd8RWOISm4EihJOY9uiJ3kuFoncCG5CiJ8lbAgwjvqRdIzVrCUAEgdyJO6vH6mNj9UyxolbR998QAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="GDScript" id="GDScript_pin"]
+script/source = "extends Button
+
+func _on_toggled(toggled_on: bool) -> void:
+	owner.auto_hide_pin_toggled.emit(toggled_on)
+"
+
 [sub_resource type="Texture2D" id="Texture2D_menu"]
 resource_local_to_scene = false
 resource_name = ""
@@ -22,34 +36,6 @@ script/source = "extends Button
 
 func _on_pressed() -> void:
 	owner.reset_camera()
-"
-
-[sub_resource type="Texture2D" id="Texture2D_3gaer"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("1_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOI2tklEKwDAIQ9uy+1/Z/YzissQMrNAfNQ81nRExOrFaagDE81y8+tgEFeRTy4BpIDm3e3ECBaFiBmAQKVYA2ihyZ23M4Y5YAnDn0h0EqINJCP5EJighzkZbu34KJaRt4w1uVBcdh3AGkgAAAABJRU5ErkJggg=="
-metadata/_custom_type_script = "uid://xqi7kv2y70eo"
-
-[sub_resource type="GDScript" id="GDScript_close"]
-script/source = "extends Button
-
-func _on_pressed() -> void:
-	owner.request_close()
-"
-
-[sub_resource type="Texture2D" id="Texture2D_mdi0g"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("1_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG9JREFUOI2Vk0EOACEIA+nG/3+ZPZlAhSo9acKMiBEW4u42DQZQLMRefEMYtH8SMJwkNwHDxvvVAGVxVccCBZVd8RWOISm4EihJOY9uiJ3kuFoncCG5CiJ8lbAgwjvqRdIzVrCUAEgdyJO6vH6mNj9UyxolbR998QAAAABJRU5ErkJggg=="
-metadata/_custom_type_script = "uid://xqi7kv2y70eo"
-
-[sub_resource type="GDScript" id="GDScript_pin"]
-script/source = "extends Button
-
-func _on_toggled(toggled_on: bool) -> void:
-	owner.auto_hide_pin_toggled.emit(toggled_on)
 "
 
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
@@ -138,6 +124,15 @@ offset_bottom = -4.0
 grow_vertical = 0
 theme_override_constants/separation = 2
 
+[node name="Pin" type="Button" parent="HudRoot/GameButtons" unique_id=534034900]
+unique_name_in_owner = true
+light_mask = 0
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+icon = SubResource("Texture2D_mdi0g")
+script = SubResource("GDScript_pin")
+
 [node name="Menu" type="Button" parent="HudRoot/GameButtons" unique_id=1968301569]
 unique_name_in_owner = true
 light_mask = 0
@@ -150,30 +145,6 @@ light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_reset")
 script = SubResource("GDScript_reset_camera")
-
-[node name="WindowButtons" type="HBoxContainer" parent="HudRoot" unique_id=1005426779]
-layout_mode = 1
-offset_left = 4.0
-offset_top = 4.0
-offset_right = 28.0
-offset_bottom = 28.0
-theme_override_constants/separation = 2
-
-[node name="Close" type="Button" parent="HudRoot/WindowButtons" unique_id=963775597]
-unique_name_in_owner = true
-light_mask = 0
-layout_mode = 2
-icon = SubResource("Texture2D_3gaer")
-script = SubResource("GDScript_close")
-
-[node name="Pin" type="Button" parent="HudRoot/WindowButtons" unique_id=534034900]
-unique_name_in_owner = true
-light_mask = 0
-layout_mode = 2
-toggle_mode = true
-button_pressed = true
-icon = SubResource("Texture2D_mdi0g")
-script = SubResource("GDScript_pin")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=133706543]
 unique_name_in_owner = true
@@ -194,10 +165,9 @@ script = SubResource("GDScript_popup_menu")
 [node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
 unique_name_in_owner = true
 
+[connection signal="toggled" from="HudRoot/GameButtons/Pin" to="HudRoot/GameButtons/Pin" method="_on_toggled"]
 [connection signal="pressed" from="HudRoot/GameButtons/Menu" to="PopupMenu" method="_on_menu_pressed"]
 [connection signal="pressed" from="HudRoot/GameButtons/ResetCamera" to="HudRoot/GameButtons/ResetCamera" method="_on_pressed"]
-[connection signal="pressed" from="HudRoot/WindowButtons/Close" to="HudRoot/WindowButtons/Close" method="_on_pressed"]
-[connection signal="toggled" from="HudRoot/WindowButtons/Pin" to="HudRoot/WindowButtons/Pin" method="_on_toggled"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
