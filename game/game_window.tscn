@@ -7,6 +7,7 @@
 script/source = "extends Window
 
 signal control_window_open_requested
+signal quit_requested
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
@@ -111,6 +112,10 @@ func _on_control_window_reset_game_requested() -> void:
 
 func _on_game_hud_control_window_open_requested() -> void:
 	control_window_open_requested.emit()
+
+
+func _on_game_hud_quit_requested() -> void:
+	quit_requested.emit()
 "
 
 [sub_resource type="GDScript" id="GDScript_slide"]
@@ -401,3 +406,4 @@ game = NodePath("../ViewportContainer/GameViewport/Game")
 
 [connection signal="size_changed" from="." to="GameWindowSlideController" method="_on_game_window_size_changed"]
 [connection signal="control_window_open_requested" from="GameHud" to="." method="_on_game_hud_control_window_open_requested"]
+[connection signal="quit_requested" from="GameHud" to="." method="_on_game_hud_quit_requested"]

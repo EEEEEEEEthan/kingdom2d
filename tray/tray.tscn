@@ -6,6 +6,7 @@
 script/source = "extends StatusIndicator
 
 signal control_window_open_requested
+signal quit_requested
 
 enum MenuId { SHOW_CONTROL_WINDOW, QUIT }
 
@@ -58,7 +59,7 @@ func _on_popup_menu_id_pressed(id: int) -> void:
 		MenuId.SHOW_CONTROL_WINDOW:
 			control_window_open_requested.emit()
 		MenuId.QUIT:
-			get_tree().current_scene.request_quit()
+			quit_requested.emit()
 "
 
 [node name="Tray" type="StatusIndicator" unique_id=497099990]

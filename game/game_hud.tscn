@@ -6,6 +6,7 @@
 script/source = "extends CanvasLayer
 
 signal control_window_open_requested
+signal quit_requested
 
 @export var game: Game
 
@@ -16,6 +17,10 @@ func _on_reset_camera_pressed() -> void:
 
 func _on_popup_control_window_open_requested() -> void:
 	control_window_open_requested.emit()
+
+
+func _on_popup_quit_requested() -> void:
+	quit_requested.emit()
 
 
 func _on_build_requested(structure_config: StructureConfig) -> void:
@@ -40,6 +45,7 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 script/source = "extends PopupMenu
 
 signal control_window_open_requested
+signal quit_requested
 signal build_requested(structure_config: StructureConfig)
 
 enum ItemId { SETTINGS, QUIT }
@@ -91,7 +97,7 @@ func _on_id_pressed(id: int) -> void:
 		ItemId.SETTINGS:
 			control_window_open_requested.emit()
 		ItemId.QUIT:
-			get_tree().current_scene.request_quit()
+			quit_requested.emit()
 
 
 func _on_build_id_pressed(id: int) -> void:
@@ -160,6 +166,7 @@ unique_name_in_owner = true
 [connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="." method="_on_reset_camera_pressed"]
 [connection signal="build_requested" from="PopupMenu" to="." method="_on_build_requested"]
 [connection signal="control_window_open_requested" from="PopupMenu" to="." method="_on_popup_control_window_open_requested"]
+[connection signal="quit_requested" from="PopupMenu" to="." method="_on_popup_quit_requested"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
