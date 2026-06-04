@@ -8,6 +8,15 @@ const MAX_WIDTH := 4096
 
 var suppress_dock_position_in_layout := false
 
+var pined := false:
+	set(value):
+		if pined == value:
+			return
+		pined = value
+		if not is_node_ready():
+			await ready
+		$AutoHideController.pined = value
+
 @export var scale: int = 1:
 	set(value):
 		scale = value
@@ -24,10 +33,10 @@ func _ready() -> void:
 	width_ratio = Settings.game_width_ratio
 	Settings.display_scale_changed.connect(_on_settings_display_scale_changed)
 	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
-	%GameHud.bar_dismiss_requested.connect($AutoHideController.dismiss_to_hidden)
-	%GameHud.auto_hide_pin_toggled.connect($AutoHideController.apply_pin_pressed)
-	$AutoHideController.auto_hide_changed.connect(%GameHud.sync_pin_from_auto_hide)
-	%GameHud.sync_pin_from_auto_hide($AutoHideController.is_auto_hide_enabled())
+	%GameHud.bar_dismiss_requested.connect(func() -> void: $AutoHideController.closed = true)
+	%GameHud.auto_hide_pin_toggled.connect(func(pressed: bool) -> void: pined = pressed)
+	$AutoHideController.pined_changed.connect(func(value: bool) -> void: pined = value)
+	%GameHud.sync_pin_from_pined(pined)
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
 	apply_layout(true)

@@ -80,11 +80,33 @@ script/source = "extends Node
 
 const SHOW_TRIGGER_ABOVE_PX := 5
 const AUTO_HIDE_DELAY_SECONDS := 1.0
+const STARTUP_PEEK_SECONDS := 5.0
 
-signal auto_hide_changed(enabled: bool)
+signal pined_changed(pined: bool)
 
-var _auto_hide := false
-var _manual_active := true
+var closed := false:
+	set(value):
+		if closed == value:
+			return
+		closed = value
+		if not closed and not pined:
+			_hover_shown = false
+		_apply_state()
+
+var pined := false:
+	set(value):
+		if pined == value:
+			return
+		var was_pined := pined
+		if value and closed:
+			closed = false
+		pined = value
+		pined_changed.emit(pined)
+		if was_pined and not pined and not closed:
+			_hover_shown = _slide_controller.active
+		_apply_state()
+
+var _hover_shown := false
 var _outside_safe_timer := 0.0
 
 var _slide_controller:
@@ -101,49 +123,23 @@ var _game_window: Window:
 
 
 func _ready() -> void:
-	_apply_visibility_policy()
+	_apply_state()
 	await get_tree().process_frame
-	force_show(5)
+	if not closed and not pined:
+		_outside_safe_timer = -STARTUP_PEEK_SECONDS
+		_hover_shown = true
+		_slide_controller.active = true
 
 
-func force_show(seconds: float) -> void:
-	_outside_safe_timer = -seconds
-	_slide_controller.active = true
-
-
-func is_auto_hide_enabled() -> bool:
-	return _auto_hide
-
-
-func apply_pin_pressed(pin_pressed: bool) -> void:
-	set_auto_hide_enabled(not pin_pressed)
-
-
-func set_auto_hide_enabled(enabled: bool) -> void:
-	if _auto_hide == enabled:
-		return
-	_auto_hide = enabled
-	_outside_safe_timer = 0.0
-	_apply_visibility_policy()
-	auto_hide_changed.emit(_auto_hide)
-
-
-func dismiss_to_hidden() -> void:
-	_manual_active = false
-	set_auto_hide_enabled(false)
-
-
-func disable_auto_hide_and_show() -> void:
-	_manual_active = true
-	_outside_safe_timer = 0.0
-	set_auto_hide_enabled(false)
-	_slide_controller.active = true
-
-
-func _apply_visibility_policy() -> void:
-	set_process(_auto_hide)
-	if not _auto_hide:
-		_slide_controller.active = _manual_active
+func _apply_state() -> void:
+	set_process(not closed and not pined)
+	if closed:
+		_slide_controller.active = false
+	elif pined:
+		_outside_safe_timer = 0.0
+		_slide_controller.active = true
+	else:
+		_slide_controller.active = _hover_shown
 
 
 func _process(delta: float) -> void:
@@ -154,9 +150,11 @@ func _process(delta: float) -> void:
 		else:
 			_outside_safe_timer += delta
 			if _outside_safe_timer >= AUTO_HIDE_DELAY_SECONDS:
+				_hover_shown = false
 				_slide_controller.active = false
 	else:
 		if _is_mouse_in_show_trigger(mouse):
+			_hover_shown = true
 			_slide_controller.active = true
 		else:
 			_outside_safe_timer = 0.0

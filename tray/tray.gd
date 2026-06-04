@@ -1,7 +1,7 @@
 extends StatusIndicator
 
 signal control_window_open_requested
-signal game_show_requested
+signal game_show_requested(pined: bool)
 signal quit_requested
 
 var _tray_supported := (
@@ -17,7 +17,7 @@ func _on_pressed(mouse_button: int, _mouse_position: Vector2i) -> void:
 		return
 	match mouse_button:
 		MOUSE_BUTTON_LEFT:
-			game_show_requested.emit()
+			game_show_requested.emit(true)
 		MOUSE_BUTTON_RIGHT:
 			var global_mouse := DisplayServer.mouse_get_position()
 			var screen := DisplayServer.get_screen_from_rect(Rect2(global_mouse, Vector2.ONE))

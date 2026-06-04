@@ -10,8 +10,8 @@ func dismiss_bar() -> void:
 	bar_dismiss_requested.emit()
 
 
-func sync_pin_from_auto_hide(auto_hide_enabled: bool) -> void:
-	%Pin.set_pressed_no_signal(not auto_hide_enabled)
+func sync_pin_from_pined(pined: bool) -> void:
+	%Pin.set_pressed_no_signal(pined)
 
 @export var game: Game
 
