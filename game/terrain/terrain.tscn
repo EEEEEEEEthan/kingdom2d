@@ -123,7 +123,8 @@ show_behind_parent = true
 scroll_scale = Vector2(0.15, 0.15)
 scroll_offset = Vector2(0, 2)
 
-[node name="MultiMeshInstance2D" parent="Parallaxes/Parallax2DCloud1" unique_id=1544576738 instance=ExtResource("4_ci4kj")]
+[node name="Cloud1" parent="Parallaxes/Parallax2DCloud1" unique_id=1544576738 instance=ExtResource("4_ci4kj")]
+position = Vector2(0, -35)
 
 [node name="Parallax2DMountain1" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
 scroll_scale = Vector2(0.2, 0.2)

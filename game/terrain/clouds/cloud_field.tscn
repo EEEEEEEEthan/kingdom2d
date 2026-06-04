@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://4ga80fnd4r6o"]
+
+[ext_resource type="Script" uid="uid://bq7juwp6g31ew" path="res://game/terrain/clouds/cloud_field.gd" id="1_02ett"]
+
+[node name="CloudField" type="Node2D" unique_id=1878045251]
+script = ExtResource("1_02ett")
+
+[node name="CloudPlaceholder" parent="." unique_id=249759729 instance_placeholder="res://game/terrain/clouds/cloud.tscn"]
+unique_name_in_owner = true
