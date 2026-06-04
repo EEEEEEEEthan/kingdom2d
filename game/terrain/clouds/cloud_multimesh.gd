@@ -8,30 +8,56 @@ const FRAME_SIZE := Vector2(16.0, 8.0)
 const SPRITES_PER_MASS_MIN := 5
 const SPRITES_PER_MASS_MAX := 14
 
+var _defer_rebuild := false
+
 @export var area_size := Vector2(720.0, 100.0):
 	set(value):
 		area_size = value
-		if not is_node_ready(): await ready
-		_rebuild()
-		
+		if not is_node_ready():
+			await ready
+		if not _defer_rebuild:
+			_rebuild()
+
 @export var cluster_radius := Vector2(36.0, 18.0):
 	set(value):
 		cluster_radius = value
-		if not is_node_ready(): await ready
-		_rebuild()
+		if not is_node_ready():
+			await ready
+		if not _defer_rebuild:
+			_rebuild()
 
-@export var instance_count: int:
+@export var instance_count: int = 0:
 	set(value):
 		instance_count = value
-		if not is_node_ready(): await ready
-		_rebuild()
+		if not is_node_ready():
+			await ready
+		if not _defer_rebuild:
+			_rebuild()
+
+
+func configure(
+	sprite_count: int,
+	node_position: Vector2,
+	new_area_size: Vector2,
+	new_cluster_radius: Vector2,
+) -> void:
+	_defer_rebuild = true
+	position = node_position
+	area_size = new_area_size
+	cluster_radius = new_cluster_radius
+	instance_count = sprite_count
+	_defer_rebuild = false
+	_rebuild()
+
 
 func _rebuild() -> void:
 	if not is_node_ready():
 		await ready
+	if multimesh == null:
+		multimesh = MultiMesh.new()
 	var target_count := instance_count
 	multimesh.instance_count = 0
-	_ensure_multimesh_format()
+	_apply_multimesh_format()
 	multimesh.instance_count = target_count
 	if target_count == 0:
 		return
@@ -47,7 +73,7 @@ func _rebuild() -> void:
 
 		multimesh.set_instance_transform_2d(
 			index,
-			Transform2D(0.0, Vector2.ONE, 0.0, positions[index]),
+			Transform2D(0.0, Vector2.ONE, 0.0, _quantize_position(positions[index])),
 		)
 		multimesh.set_instance_color(
 			index,
@@ -60,14 +86,20 @@ func _rebuild() -> void:
 		)
 
 
+func _quantize_position(sample_position: Vector2) -> Vector2:
+	return Vector2(roundi(sample_position.x), roundi(sample_position.y))
+
+
 func _build_clustered_positions(instance_count: int, random: RandomNumberGenerator) -> PackedVector2Array:
 	var positions := PackedVector2Array()
 	positions.resize(instance_count)
+	var half_width := int(area_size.x * 0.5)
+	var half_height := int(area_size.y * 0.5)
 	var index := 0
 	while index < instance_count:
 		var mass_center := Vector2(
-			random.randf_range(-area_size.x * 0.5, area_size.x * 0.5),
-			random.randf_range(-area_size.y * 0.5, area_size.y * 0.5),
+			random.randi_range(-half_width, half_width),
+			random.randi_range(-half_height, half_height),
 		)
 		var sprites_in_mass := mini(
 			random.randi_range(SPRITES_PER_MASS_MIN, SPRITES_PER_MASS_MAX),
@@ -85,10 +117,12 @@ func _sample_cluster_offset(random: RandomNumberGenerator) -> Vector2:
 	return direction * radius * cluster_radius
 
 
-func _ensure_multimesh_format() -> void:
+func _apply_multimesh_format() -> void:
 	multimesh.transform_format = MultiMesh.TRANSFORM_2D
 	multimesh.use_custom_data = false
 	multimesh.use_colors = true
 	var quad_mesh := multimesh.mesh as QuadMesh
-	if quad_mesh:
-		quad_mesh.size = FRAME_SIZE
+	if quad_mesh == null:
+		quad_mesh = QuadMesh.new()
+		multimesh.mesh = quad_mesh
+	quad_mesh.size = FRAME_SIZE
