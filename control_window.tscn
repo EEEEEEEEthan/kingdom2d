@@ -55,6 +55,34 @@ func _on_confirmed() -> void:
 	owner.reset_game_requested.emit()
 "
 
+[sub_resource type="GDScript" id="GDScript_close_behavior_option"]
+script/source = "extends OptionButton
+
+func _ready() -> void:
+	add_item(\"每次询问\", Settings.CloseButtonBehavior.ASK_EACH_TIME)
+	add_item(\"结束进程\", Settings.CloseButtonBehavior.EXIT_PROCESS)
+	add_item(\"隐藏至托盘\", Settings.CloseButtonBehavior.HIDE_TO_TRAY)
+	_select_by_behavior(Settings.close_button_behavior)
+	Settings.close_button_behavior_changed.connect(_on_settings_close_button_behavior_changed)
+
+
+func _on_settings_close_button_behavior_changed(new_behavior: int) -> void:
+	_select_by_behavior(new_behavior)
+
+
+func _on_item_selected(index: int) -> void:
+	var behavior: int = get_item_id(index)
+	if behavior != Settings.close_button_behavior:
+		Settings.close_button_behavior = behavior
+
+
+func _select_by_behavior(behavior: int) -> void:
+	for i in item_count:
+		if get_item_id(i) == behavior:
+			select(i)
+			return
+"
+
 [node name="ControlWindow" type="Window" unique_id=1280178936]
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
@@ -63,7 +91,7 @@ canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(100, 36)
-size = Vector2i(256, 256)
+size = Vector2i(256, 288)
 always_on_top = true
 content_scale_mode = 1
 content_scale_stretch = 1
@@ -124,6 +152,16 @@ tick_count = 8
 ticks_on_borders = true
 script = SubResource("GDScript_width_slider")
 
+[node name="CloseBehaviorLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=2847293011]
+layout_mode = 2
+text = "关闭按钮"
+
+[node name="CloseBehaviorOption" type="OptionButton" parent="VBoxContainer/GridContainer" unique_id=2847293012]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+script = SubResource("GDScript_close_behavior_option")
+
 [node name="ResetGame" type="Button" parent="VBoxContainer" unique_id=632707697]
 layout_mode = 2
 size_flags_vertical = 10
@@ -147,6 +185,7 @@ dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
 [connection signal="close_requested" from="." to="." method="hide"]
+[connection signal="item_selected" from="VBoxContainer/GridContainer/CloseBehaviorOption" to="VBoxContainer/GridContainer/CloseBehaviorOption" method="_on_item_selected"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]

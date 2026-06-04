@@ -35,3 +35,25 @@ func _pin_engine_root_offscreen() -> void:
 
 func request_quit() -> void:
 	%QuitConfirmDialog.visible = true
+
+
+func handle_game_window_close() -> void:
+	match Settings.close_button_behavior:
+		Settings.CloseButtonBehavior.EXIT_PROCESS:
+			get_tree().quit()
+		Settings.CloseButtonBehavior.HIDE_TO_TRAY:
+			%GameWindow.closed = true
+		Settings.CloseButtonBehavior.ASK_EACH_TIME:
+			%CloseBehaviorDialog.popup_near_mouse()
+
+
+func apply_close_exit_choice(save_preference: bool) -> void:
+	if save_preference:
+		Settings.close_button_behavior = Settings.CloseButtonBehavior.EXIT_PROCESS
+	get_tree().quit()
+
+
+func apply_close_hide_choice(save_preference: bool) -> void:
+	if save_preference:
+		Settings.close_button_behavior = Settings.CloseButtonBehavior.HIDE_TO_TRAY
+	%GameWindow.closed = true

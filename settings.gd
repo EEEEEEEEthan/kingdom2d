@@ -1,11 +1,19 @@
 extends Node
 
+enum CloseButtonBehavior {
+	ASK_EACH_TIME,
+	EXIT_PROCESS,
+	HIDE_TO_TRAY,
+}
+
+signal close_button_behavior_changed(new_behavior: CloseButtonBehavior)
 signal display_scale_changed(new_scale: int)
 signal game_width_ratio_changed(new_ratio: float)
 
 const SETTINGS_FILE_PATH = "user://settings.cfg"
 
 const _SECTION_DISPLAY = "display"
+const _KEY_CLOSE_BUTTON_BEHAVIOR = "close_button_behavior"
 const _KEY_DISPLAY_SCALE = "display_scale"
 const _KEY_GAME_WIDTH_RATIO = "game_width_ratio"
 
@@ -25,6 +33,13 @@ var game_width_ratio: float = 1.0:
 			_save_to_disk()
 		game_width_ratio_changed.emit(value)
 
+var close_button_behavior: CloseButtonBehavior = CloseButtonBehavior.ASK_EACH_TIME:
+	set(value):
+		close_button_behavior = value
+		if not _is_restoring_from_disk:
+			_save_to_disk()
+		close_button_behavior_changed.emit(value)
+
 
 func _ready() -> void:
 	if not FileAccess.file_exists(SETTINGS_FILE_PATH):
@@ -35,6 +50,11 @@ func _ready() -> void:
 	_is_restoring_from_disk = true
 	display_scale = config.get_value(_SECTION_DISPLAY, _KEY_DISPLAY_SCALE, display_scale)
 	game_width_ratio = config.get_value(_SECTION_DISPLAY, _KEY_GAME_WIDTH_RATIO, game_width_ratio)
+	close_button_behavior = config.get_value(
+		_SECTION_DISPLAY,
+		_KEY_CLOSE_BUTTON_BEHAVIOR,
+		close_button_behavior,
+	)
 	_is_restoring_from_disk = false
 
 
@@ -42,4 +62,5 @@ func _save_to_disk() -> void:
 	var config := ConfigFile.new()
 	config.set_value(_SECTION_DISPLAY, _KEY_DISPLAY_SCALE, display_scale)
 	config.set_value(_SECTION_DISPLAY, _KEY_GAME_WIDTH_RATIO, game_width_ratio)
+	config.set_value(_SECTION_DISPLAY, _KEY_CLOSE_BUTTON_BEHAVIOR, close_button_behavior)
 	config.save(SETTINGS_FILE_PATH)

@@ -1,13 +1,13 @@
 extends CanvasLayer
 
 signal auto_hide_pin_toggled(pin_pressed: bool)
-signal bar_dismiss_requested
+signal close_button_pressed
 signal control_window_open_requested
 signal quit_requested
 
 
-func dismiss_bar() -> void:
-	bar_dismiss_requested.emit()
+func request_close() -> void:
+	close_button_pressed.emit()
 
 
 func sync_pin_from_pined(pined: bool) -> void:

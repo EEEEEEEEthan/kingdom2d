@@ -35,7 +35,7 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 script/source = "extends Button
 
 func _on_pressed() -> void:
-	owner.dismiss_bar()
+	owner.request_close()
 "
 
 [sub_resource type="Texture2D" id="Texture2D_mdi0g"]

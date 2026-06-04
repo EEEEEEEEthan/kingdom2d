@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://djbym0x02cuni" path="res://main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://control_window.tscn" id="2_control_window"]
 [ext_resource type="PackedScene" uid="uid://bxn51co5pbs21" path="res://tray/tray.tscn" id="3_tray"]
+[ext_resource type="PackedScene" uid="uid://c8k4m2n7closebh" path="res://close_behavior_dialog.tscn" id="4_close_behavior_dialog"]
 
 [sub_resource type="GDScript" id="GDScript_display_scale_wheel"]
 script/source = "extends Node
@@ -90,6 +91,7 @@ anisotropic_filtering_level = 0
 
 [node name="ControlWindow" parent="." unique_id=413646671 instance=ExtResource("2_control_window")]
 unique_name_in_owner = true
+visible = false
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 unique_name_in_owner = true
@@ -118,8 +120,14 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
+[node name="CloseBehaviorDialog" parent="." instance=ExtResource("4_close_behavior_dialog")]
+unique_name_in_owner = true
+
+[connection signal="close_button_pressed" from="GameWindow" to="." method="handle_game_window_close"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]
+[connection signal="exit_chosen" from="CloseBehaviorDialog" to="." method="apply_close_exit_choice"]
+[connection signal="hide_chosen" from="CloseBehaviorDialog" to="." method="apply_close_hide_choice"]
