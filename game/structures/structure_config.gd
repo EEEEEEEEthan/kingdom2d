@@ -54,6 +54,7 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 
 var id: TypeId = TypeId.NONE
 var name: StringName
+var max_hp = 32
 var _scene_path: StringName
 var _scene: PackedScene:
 	get:

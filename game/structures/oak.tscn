@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_l17i3"]
 
 [sub_resource type="GDScript" id="GDScript_pj4fb"]
-script/source = "extends Structure
+script/source = "extends Plant
 
 func _serialize() -> Dictionary:
 	return {}
