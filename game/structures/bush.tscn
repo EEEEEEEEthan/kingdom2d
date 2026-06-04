@@ -11,6 +11,9 @@ func _serialize() -> Dictionary:
 
 func _deserialize(_data: Dictionary) -> void:
 	pass
+
+func _on_growth_changed() -> void:
+	%Sprite2D.update_texture()
 "
 
 [sub_resource type="Texture2D" id="Texture2D_dxrkv"]
@@ -33,6 +36,9 @@ normal_texture = SubResource("Texture2D_u5opy")
 
 [sub_resource type="GDScript" id="GDScript_l17i3"]
 script/source = "extends Sprite2D
+
+func update_texture() -> void:
+	frame = clamp(int(owner.growth / 4), 0, 3)
 "
 
 [node name="Bush" unique_id=1642746995 instance=ExtResource("1_ohp2f")]
@@ -42,6 +48,8 @@ script = SubResource("GDScript_pj4fb")
 unique_name_in_owner = true
 texture = SubResource("CanvasTexture_4fuuu")
 offset = Vector2(0, -8)
+hframes = 4
+vframes = 4
 region_enabled = true
 region_rect = Rect2(1, 1, 14, 15)
 script = SubResource("GDScript_l17i3")

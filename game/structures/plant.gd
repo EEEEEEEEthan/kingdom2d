@@ -3,7 +3,11 @@ class_name Plant
 
 const _KEY_GROWTH = 1
 
-var growth: float
+var growth: float:
+	set(value):
+		growth = value
+		if not is_node_ready(): await ready
+		_on_growth_changed()
 
 func _serialize() -> Dictionary:
 	return {
@@ -12,3 +16,6 @@ func _serialize() -> Dictionary:
 
 func _deserialize(_data: Dictionary) -> void:
 	growth = _data[_KEY_GROWTH]
+
+func _on_growth_changed() -> void:
+	pass
