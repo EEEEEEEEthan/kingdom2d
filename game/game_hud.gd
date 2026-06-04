@@ -10,7 +10,7 @@ var hud_scale: int = 1:
 	set(value):
 		hud_scale = value
 		if not is_node_ready(): await ready
-		var vbox := %VBoxContainer
+		var vbox := %Buttons
 		var s := float(hud_scale)
 		vbox.scale = Vector2.ONE
 		vbox.pivot_offset = Vector2(0, vbox.get_combined_minimum_size().y)

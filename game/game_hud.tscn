@@ -97,7 +97,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HudRoot" unique_id=1493286413]
+[node name="Buttons" type="VBoxContainer" parent="HudRoot" unique_id=1493286413]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 2
@@ -110,13 +110,13 @@ offset_bottom = -4.0
 grow_vertical = 0
 theme_override_constants/separation = 2
 
-[node name="Menu" type="Button" parent="HudRoot/VBoxContainer" unique_id=1968301569]
+[node name="Menu" type="Button" parent="HudRoot/Buttons" unique_id=1968301569]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_menu")
 
-[node name="ResetCamera" type="Button" parent="HudRoot/VBoxContainer" unique_id=67090867]
+[node name="ResetCamera" type="Button" parent="HudRoot/Buttons" unique_id=67090867]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
@@ -131,7 +131,6 @@ anisotropic_filtering_level = 0
 canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 size = Vector2i(128, 100)
-visible = true
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
@@ -143,8 +142,8 @@ script = SubResource("GDScript_popup_menu")
 [node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
 unique_name_in_owner = true
 
-[connection signal="pressed" from="HudRoot/VBoxContainer/Menu" to="PopupMenu" method="_on_menu_pressed"]
-[connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="HudRoot/VBoxContainer/ResetCamera" method="_on_pressed"]
+[connection signal="pressed" from="HudRoot/Buttons/Menu" to="PopupMenu" method="_on_menu_pressed"]
+[connection signal="pressed" from="HudRoot/Buttons/ResetCamera" to="HudRoot/Buttons/ResetCamera" method="_on_pressed"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
