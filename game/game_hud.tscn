@@ -38,6 +38,32 @@ func _on_pressed() -> void:
 	owner.reset_camera()
 "
 
+[sub_resource type="GDScript" id="GDScript_mdi0g"]
+script/source = "extends Label
+
+var game: Game:
+	get: return owner.game
+
+func _process(_delta: float) -> void:
+	var time = game.game_time
+	var year_text = \"\" if time.year <= 1 else \"Year %s \" % time.year
+	var season_text : StringName
+	match time.month:
+		1: season_text = &\"Late Winter\"
+		2: season_text = &\"Early Spring\"
+		3: season_text = &\"Mid Spring\"
+		4: season_text = &\"Late Spring\"
+		5: season_text = &\"Early Summer\"
+		6: season_text = &\"Mid Summer\"
+		7: season_text = &\"Late Summer\"
+		8: season_text = &\"Early Autumn\"
+		9: season_text = &\"Mid Autumn\"
+		10: season_text = &\"Late Autumn\"
+		11: season_text = &\"Early Winter\"
+		12: season_text = &\"Mid Winter\"
+	text = \"%s%s\" % [year_text,season_text]
+"
+
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
 
@@ -112,19 +138,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="GameButtons" type="HBoxContainer" parent="HudRoot" unique_id=365840526]
+[node name="MarginContainer" type="MarginContainer" parent="HudRoot" unique_id=1542180403]
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = -28.0
-offset_right = 54.0
-offset_bottom = -4.0
-grow_vertical = 0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="GameButtons" type="HBoxContainer" parent="HudRoot/MarginContainer" unique_id=365840526]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="Pin" type="Button" parent="HudRoot/GameButtons" unique_id=534034900]
+[node name="Pin" type="Button" parent="HudRoot/MarginContainer/GameButtons" unique_id=534034900]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
@@ -133,19 +167,26 @@ button_pressed = true
 icon = SubResource("Texture2D_mdi0g")
 script = SubResource("GDScript_pin")
 
-[node name="Menu" type="Button" parent="HudRoot/GameButtons" unique_id=1968301569]
+[node name="Menu" type="Button" parent="HudRoot/MarginContainer/GameButtons" unique_id=1968301569]
 unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_menu")
 
-[node name="ResetCamera" type="Button" parent="HudRoot/GameButtons" unique_id=67090867]
+[node name="ResetCamera" type="Button" parent="HudRoot/MarginContainer/GameButtons" unique_id=67090867]
 unique_name_in_owner = true
 visible = false
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_reset")
 script = SubResource("GDScript_reset_camera")
+
+[node name="Label" type="Label" parent="HudRoot/MarginContainer" unique_id=324679616]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+text = "day999"
+script = SubResource("GDScript_mdi0g")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=133706543]
 unique_name_in_owner = true
@@ -166,9 +207,9 @@ script = SubResource("GDScript_popup_menu")
 [node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
 unique_name_in_owner = true
 
-[connection signal="toggled" from="HudRoot/GameButtons/Pin" to="HudRoot/GameButtons/Pin" method="_on_toggled"]
-[connection signal="pressed" from="HudRoot/GameButtons/Menu" to="PopupMenu" method="_on_menu_pressed"]
-[connection signal="pressed" from="HudRoot/GameButtons/ResetCamera" to="HudRoot/GameButtons/ResetCamera" method="_on_pressed"]
+[connection signal="toggled" from="HudRoot/MarginContainer/GameButtons/Pin" to="HudRoot/MarginContainer/GameButtons/Pin" method="_on_toggled"]
+[connection signal="pressed" from="HudRoot/MarginContainer/GameButtons/Menu" to="PopupMenu" method="_on_menu_pressed"]
+[connection signal="pressed" from="HudRoot/MarginContainer/GameButtons/ResetCamera" to="HudRoot/MarginContainer/GameButtons/ResetCamera" method="_on_pressed"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]

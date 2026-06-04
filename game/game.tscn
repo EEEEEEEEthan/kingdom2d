@@ -124,3 +124,7 @@ process_thread_messages = 0
 position = Vector2(0, 32)
 process_callback = 0
 script = SubResource("GDScript_camera")
+
+[node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=307614254]
+color = Color(0, 0, 0.32171935, 0)
+blend_mode = 2
