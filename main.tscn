@@ -122,5 +122,6 @@ script = SubResource("GDScript_quit_confirm")
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
+[connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]
