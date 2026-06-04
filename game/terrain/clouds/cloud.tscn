@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://ceck4jevjpmxp"]
+
+[ext_resource type="Script" uid="uid://cf47dvwbvopl4" path="res://game/terrain/clouds/cloud.gd" id="1_3tplo"]
+[ext_resource type="Texture2D" uid="uid://d4l7cepg4ntxe" path="res://game/terrain/clouds/cloud_spritesheet.png" id="1_y5hpv"]
+[ext_resource type="Script" uid="uid://cj8n7ei1irpwd" path="res://game/terrain/clouds/cloud_multimesh.gd" id="2_multimesh"]
+[ext_resource type="Shader" uid="uid://csxvrrab8u42b" path="res://game/terrain/clouds/cloud.gdshader" id="3_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cloud"]
+shader = ExtResource("3_shader")
+shader_parameter/fps = 3.0
+shader_parameter/frame_count = Vector2(4, 8)
+shader_parameter/speed_range = Vector2(0.6, 1.4)
+
+[sub_resource type="QuadMesh" id="QuadMesh_1grvs"]
+size = Vector2(16, 8)
+
+[sub_resource type="MultiMesh" id="MultiMesh_5grhd"]
+use_colors = true
+instance_count = 24
+mesh = SubResource("QuadMesh_1grvs")
+buffer = PackedFloat32Array(1, 0, 0, 45.676804, 0, 1, 0, -3.903568, 1, 0.46872684, 0.24468885, 0.9941987, 1, 0, 0, 51.07279, 0, 1, 0, -0.60380834, 0, 0.22625682, 0.47721514, 0.8775239, 1, 0, 0, 58.381798, 0, 1, 0, 1.7009611, 0.14285715, 0.60584533, 0.29715437, 0.9221936, 1, 0, 0, 52.62679, 0, 1, 0, 1.6300814, 0.71428573, 0.6136301, 0.27772808, 0.9392024, 1, 0, 0, 47.907627, 0, 1, 0, -0.9052628, 0.5714286, 0.09893442, 0.96419567, 0.8620933, 1, 0, 0, 46.9674, 0, 1, 0, -0.5184545, 0.71428573, 0.1771651, 0.1576096, 0.9628238, 1, 0, 0, 37.104218, 0, 1, 0, -1.6397679, 0.14285715, 0.64129335, 0.67110443, 0.99950564, 1, 0, 0, 8.69017, 0, 1, 0, 2.5271099, 0, 0.94610703, 0.49397668, 0.8457151, 1, 0, 0, 20.96286, 0, 1, 0, 2.354765, 0.5714286, 0.520166, 0.16322227, 0.90082425, 1, 0, 0, 36.995583, 0, 1, 0, 1.4203668, 0.85714287, 0.05340148, 0.57709914, 0.8969121, 1, 0, 0, 32.866226, 0, 1, 0, -3.838078, 0.85714287, 0.9209221, 0.79329014, 0.9297796, 1, 0, 0, 33.31981, 0, 1, 0, 0.789363, 1, 0.4677717, 0.13827434, 0.84914786, 1, 0, 0, 33.335854, 0, 1, 0, 0.8317886, 0, 0.45145148, 0.3202878, 0.960125, 1, 0, 0, 25.277609, 0, 1, 0, -2.2008533, 0, 0.9509609, 0.036792394, 0.9972802, 1, 0, 0, 32.197132, 0, 1, 0, 1.0002956, 0.5714286, 0.8769802, 0.31731504, 0.91335005, 1, 0, 0, 48.076263, 0, 1, 0, -1.6207957, 0.14285715, 0.45651713, 0.34788802, 0.8830329, 1, 0, 0, 27.426117, 0, 1, 0, 0.33052534, 0.71428573, 0.92613006, 0.5223761, 0.8340288, 1, 0, 0, 28.982733, 0, 1, 0, 1.9900893, 0, 0.6672273, 0.27385694, 0.864821, 1, 0, 0, 13.870251, 0, 1, 0, 0.36061293, 0.5714286, 0.18664442, 0.9313845, 0.954513, 1, 0, 0, 33.942516, 0, 1, 0, 0.8527847, 0.42857143, 0.3966741, 0.74239576, 0.90130836, 1, 0, 0, -63.237686, 0, 1, 0, 2.8860903, 0.2857143, 0.32942057, 0.751617, 0.83548284, 1, 0, 0, -47.04837, 0, 1, 0, 1.58319, 0.71428573, 0.15636685, 0.0034749268, 0.9453591, 1, 0, 0, -37.374535, 0, 1, 0, 0.4606077, 0.42857143, 0.45265403, 0.7696437, 0.92580783, 1, 0, 0, -40.236565, 0, 1, 0, 3.6146877, 0.2857143, 0.7774946, 0.8913055, 0.8878173)
+
+[node name="Cloud" type="Node2D" unique_id=249759729]
+script = ExtResource("1_3tplo")
+count = 139
+
+[node name="MultiMeshInstance2D" type="MultiMeshInstance2D" parent="." unique_id=1544576738]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_cloud")
+position = Vector2(21, 22)
+multimesh = SubResource("MultiMesh_5grhd")
+texture = ExtResource("1_y5hpv")
+script = ExtResource("2_multimesh")
+area_size = Vector2(128, 8)
+cluster_radius = Vector2(48, 8)
+instance_count = 24
