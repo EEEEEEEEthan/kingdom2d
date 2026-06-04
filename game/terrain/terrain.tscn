@@ -123,7 +123,10 @@ show_behind_parent = true
 scroll_scale = Vector2(0.15, 0.15)
 scroll_offset = Vector2(0, 2)
 
-[node name="CloudField" parent="Parallaxes/Parallax2DCloud1" unique_id=1878045251 instance=ExtResource("4_ci4kj")]
+[node name="Cloud1" type="Node2D" parent="Parallaxes/Parallax2DCloud1" unique_id=812949652]
+unique_name_in_owner = true
+
+[node name="CloudField" parent="Parallaxes/Parallax2DCloud1/Cloud1" unique_id=1878045251 instance=ExtResource("4_ci4kj")]
 position = Vector2(-128, -36)
 field_size = Vector2(4352, 8)
 cloud_count = 8
@@ -143,7 +146,10 @@ offset = Vector2(0, -24)
 scroll_scale = Vector2(0.25, 0.25)
 scroll_offset = Vector2(0, 2)
 
-[node name="CloudField2" parent="Parallaxes/Parallax2DCloud2" unique_id=353350965 instance=ExtResource("4_ci4kj")]
+[node name="Cloud2" type="Node2D" parent="Parallaxes/Parallax2DCloud2" unique_id=1418060995]
+unique_name_in_owner = true
+
+[node name="CloudField2" parent="Parallaxes/Parallax2DCloud2/Cloud2" unique_id=353350965 instance=ExtResource("4_ci4kj")]
 position = Vector2(-128, -43)
 field_size = Vector2(4352, 8)
 cloud_count = 8

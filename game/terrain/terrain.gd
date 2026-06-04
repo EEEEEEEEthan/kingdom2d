@@ -10,11 +10,13 @@ enum TerrainType {
 const TERRAIN_SET := 0
 const GROUND_ROW_Y := -1
 
-var _sprites: Array[Sprite2D]:
+var _sprites: Array:
 	get:
 		if not _sprites:
 			_sprites = [
+				%Cloud1,
 				%Sprite2D0,
+				%Cloud2,
 				%Sprite2D1,
 				%Sprite2D2,
 				%Sprite2D3,
@@ -30,8 +32,8 @@ var _sprites: Array[Sprite2D]:
 		var cnt = len(_sprites)
 		for i in cnt:
 			var y = remap(value, 0, 1, (cnt - i) * 32, 0)
-			var sprite := _sprites[i]
-			var pos = sprite.position
+			var node = _sprites[i]
+			var pos = node.position
 			pos.y = y
 			_sprites[i].position = pos
 
