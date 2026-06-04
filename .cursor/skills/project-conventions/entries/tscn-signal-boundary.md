@@ -7,7 +7,7 @@
 ## 禁止（场景内部）
 
 - `get_node("/root/...")`、`get_tree().root.get_node(...)` 等方式抓取场景外节点。
-- 直接调用 Autoload 单例的业务方法（如 `Game.xxx()`、`Settings.save()`），除非该 Autoload 是纯工具且无项目状态耦合——仍优先信号上抛。
+- 直接调用 Autoload 的**实例**业务方法或读写其状态（如 `Game.xxx()`、`Settings.save()`）。**静态方法**（无项目状态副作用的工具函数）允许调用。
 - 硬编码其它场景的路径并 `get_node` 到已挂载的实例。
 - 在子脚本里用 `get_parent()` 链穿透到本场景之外的节点。
 
@@ -51,6 +51,7 @@ func _on_build_clicked() -> void:
 
 - 访问本场景子树：`%NodeName`、`owner`、同场景 `get_node`。
 - 使用引擎通用 API（`DisplayServer`、`Input` 等）且不绑定其它业务场景时。
+- 调用 Autoload 上的 **static** 方法（纯工具、不改动单例业务状态）。
 
 ## 为什么
 
