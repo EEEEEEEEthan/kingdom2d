@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bl6nwqv1nb67" path="res://game/terrain/terrain_normal.png" id="2_rx45g"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_uaf13"]
 [ext_resource type="Script" uid="uid://c7lsurn21ti7c" path="res://game/terrain/terrain.gd" id="3_5grhd"]
+[ext_resource type="Texture2D" uid="uid://d4l7cepg4ntxe" path="res://game/clouds/cloud_spritesheet.png" id="4_cloud"]
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_rx45g"]
 diffuse_texture = ExtResource("1_0rasl")
@@ -75,12 +76,46 @@ height = 17
 fill_from = Vector2(0, 1)
 fill_to = Vector2(0, 0)
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_cloud"]
+particles_animation = true
+particles_anim_h_frames = 4
+particles_anim_v_frames = 8
+particles_anim_loop = true
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ci4kj"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(0, 5, 1)
+angle_min = 1.0728835e-05
+angle_max = 1.0728835e-05
+spread = 0.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+gravity = Vector3(0, 0, 0)
+anim_speed_min = 0.125
+anim_speed_max = 0.125
+anim_offset_max = 0.875
+
 [sub_resource type="Texture2D" id="Texture2D_qbdts"]
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("2_uaf13")
 _base64_data = "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"
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_cloud"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(0, 5, 1)
+angle_min = 1.0728835e-05
+angle_max = 1.0728835e-05
+spread = 0.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+gravity = Vector3(0, 0, 0)
+anim_speed_min = 0.125
+anim_speed_max = 0.125
+anim_offset_max = 0.875
 
 [sub_resource type="Texture2D" id="Texture2D_ittvg"]
 resource_local_to_scene = false
@@ -118,42 +153,87 @@ offset = Vector2(0, -9)
 [node name="Parallaxes" type="Node2D" parent="." unique_id=1214997680]
 show_behind_parent = true
 
-[node name="Parallax2D1" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
+[node name="Parallax2DCloud1" type="Parallax2D" parent="Parallaxes" unique_id=1522444227]
+scroll_scale = Vector2(0.15, 0.15)
+scroll_offset = Vector2(0, 2)
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="Parallaxes/Parallax2DCloud1" unique_id=375775769]
+unique_name_in_owner = true
+material = SubResource("CanvasItemMaterial_cloud")
+position = Vector2(-28, -31)
+amount = 256
+texture = ExtResource("4_cloud")
+lifetime = 1228.8
+preprocess = 8192.0
+randomness = 0.4
+fixed_fps = 0
+visibility_rect = Rect2(0, -200, 4096, 400)
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_ci4kj")
+
+[node name="Parallax2DMountain1" type="Parallax2D" parent="Parallaxes" unique_id=174031200]
 scroll_scale = Vector2(0.2, 0.2)
+scroll_offset = Vector2(0, 2)
 repeat_size = Vector2(1216, 0)
 repeat_times = 40
 
-[node name="Sprite2D1" type="Sprite2D" parent="Parallaxes/Parallax2D1" unique_id=1342626762]
+[node name="Sprite2D1" type="Sprite2D" parent="Parallaxes/Parallax2DMountain1" unique_id=1342626762]
 unique_name_in_owner = true
 texture = SubResource("Texture2D_qbdts")
 offset = Vector2(0, -24)
 
-[node name="Parallax2D2" type="Parallax2D" parent="Parallaxes" unique_id=2035051536]
+[node name="Parallax2DCloud2" type="Parallax2D" parent="Parallaxes" unique_id=204465630]
+scroll_scale = Vector2(0.25, 0.25)
+scroll_offset = Vector2(0, 2)
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="Parallaxes/Parallax2DCloud2" unique_id=1147085853]
+material = SubResource("CanvasItemMaterial_cloud")
+position = Vector2(-28, -31)
+amount = 256
+texture = ExtResource("4_cloud")
+lifetime = 2048.0
+preprocess = 8192.0
+randomness = 0.4
+fixed_fps = 0
+visibility_rect = Rect2(0, -200, 4096, 400)
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_cloud")
+
+[node name="Parallax2DMountain2" type="Parallax2D" parent="Parallaxes" unique_id=2035051536]
 scroll_scale = Vector2(0.4, 0.4)
 repeat_size = Vector2(1120, 0)
 repeat_times = 6
 
-[node name="Sprite2D2" type="Sprite2D" parent="Parallaxes/Parallax2D2" unique_id=606335718]
+[node name="Sprite2D2" type="Sprite2D" parent="Parallaxes/Parallax2DMountain2" unique_id=606335718]
 unique_name_in_owner = true
 texture = SubResource("Texture2D_ittvg")
 offset = Vector2(0, -24)
 
-[node name="Parallax2D3" type="Parallax2D" parent="Parallaxes" unique_id=1494322017]
+[node name="Parallax2DMountain3" type="Parallax2D" parent="Parallaxes" unique_id=1494322017]
 scroll_scale = Vector2(0.6, 0.6)
 repeat_size = Vector2(1088, 0)
 repeat_times = 6
 
-[node name="Sprite2D3" type="Sprite2D" parent="Parallaxes/Parallax2D3" unique_id=1712520175]
+[node name="Sprite2D3" type="Sprite2D" parent="Parallaxes/Parallax2DMountain3" unique_id=1712520175]
 unique_name_in_owner = true
 texture = SubResource("Texture2D_uaf13")
 offset = Vector2(0, -16)
 
-[node name="Parallax2D4" type="Parallax2D" parent="Parallaxes" unique_id=318209487]
+[node name="Parallax2DMountain4" type="Parallax2D" parent="Parallaxes" unique_id=318209487]
 scroll_scale = Vector2(0.8, 0.8)
 repeat_size = Vector2(1024, 0)
 repeat_times = 40
 
-[node name="Sprite2D4" type="Sprite2D" parent="Parallaxes/Parallax2D4" unique_id=1941642327]
+[node name="Sprite2D4" type="Sprite2D" parent="Parallaxes/Parallax2DMountain4" unique_id=1941642327]
 unique_name_in_owner = true
 texture = SubResource("Texture2D_rx45g")
 offset = Vector2(0, -8)
+
+[node name="ReferenceRect" type="ReferenceRect" parent="." unique_id=844303477]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -64.0
+offset_right = 4096.0
+grow_vertical = 0
+mouse_filter = 2

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://frncc1ycbdyb"
-path="res://.godot/imported/distant_mountains.png-6acef0959a779a7cb5e6b4c8b93b0a1c.ctex"
+uid="uid://d4l7cepg4ntxe"
+path="res://.godot/imported/cloud_spritesheet.png-1d11cd71c25c5e62f7ff0608f5576303.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://game/background/distant_mountains.png"
-dest_files=["res://.godot/imported/distant_mountains.png-6acef0959a779a7cb5e6b4c8b93b0a1c.ctex"]
+source_file="res://game/clouds/cloud_spritesheet.png"
+dest_files=["res://.godot/imported/cloud_spritesheet.png-1d11cd71c25c5e62f7ff0608f5576303.ctex"]
 
 [params]
 
