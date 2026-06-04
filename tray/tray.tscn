@@ -3,6 +3,17 @@
 [ext_resource type="Script" path="res://tray/tray.gd" id="1_tray"]
 [ext_resource type="Texture2D" uid="uid://cewc8x12r2sq6" path="res://tray/icon.svg" id="2_icon"]
 
+[sub_resource type="GDScript" id="GDScript_tray_popup_menu"]
+script/source = "extends PopupMenu
+
+func _on_id_pressed(id: int) -> void:
+	match id:
+		0:
+			owner.control_window_open_requested.emit()
+		1:
+			owner.quit_requested.emit()
+"
+
 [node name="Tray" type="StatusIndicator" unique_id=497099990]
 tooltip = "Kingdom2D"
 icon = ExtResource("2_icon")
@@ -17,6 +28,7 @@ item_0/text = "设置"
 item_0/id = 0
 item_1/text = "退出"
 item_1/id = 1
+script = SubResource("GDScript_tray_popup_menu")
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]
-[connection signal="id_pressed" from="PopupMenu" to="." method="_on_popup_menu_id_pressed"]
+[connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]

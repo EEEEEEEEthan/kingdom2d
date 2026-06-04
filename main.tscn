@@ -60,6 +60,9 @@ script/source = "extends ConfirmationDialog
 func _ready() -> void:
 	visible = false
 
+func _on_confirmed() -> void:
+	owner.get_tree().quit()
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED and visible:
 		_place_near_global_mouse()
@@ -114,10 +117,10 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="_on_control_window_open_requested"]
-[connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="_on_control_window_reset_game_requested"]
+[connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
+[connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
 [connection signal="visibility_control_changed" from="ControlWindow" to="GameWindow/AutoHideController" method="configure_visibility_control"]
-[connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="_on_control_window_open_requested"]
+[connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
-[connection signal="confirmed" from="QuitConfirmDialog" to="." method="_on_quit_confirm_dialog_confirmed"]
+[connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]

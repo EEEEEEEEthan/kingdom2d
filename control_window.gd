@@ -14,7 +14,7 @@ func _ready() -> void:
 	Settings.game_width_ratio_changed.connect(notify_display_layout_changed)
 
 
-func _on_control_window_open_requested() -> void:
+func open_near_mouse() -> void:
 	var pos := DisplayServer.mouse_get_position()
 	var screen := DisplayServer.get_screen_from_rect(Rect2(pos, Vector2.ONE))
 	var usable := DisplayServer.screen_get_usable_rect(screen)
@@ -26,10 +26,6 @@ func _on_control_window_open_requested() -> void:
 	show()
 	mode = MODE_WINDOWED
 	grab_focus()
-
-
-func _on_reset_confirm_dialog_confirmed() -> void:
-	reset_game_requested.emit()
 
 
 func _update_visibility_ui() -> void:
@@ -54,7 +50,7 @@ func notify_display_layout_changed(_unused = null) -> void:
 	display_layout_changed.emit()
 
 
-func _on_auto_hide_toggled(_toggled_on: bool) -> void:
+func on_auto_hide_toggled(_toggled_on: bool) -> void:
 	Settings.auto_hide = %AutoHide.button_pressed
 	if not %AutoHide.button_pressed:
 		%GameVisible.set_pressed_no_signal(true)
@@ -62,5 +58,5 @@ func _on_auto_hide_toggled(_toggled_on: bool) -> void:
 	_emit_visibility_control()
 
 
-func _on_game_visible_toggled(_toggled_on: bool) -> void:
+func on_game_visible_toggled(_toggled_on: bool) -> void:
 	_emit_visibility_control()

@@ -24,6 +24,8 @@ func _ready() -> void:
 	width_ratio = Settings.game_width_ratio
 	Settings.display_scale_changed.connect(_on_settings_display_scale_changed)
 	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
+	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
+	%GameHud.quit_requested.connect(quit_requested.emit)
 	apply_layout(true)
 	visible = true
 
@@ -80,13 +82,5 @@ func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
 	width_ratio = new_ratio
 
 
-func _on_control_window_reset_game_requested() -> void:
+func reset_game() -> void:
 	%Game.reset_game()
-
-
-func _on_game_hud_control_window_open_requested() -> void:
-	control_window_open_requested.emit()
-
-
-func _on_game_hud_quit_requested() -> void:
-	quit_requested.emit()

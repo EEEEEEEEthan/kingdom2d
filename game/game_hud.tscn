@@ -17,12 +17,15 @@ script = ExtResource("1_tex")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGdJREFUOI21UssKwDAM0rH//2V32WEEE1dKAz00wUdsKQk7dYW53tPWPQDdnasO6ECJwKmxzH47iOUInFqbQRdiBS45sEpN70wGW68gzO/OSpJCHD+RI/gqVLDtOwfdvtbNtEK0DwAPMoUTLchY33wAAAAASUVORK5CYII="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
+[sub_resource type="GDScript" id="GDScript_reset_camera"]
+script/source = "extends Button
+
+func _on_pressed() -> void:
+	owner.reset_camera()
+"
+
 [sub_resource type="GDScript" id="GDScript_popup_menu"]
 script/source = "extends PopupMenu
-
-signal control_window_open_requested
-signal quit_requested
-signal build_requested(structure_config: StructureConfig)
 
 enum ItemId { SETTINGS, QUIT }
 
@@ -71,13 +74,14 @@ func _on_menu_pressed() -> void:
 func _on_id_pressed(id: int) -> void:
 	match id as ItemId:
 		ItemId.SETTINGS:
-			control_window_open_requested.emit()
+			owner.control_window_open_requested.emit()
 		ItemId.QUIT:
-			quit_requested.emit()
+			owner.quit_requested.emit()
 
 
 func _on_build_id_pressed(id: int) -> void:
-	build_requested.emit(StructureConfig.configs_by_id[id as StructureConfig.TypeId])
+	var structure_config: StructureConfig = StructureConfig.configs_by_id[id as StructureConfig.TypeId]
+	owner.game.start_build_placement(structure_config)
 "
 
 [node name="GameHud" type="CanvasLayer" unique_id=914645458]
@@ -117,6 +121,7 @@ unique_name_in_owner = true
 light_mask = 0
 layout_mode = 2
 icon = SubResource("Texture2D_reset")
+script = SubResource("GDScript_reset_camera")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=133706543]
 unique_name_in_owner = true
@@ -139,10 +144,7 @@ script = SubResource("GDScript_popup_menu")
 unique_name_in_owner = true
 
 [connection signal="pressed" from="HudRoot/VBoxContainer/Menu" to="PopupMenu" method="_on_menu_pressed"]
-[connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="." method="_on_reset_camera_pressed"]
-[connection signal="build_requested" from="PopupMenu" to="." method="_on_build_requested"]
-[connection signal="control_window_open_requested" from="PopupMenu" to="." method="_on_popup_control_window_open_requested"]
-[connection signal="quit_requested" from="PopupMenu" to="." method="_on_popup_quit_requested"]
+[connection signal="pressed" from="HudRoot/VBoxContainer/ResetCamera" to="HudRoot/VBoxContainer/ResetCamera" method="_on_pressed"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]
