@@ -1,9 +1,16 @@
 [gd_scene format=3 uid="uid://4ga80fnd4r6o"]
 
 [ext_resource type="Script" uid="uid://bq7juwp6g31ew" path="res://game/terrain/clouds/cloud_field.gd" id="1_02ett"]
+[ext_resource type="Shader" uid="uid://csxvrrab8u42b" path="res://game/terrain/clouds/cloud.gdshader" id="3_548jp"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_548jp"]
+shader = ExtResource("3_548jp")
+shader_parameter/fps = 3.0
+shader_parameter/frame_count = Vector2(4, 8)
+shader_parameter/speed_range = Vector2(0.6, 1.4)
 
 [node name="CloudField" type="Node2D" unique_id=1878045251]
+material = SubResource("ShaderMaterial_548jp")
 script = ExtResource("1_02ett")
-
-[node name="CloudPlaceholder" parent="." unique_id=249759729 instance_placeholder="res://game/terrain/clouds/cloud.tscn"]
-unique_name_in_owner = true
+field_size = Vector2(4096, 8)
+scroll_speed_range = Vector2(0.5, 1)
