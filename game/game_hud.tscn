@@ -28,14 +28,7 @@ func _on_pressed() -> void:
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("1_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGhJREFUOI2l0lEOgDAMAlBmvP+V648aZUC6jO/x0jUdVYWdHFttAlZGed9+gdFE6n47AR3kV1ZAQqayAxQiywBwGoARWU4TtJOAZ+y4WAfwny2iALcwiTBgt+0QPuVUlgifcjf2lJdzARG+GCA//rRBAAAAAElFTkSuQmCC"
-metadata/_custom_type_script = "uid://xqi7kv2y70eo"
-
-[sub_resource type="Texture2D" id="Texture2D_mdi0g"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("1_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOI2dkkEOACEIA63Z/38ZT2wQoYhc1EhHKGKYEJHRDTRENhG6+RpiROf5INYK5AYQibfwLXhDqDiqAGZlYurB318lzgAMcnhyY2IqZgBNrtoJAf4lCvGAbO7pRCyg+jTHHYANUH6aqoKnWFdXGiWCVOlqAAAAAElFTkSuQmCC"
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOI2tklEKwDAIQ9uy+1/Z/YzissQMrNAfNQ81nRExOrFaagDE81y8+tgEFeRTy4BpIDm3e3ECBaFiBmAQKVYA2ihyZ23M4Y5YAnDn0h0EqINJCP5EJighzkZbu34KJaRt4w1uVBcdh3AGkgAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [sub_resource type="GDScript" id="GDScript_close"]
@@ -44,6 +37,13 @@ script/source = "extends Button
 func _on_pressed() -> void:
 	owner.dismiss_bar()
 "
+
+[sub_resource type="Texture2D" id="Texture2D_mdi0g"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG9JREFUOI2Vk0EOACEIA+nG/3+ZPZlAhSo9acKMiBEW4u42DQZQLMRefEMYtH8SMJwkNwHDxvvVAGVxVccCBZVd8RWOISm4EihJOY9uiJ3kuFoncCG5CiJ8lbAgwjvqRdIzVrCUAEgdyJO6vH6mNj9UyxolbR998QAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [sub_resource type="GDScript" id="GDScript_pin"]
 script/source = "extends Button
@@ -194,10 +194,10 @@ script = SubResource("GDScript_popup_menu")
 [node name="BuildSubmenu" type="PopupMenu" parent="PopupMenu" unique_id=1982746501]
 unique_name_in_owner = true
 
-[connection signal="pressed" from="HudRoot/WindowButtons/Close" to="HudRoot/WindowButtons/Close" method="_on_pressed"]
-[connection signal="toggled" from="HudRoot/WindowButtons/Pin" to="HudRoot/WindowButtons/Pin" method="_on_toggled"]
 [connection signal="pressed" from="HudRoot/GameButtons/Menu" to="PopupMenu" method="_on_menu_pressed"]
 [connection signal="pressed" from="HudRoot/GameButtons/ResetCamera" to="HudRoot/GameButtons/ResetCamera" method="_on_pressed"]
+[connection signal="pressed" from="HudRoot/WindowButtons/Close" to="HudRoot/WindowButtons/Close" method="_on_pressed"]
+[connection signal="toggled" from="HudRoot/WindowButtons/Pin" to="HudRoot/WindowButtons/Pin" method="_on_toggled"]
 [connection signal="id_pressed" from="PopupMenu" to="PopupMenu" method="_on_id_pressed"]
 [connection signal="about_to_popup" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_menu_about_to_popup"]
 [connection signal="id_pressed" from="PopupMenu/BuildSubmenu" to="PopupMenu" method="_on_build_id_pressed"]

@@ -8,7 +8,7 @@ const MAX_WIDTH := 4096
 
 var suppress_dock_position_in_layout := false
 
-var pined := false:
+var pined := true:
 	set(value):
 		if pined == value:
 			return

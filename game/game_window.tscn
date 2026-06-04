@@ -93,7 +93,7 @@ var closed := false:
 			_hover_shown = false
 		_apply_state()
 
-var pined := false:
+var pined := true:
 	set(value):
 		if pined == value:
 			return
