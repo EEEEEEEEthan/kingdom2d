@@ -48,6 +48,7 @@ func _ready() -> void:
 func new_game() -> void:
 	clear()
 	GameBuilder.build(self)
+	save_game()
 
 func reset_game() -> void:
 	if FileAccess.file_exists(SAVE_FILE_PATH):
@@ -55,12 +56,14 @@ func reset_game() -> void:
 	new_game()
 
 func load_game() -> void:
+	print("load_game")
 	clear()
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
 	var data := file.get_var() as Dictionary
 	structure_manager.deserialize(data[_SERKEY_STRUCTURE_MANAGER])
 
 func save_game() -> void:
+	print("save_game")
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
 	var data = {
 		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
