@@ -25,11 +25,11 @@
 
 ### 社会必要劳动时间
 
-- **规则**：所有生产行为须记录耗时，用于统计社会必要劳动时间。
+- **规则**：所有生产行为须记录耗时；按**商品**分别统计，取**均值** = 累计生产总耗时 ÷ 累计生产总量。
 - **说明**：
+  - 每次生产：累计生产总耗时增加本次耗时，累计生产总量增加本次产量，二者相除即得当前均值
   - 生产行为的时间数据是价格形成的输入之一
-  - 统计口径：见 [open-decisions.md](open-decisions.md) **E3**
-  - 建筑类劳动时间亦供给 [building-valuation-calculator.md](building-valuation-calculator.md)（建筑估值）
+  - 建筑建造须记时；按**建筑类型**同理累计耗时与完成次数求均值，供给 [building-valuation-calculator.md](building-valuation-calculator.md)（建筑估值）
 
 ### 近一年消费总量
 
