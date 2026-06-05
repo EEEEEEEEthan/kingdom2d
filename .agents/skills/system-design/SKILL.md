@@ -27,6 +27,7 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
 | 经济 / 货币 | [economy.md](economy.md) | 货币流通、总量、交易 |
 | 角色 / 职业 | [characters.md](characters.md) | 职业分类、转职、雇佣佣金 |
+| 建筑 / 选址 | [structures.md](structures.md) | 工作场所与住房、选址、购置拆建 |
 | Idea 池 | [idea-pool.md](idea-pool.md) | 未确认想法，可能用也可能不用 |
 
 后续按系统新增子文档（如 `structures.md`、`time.md`），并在此表登记。
