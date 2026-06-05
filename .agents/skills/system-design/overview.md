@@ -16,4 +16,4 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 
 - 经济：[economy.md](economy.md)（货币总量恒定、劳动时间定价、流通货币/商品）
 - 角色：[characters.md](characters.md)（自由/雇佣职业、转职权重、佣金）
-- 建筑：[structures.md](structures.md)（工作场所/住房、空地需地契审批、购置=拆后自建）
+- 建筑：[structures.md](structures.md)（工作场所/住房、向领主永久购地与审批、购置=拆后自建）
