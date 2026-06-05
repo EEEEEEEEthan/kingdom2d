@@ -56,3 +56,11 @@ func _serialize() -> Dictionary:
 
 func _on_cell_index_updated() -> void:
 	pass
+
+
+func play_bounce(on_finished: Callable = Callable()) -> void:
+	%Juice.play_bounce(on_finished)
+
+
+func stop_bounce() -> void:
+	%Juice.stop_bounce()

@@ -45,7 +45,7 @@ func _update_cell_index_from_mouse() -> void:
 	var index_changed := new_index != _preview.cell_index
 	_preview.cell_index = new_index
 	if index_changed:
-		_preview_juice.play_cell_snap()
+		_preview_juice.on_cell_snapped()
 
 
 func _mouse_to_cell_index() -> int:
@@ -62,6 +62,7 @@ func _try_place() -> void:
 	_preview.modulate = Color.WHITE
 	_preview_juice.dispose()
 	structure_manager.add_structure(_preview, _preview.cell_index)
+	_preview.play_bounce()
 	queue_free()
 
 
@@ -72,15 +73,12 @@ func _cancel() -> void:
 class _StructureBuildPreviewJuice extends Node2D:
 	const _IDLE_SCALE_PEAK := 1.055
 	const _IDLE_HALF_CYCLE := 0.42
-	const _SNAP_SQUASH_Y := 0.88
-	const _SNAP_STRETCH := 1.07
 
-	var _preview: Node2D
+	var _preview: Structure
 	var _idle_tween: Tween
-	var _snap_tween: Tween
 	var _disposed: bool
 
-	func _init(preview: Node2D) -> void:
+	func _init(preview: Structure) -> void:
 		_preview = preview
 		add_child(preview)
 		await ready
@@ -90,30 +88,24 @@ class _StructureBuildPreviewJuice extends Node2D:
 		if _disposed: return
 		_disposed = true
 		remove_child(_preview)
-		if _idle_tween and _idle_tween.is_valid():
-			_idle_tween.kill()
-		if _snap_tween and _snap_tween.is_valid():
-			_snap_tween.kill()
-		_preview.scale = Vector2.ONE
+		_stop_idle_pulse()
+		_preview.stop_bounce()
 		queue_free()
 
 	func free() -> void:
 		super.free()
 		dispose()
 
-	func play_cell_snap() -> void:
+	func on_cell_snapped() -> void:
+		_stop_idle_pulse()
+		_preview.play_bounce(_start_idle_pulse)
+
+	func _stop_idle_pulse() -> void:
 		if _idle_tween and _idle_tween.is_valid():
 			_idle_tween.kill()
-		if _snap_tween and _snap_tween.is_valid():
-			_snap_tween.kill()
-		_snap_tween = create_tween()
-		_snap_tween.tween_property(_preview, "scale", Vector2(1.0, _SNAP_SQUASH_Y), 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		_snap_tween.tween_property(_preview, "scale", Vector2(_SNAP_STRETCH, _SNAP_STRETCH), 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		_snap_tween.tween_callback(_start_idle_pulse)
 
 	func _start_idle_pulse() -> void:
-		if _idle_tween and _idle_tween.is_valid():
-			_idle_tween.kill()
+		_stop_idle_pulse()
 		_preview.scale = Vector2.ONE
 		_preview.modulate = StructureBuildPlacement._PREVIEW_MODULATE
 		_idle_tween = create_tween().set_loops()

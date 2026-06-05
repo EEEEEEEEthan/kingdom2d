@@ -1,3 +1,33 @@
 [gd_scene format=3 uid="uid://bh0xjukljktdb"]
 
+[sub_resource type="GDScript" id="GDScript_juice"]
+script/source = "extends Node
+
+const _SQUASH_Y := 0.88
+const _STRETCH := 1.07
+
+var _tween: Tween
+
+
+func play_bounce(on_finished: Callable = Callable()) -> void:
+	stop_bounce()
+	var target := owner as Node2D
+	_tween = create_tween()
+	_tween.tween_property(target, \"scale\", Vector2(1.0, _SQUASH_Y), 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(target, \"scale\", Vector2(_STRETCH, _STRETCH), 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(target, \"scale\", Vector2.ONE, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if on_finished.is_valid():
+		_tween.finished.connect(on_finished, CONNECT_ONE_SHOT)
+
+
+func stop_bounce() -> void:
+	if _tween and _tween.is_valid():
+		_tween.kill()
+	(owner as Node2D).scale = Vector2.ONE
+"
+
 [node name="BaseStructure" type="Node2D" unique_id=1642746995]
+
+[node name="Juice" type="Node" parent="." unique_id=1982746996]
+unique_name_in_owner = true
+script = SubResource("GDScript_juice")
