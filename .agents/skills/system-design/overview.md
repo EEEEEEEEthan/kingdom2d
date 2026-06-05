@@ -14,6 +14,7 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 
 ## 相关子文档
 
+- **开放决策**：[open-decisions.md](open-decisions.md)（未决问题优先级）
 - 经济：[economy.md](economy.md)（货币总量恒定、劳动时间定价、流通货币/商品）
 - 劳动获益：[labor-benefit.md](labor-benefit.md)（雇佣=日薪，自由=产出市值）
 - 转职计算器：[career-change-calculator.md](career-change-calculator.md)（雇佣日薪底价 ==0）
