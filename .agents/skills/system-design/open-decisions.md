@@ -71,8 +71,6 @@
 | X10 | 待办队列 UI 节点、校验失败反馈文案 | [structures.md](structures.md) |
 | X11 | 劳动获益 UI / 平衡用途 | [labor-benefit.md](labor-benefit.md) |
 | X12 | 实现层命名与统计缓存 | 各计算器文档 |
-| E1 | 期望价格具体公式（须满足 [economy.md](economy.md) 相关性；实现期调试） | [economy.md](economy.md) |
-| E2 | 期望价 → 当日价调整算法（比例、上限、平滑；实现期调试） | [economy.md](economy.md) |
 
 ---
 
@@ -81,7 +79,7 @@
 ```
 期望价相关性 ─┬─→ 产出市值 (C5) ─→ 转职分数 (C1/C2)
                     ├─→ 物料折钱 ─→ 建筑估值 (S3) ─→ 占格成交价 (S1/S2)
-                    └─→ E3/E4/E6 统计口径（E1/E2 公式实现期调试）
+                    └─→ E3/E4/E6 统计口径
 
 S1 占格成交价 ─→ luxury-housing / 购置比价
 B2/B3 组合审批 ─→ multi-tile-workshop
