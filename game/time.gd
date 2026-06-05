@@ -14,7 +14,30 @@ enum Seasons{
 	WINTER,
 }
 
+enum DayTimePeriod {
+	MORNING_MARKET,
+	WORK,
+	REST,
+	SLEEP,
+}
+
+const _HOUR_MORNING_MARKET_START = 6
+const _HOUR_WORK_START = 7
+const _HOUR_REST_START = 19
+const _HOUR_SLEEP_START = 22
+
 var all_days
+
+var hour_of_day: int:
+	get:
+		var day_fraction := fmod(all_days, 1.0)
+		if day_fraction < 0.0:
+			day_fraction += 1.0
+		return mini(int(day_fraction * 24.0), 23)
+
+var day_time_period: DayTimePeriod:
+	get:
+		return get_day_time_period_for_hour(hour_of_day)
 
 var year: int:
 	get:
@@ -46,6 +69,16 @@ var season: Seasons:
 			12: return Seasons.WINTER
 		printerr("unexpected month %s" %month)
 		return  Seasons.SPRING
+
+static func get_day_time_period_for_hour(hour_of_day: int) -> DayTimePeriod:
+	if hour_of_day >= _HOUR_MORNING_MARKET_START and hour_of_day < _HOUR_WORK_START:
+		return DayTimePeriod.MORNING_MARKET
+	if hour_of_day >= _HOUR_WORK_START and hour_of_day < _HOUR_REST_START:
+		return DayTimePeriod.WORK
+	if hour_of_day >= _HOUR_REST_START and hour_of_day < _HOUR_SLEEP_START:
+		return DayTimePeriod.REST
+	return DayTimePeriod.SLEEP
+
 
 func _init(days: float = 0.0) -> void:
 	all_days = days
