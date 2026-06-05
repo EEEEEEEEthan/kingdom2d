@@ -21,6 +21,19 @@ enum DayTimePeriod {
 	SLEEP,
 }
 
+enum MoonPhase {
+	NEW,
+	WAXING_CRESCENT,
+	FIRST_QUARTER,
+	WAXING_GIBBOUS,
+	FULL,
+	WANING_GIBBOUS,
+	LAST_QUARTER,
+	WANING_CRESCENT,
+}
+
+const MOON_PHASE_COUNT := 8
+
 const _HOUR_MORNING_MARKET_START = 6
 const _HOUR_WORK_START = 7
 const _HOUR_REST_START = 19
@@ -34,6 +47,11 @@ var day_fraction: float:
 		if fraction < 0.0:
 			fraction += 1.0
 		return fraction
+
+var moon_phase: MoonPhase:
+	get:
+		var phase_index := int(fmod(all_days, _DAYS_PER_MONTH) / _DAYS_PER_MONTH * MOON_PHASE_COUNT)
+		return (phase_index % MOON_PHASE_COUNT) as MoonPhase
 
 var hour_of_day: int:
 	get:

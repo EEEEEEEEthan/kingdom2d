@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://bgkb425iiewla" path="res://game/game.gd" id="1_dxrkv"]
 [ext_resource type="PackedScene" uid="uid://ykbasbose6tk" path="res://game/terrain/terrain.tscn" id="2_vasa2"]
-[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_h7iqs"]
 [ext_resource type="Script" uid="uid://1sagu8e7pmqf" path="res://game/structures/structure_manager.gd" id="4_4fuuu"]
 [ext_resource type="PackedScene" uid="uid://yqr3qh2batnx" path="res://game/characters/character_manager.tscn" id="5_dxrkv"]
+[ext_resource type="Script" uid="uid://fl1ph34lvnoa" path="res://game/celestial_body.gd" id="6_celestial"]
 
 [sub_resource type="Gradient" id="Gradient_dxrkv"]
 colors = PackedColorArray(0.7117712, 0.80896837, 0.9836268, 1, 0.38431373, 0.5529412, 1, 0)
@@ -15,13 +15,6 @@ width = 4
 height = 16
 fill_from = Vector2(0, 1)
 fill_to = Vector2(0, 0)
-
-[sub_resource type="Texture2D" id="Texture2D_dxrkv"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("3_h7iqs")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAKCAYAAACT+/8OAAAAAXNSR0IArs4c6QAAADhJREFUCJljTLM0ZEAGTFD6PxQzML47PAsmwMDAwMDIxIAGWKbtfovVDISKqzdO41eBqQVmHUwAAOSBCun8O6/TAAAAAElFTkSuQmCC"
-metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [sub_resource type="GDScript" id="GDScript_camera"]
 script/source = "extends Camera2D
@@ -245,11 +238,6 @@ texture = SubResource("GradientTexture2D_dxrkv")
 unique_name_in_owner = true
 position = Vector2(0, 61)
 
-[node name="Character" type="Sprite2D" parent="Horizon" unique_id=257550443]
-visible = false
-position = Vector2(111, -4)
-texture = SubResource("Texture2D_dxrkv")
-
 [node name="Terrain" parent="Horizon" unique_id=391382551 instance=ExtResource("2_vasa2")]
 unique_name_in_owner = true
 position = Vector2(0, 3)
@@ -264,6 +252,11 @@ script = ExtResource("4_4fuuu")
 unique_name_in_owner = true
 position = Vector2(0, -3)
 
+[node name="CelestialBody" type="Sprite2D" parent="." unique_id=1597964607]
+light_mask = 0
+z_index = 8
+script = ExtResource("6_celestial")
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
 process_thread_group = 1
@@ -275,7 +268,6 @@ script = SubResource("GDScript_camera")
 
 [node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=307614254]
 color = Color(1, 0.97, 0.88, 1)
-energy = 1.0
 height = 0.85
 script = SubResource("GDScript_day_night_light")
 
