@@ -55,6 +55,7 @@ func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
 
 func new_game() -> void:
+	_clear()
 	GameBuilder.build(self)
 	save_game()
 

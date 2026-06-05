@@ -12,7 +12,6 @@ const _CHARACTER_SPAWN_RADIUS = 8
 
 
 static func build(game) -> void:
-	game.clear()
 	game.terrain.fill_terrain(Terrain.TerrainType.Land)
 	_spawn_sovereign_banner(game)
 	_spawn_initial_characters(game)
