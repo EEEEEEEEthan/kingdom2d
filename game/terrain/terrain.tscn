@@ -136,7 +136,7 @@ cloud_count = 8
 
 [node name="Parallax2DMountain2" type="Parallax2D" parent="Parallaxes" unique_id=2035051536]
 scroll_scale = Vector2(0.4, 0.4)
-repeat_size = Vector2(1120, 0)
+repeat_size = Vector2(1216, 0)
 repeat_times = 6
 
 [node name="Sprite2D2" type="Sprite2D" parent="Parallaxes/Parallax2DMountain2" unique_id=606335718]
@@ -144,11 +144,11 @@ unique_name_in_owner = true
 texture = SubResource("CanvasTexture_mountains")
 offset = Vector2(0, -24.025)
 region_enabled = true
-region_rect = Rect2(0, 48, 1152, 48)
+region_rect = Rect2(0, 48, 1216, 48)
 
 [node name="Parallax2DMountain3" type="Parallax2D" parent="Parallaxes" unique_id=1494322017]
 scroll_scale = Vector2(0.6, 0.6)
-repeat_size = Vector2(1088, 0)
+repeat_size = Vector2(1216, 0)
 repeat_times = 6
 
 [node name="Sprite2D3" type="Sprite2D" parent="Parallaxes/Parallax2DMountain3" unique_id=1712520175]
@@ -156,11 +156,11 @@ unique_name_in_owner = true
 texture = SubResource("CanvasTexture_mountains")
 offset = Vector2(0, -24.38)
 region_enabled = true
-region_rect = Rect2(0, 96, 1088, 48)
+region_rect = Rect2(0, 96, 1216, 48)
 
 [node name="Parallax2DMountain4" type="Parallax2D" parent="Parallaxes" unique_id=318209487]
 scroll_scale = Vector2(0.8, 0.8)
-repeat_size = Vector2(1024, 0)
+repeat_size = Vector2(1216, 0)
 repeat_times = 40
 
 [node name="Sprite2D4" type="Sprite2D" parent="Parallaxes/Parallax2DMountain4" unique_id=1941642327]
@@ -168,7 +168,7 @@ unique_name_in_owner = true
 texture = SubResource("CanvasTexture_mountains")
 offset = Vector2(0, -24.1)
 region_enabled = true
-region_rect = Rect2(0, 144, 1024, 48)
+region_rect = Rect2(0, 144, 1216, 48)
 
 [node name="ReferenceRect" type="ReferenceRect" parent="." unique_id=844303477]
 anchors_preset = 2

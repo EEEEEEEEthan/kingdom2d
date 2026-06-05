@@ -146,7 +146,7 @@ func _apply_day_night() -> void:
 	color = _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_COLORS, day_fraction)
 	var base_energy := _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_ENERGIES, day_fraction)
 	energy = base_energy * sun_height
-	height = sun_height
+	#height = sun_height
 	rotation = PI * 0.5 - sun_phase
 	var night_tint := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
 	%CanvasModulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
@@ -349,12 +349,12 @@ script = SubResource("GDScript_camera")
 
 [node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=307614254]
 color = Color(1, 0.97, 0.88, 1)
-height = 0.85
+energy = 0.25
+height = 0.35
 script = SubResource("GDScript_day_night_light")
 
-[node name="MoonDirectionalLight2D" type="DirectionalLight2D" parent="."]
+[node name="MoonDirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=248916419]
 color = Color(0.55, 0.62, 0.88, 1)
-height = 0.0
 script = SubResource("GDScript_moon_light")
 
 [node name="EditorTimeDebugController" type="Node" parent="." unique_id=1847293650]
