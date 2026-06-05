@@ -15,7 +15,7 @@
 
 ## 玩家可见的流程
 
-1. 角色对两格各向占格所有者**询价** → 各格得到最终价（定价机制待定；本角落假设澡堂格更低）
+1. 角色对两格各**询价** → 各格返回当日**建筑估值**（本角落假设澡堂格估值更低）
 2. 澡堂格报价低于木匠铺格，且角色**支付得起**澡堂价
 3. 在可成交且支付得起的候选格中取**最低价** → 选中澡堂格
 4. **付价** → **拆掉澡堂** → 进入**建造施工流程**（地基、填料、雇建筑工）→ 竣工奢侈住房
@@ -29,6 +29,6 @@
 
 ## 关联机制
 
-- [structures.md](../structures.md)：购置询价、购置即拆后自建、占格购置定价（待定）
+- [structures.md](../structures.md)：购置询价、占格购置成交价（= 估值、无议价）、购置即拆后自建
 - [characters.md](../characters.md)：雇建筑工
-- [building-valuation-calculator.md](../building-valuation-calculator.md)：估值是否参与成交价（待定）
+- [building-valuation-calculator.md](../building-valuation-calculator.md)：估值 v0 公式（S3）

@@ -10,11 +10,8 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| S1 | **占格购置最终成交价如何形成**？是否引用 [building-valuation-calculator.md](building-valuation-calculator.md) 估值？卖方保留价 / 买方出价 / 议价？ | [structures.md](structures.md) | [luxury-housing](beautiful-corners/luxury-housing.md) 询价比价全流程 |
-| S2 | **领主回购占格定价**（与 S1 是否同一套机制） | [structures.md](structures.md) | 领主收回占格 |
-| S3 | **建筑估值 v0 公式**（物料市价 + 劳动时间 + 完成度；是否含区位） | [building-valuation-calculator.md](building-valuation-calculator.md) | S1/S2 若走「估值基准价」路径 |
-
-> **建议**：S1 与 S3 同场决定——要么「成交价 = f(估值)」，要么成交价独立、估值仅作 UI/平衡参考。
+| S2 | **领主回购占格定价**（是否与占格购置同为估值一口价、无议价） | [structures.md](structures.md) | 领主收回占格 |
+| S3 | **建筑估值 v0 公式**（物料市价 + 劳动时间 + 完成度；是否含区位） | [building-valuation-calculator.md](building-valuation-calculator.md) | 占格购置/回购的估值金额 |
 
 ---
 
@@ -67,9 +64,9 @@
 
 ```
 期望价相关性 ─┬─→ 产出市值 (C5) ─→ 转职分数 (C1/C2)
-                    └─→ 物料折钱 ─→ 建筑估值 (S3) ─→ 占格成交价 (S1/S2)
+                    └─→ 物料折钱 ─→ 建筑估值 (S3) ─→ 占格成交价 / 回购价 (S2)
 
-S1 占格成交价 ─→ luxury-housing / 购置比价
+建筑估值 (S3) ─→ luxury-housing / 购置比价
 B2/B3 组合审批 ─→ multi-tile-workshop
 ```
 
