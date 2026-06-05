@@ -99,7 +99,8 @@ const _KEY_LIGHT_COLORS := [
 	Color(0.45, 0.5, 0.75),
 ]
 const _KEY_LIGHT_ENERGIES := [0.18, 0.22, 0.55, 1.0, 0.5, 0.2, 0.18]
-const _KEY_LIGHT_HEIGHTS := [0.05, 0.1, 0.35, 0.85, 0.35, 0.08, 0.05]
+const _SUNRISE_FRACTION := 0.25
+const _SUNSET_FRACTION := 0.75
 const _KEY_AMBIENT_COLORS := [
 	Color(0.42, 0.48, 0.72),
 	Color(0.5, 0.44, 0.62),
@@ -132,12 +133,12 @@ var _game: Game:
 	get:
 		return owner as Game
 
-var _horizon: Node2D
+var _canvas_modulate: CanvasModulate
 var _sky_gradient: Gradient
 
 
 func _ready() -> void:
-	_horizon = owner.get_node(\"Horizon\") as Node2D
+	_canvas_modulate = owner.get_node(\"CanvasModulate\") as CanvasModulate
 	var sky_texture := owner.get_node(\"Sprite2D\").texture as GradientTexture2D
 	_sky_gradient = sky_texture.gradient
 	_apply_day_night()
@@ -149,15 +150,30 @@ func _process(_delta: float) -> void:
 
 func _apply_day_night() -> void:
 	var day_fraction := _game.game_time.day_fraction
+	var sun_phase := _sun_phase(day_fraction)
+	var sun_height := _sun_height_from_phase(sun_phase)
 	color = _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_COLORS, day_fraction)
-	energy = _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_ENERGIES, day_fraction)
-	height = _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_HEIGHTS, day_fraction)
-	_horizon.modulate = _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
+	var base_energy := _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_ENERGIES, day_fraction)
+	energy = base_energy * sun_height
+	height = sun_height
+	rotation = PI * 0.5 - sun_phase
+	var night_tint := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
+	_canvas_modulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
 	var sky_top := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_TOP_COLORS, day_fraction)
 	var sky_bottom := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_BOTTOM_COLORS, day_fraction)
 	sky_bottom.a = 0.0
 	_sky_gradient.set_color(0, sky_top)
 	_sky_gradient.set_color(1, sky_bottom)
+
+
+func _sun_phase(day_fraction: float) -> float:
+	return (day_fraction - _SUNRISE_FRACTION) / (_SUNSET_FRACTION - _SUNRISE_FRACTION) * PI
+
+
+func _sun_height_from_phase(sun_phase: float) -> float:
+	if sun_phase <= 0.0 or sun_phase >= PI:
+		return 0.0
+	return sin(sun_phase)
 
 
 func _sample_color_keyframes(key_fractions: Array, key_colors: Array, day_fraction: float) -> Color:
@@ -192,6 +208,8 @@ light_mask = 0
 position = Vector2(0, 32)
 scale = Vector2(99999, 4)
 texture = SubResource("GradientTexture2D_dxrkv")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1982736450]
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
 unique_name_in_owner = true
