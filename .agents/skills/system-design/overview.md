@@ -14,4 +14,4 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 
 ## 相关子文档
 
-- 经济：[economy.md](economy.md)
+- 经济：[economy.md](economy.md)（货币总量恒定、劳动时间定价、流通货币/商品）
