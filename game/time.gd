@@ -28,11 +28,15 @@ const _HOUR_SLEEP_START = 22
 
 var all_days
 
+var day_fraction: float:
+	get:
+		var fraction := fmod(all_days, 1.0)
+		if fraction < 0.0:
+			fraction += 1.0
+		return fraction
+
 var hour_of_day: int:
 	get:
-		var day_fraction := fmod(all_days, 1.0)
-		if day_fraction < 0.0:
-			day_fraction += 1.0
 		return mini(int(day_fraction * 24.0), 23)
 
 var day_time_period: DayTimePeriod:

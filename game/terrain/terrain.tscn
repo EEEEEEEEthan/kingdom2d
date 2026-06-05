@@ -112,6 +112,7 @@ script = ExtResource("3_5grhd")
 [node name="Sprite2D0" type="Sprite2D" parent="." unique_id=13859517]
 unique_name_in_owner = true
 show_behind_parent = true
+light_mask = 0
 scale = Vector2(4, 4)
 texture = SubResource("GradientTexture2D_5grhd")
 offset = Vector2(0, -9)
