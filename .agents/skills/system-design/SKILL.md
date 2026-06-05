@@ -19,6 +19,7 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 4. **记录**：用户明确确认后，写入对应子文档的「已定决策」
 5. **idea**：用户提出但未确认的想法写入 [idea-pool.md](idea-pool.md)；采纳时迁入对应子文档并标为已定，弃用时标为「已弃用」
 6. **联动**：若决策影响代码结构或命名，实现时同步遵守
+7. **最美角落**：设计或改机制前对照 [beautiful-corners/](beautiful-corners/README.md)；系统须能展现其中的叙事场景
 
 ## 子文档索引
 
@@ -27,10 +28,11 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
 | 经济 / 货币 | [economy.md](economy.md) | 货币流通、总量、交易 |
 | 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=日薪，自由=产出市值 |
-| 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 当事人意愿：>0 日薪、==0 成交价 |
+| 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 雇佣议价：反推日薪底价（>0） |
 | 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 建筑实例客观估值（物料+劳动等） |
 | 角色 / 职业 | [characters.md](characters.md) | 建筑工、转职、岗位雇佣、薪酬结算 |
 | 建筑 / 选址 | [structures.md](structures.md) | 占地购地、地基填料、雇工施工、购置拆建 |
+| 最美角落 | [beautiful-corners/README.md](beautiful-corners/README.md) | 叙事锚点；系统设计须能展现这些场景 |
 | Idea 池 | [idea-pool.md](idea-pool.md) | 未确认想法，可能用也可能不用 |
 
 后续按系统新增子文档（如 `structures.md`、`time.md`），并在此表登记。
