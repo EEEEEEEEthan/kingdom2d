@@ -1,6 +1,6 @@
 # 建筑估值计算器
 
-> 对**建筑实例**给出客观**估值**（货币金额）。与 [career-change-calculator.md](career-change-calculator.md)（雇佣日薪议价）分离。占格购置的报价与成交价即估值（无议价）；领主回购见 [structures.md](structures.md) 与 [open-decisions.md](open-decisions.md) **S2**。
+> 对**建筑实例**给出客观**估值**（货币金额）。与 [career-change-calculator.md](career-change-calculator.md)（雇佣日薪议价）分离。占格购置与领主回购的报价与成交价即估值（无议价），见 [structures.md](structures.md)「占格建筑交易成交价」。
 
 ### 核心机制
 
@@ -8,7 +8,7 @@
 - **说明**：
   - **不是**日薪或购地价；不表达卖方主观保留价，亦无议价过程
   - **不是** [economy.md](economy.md) 中同质「流通商品」的日市价公式；商品市价可作为本计算器的**输入**（物料折钱）
-  - **占格购置**：询价返回的报价与成交价**即**本估值（见 [structures.md](structures.md)「占格购置成交价」）
+  - **占格购置 / 领主回购**：询价返回的报价与成交价**即**本估值（见 [structures.md](structures.md)「占格建筑交易成交价」）
 
 ### 估值输入（概念层）
 
@@ -24,12 +24,12 @@
 
 | 场景 | 文档 | 说明 |
 |------|------|------|
-| 占格购置询价/成交 | [structures.md](structures.md) | 报价与成交价 = 当日估值，买方直接决定买或不买 |
+| 占格购置 / 领主回购 | [structures.md](structures.md) | 报价与成交价 = 当日估值，买方直接决定买或不买 |
 | 物料/劳动记账与平衡 | [economy.md](economy.md) | 劳动时间统计、商品市价供给估值折钱 |
 
 ## 开放问题
 
-见 [open-decisions.md](open-decisions.md) **S3**（v0 公式）、**S2**（领主回购是否同机制）；其余：工地阶段是否按完成度比例、估值是否每日刷新、购地价是否纳入本计算器。
+见 [open-decisions.md](open-decisions.md) **S3**（v0 公式）；其余：工地阶段是否按完成度比例、估值是否每日刷新、购地价是否纳入本计算器。
 
 ## 关联
 

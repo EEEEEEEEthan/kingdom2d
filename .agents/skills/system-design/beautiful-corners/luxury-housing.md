@@ -29,6 +29,6 @@
 
 ## 关联机制
 
-- [structures.md](../structures.md)：购置询价、占格购置成交价（= 估值、无议价）、购置即拆后自建
+- [structures.md](../structures.md)：购置询价、占格建筑交易成交价（= 估值、无议价）、购置即拆后自建
 - [characters.md](../characters.md)：雇建筑工
 - [building-valuation-calculator.md](../building-valuation-calculator.md)：估值 v0 公式（S3）
