@@ -9,7 +9,7 @@
 - **状态**：已定
 - **规则**：对一次决策先汇总**除金钱以外**的因素权重，再将**金钱**作为补偿项加入总权重；总权重由场景要求反解出临界金额。
 - **说明**：
-  - 非金钱因素示例：收入更高、职业更体面、仍在使用该建筑、区位稀缺、急用钱等；亦可引用 [building-valuation-calculator.md](building-valuation-calculator.md) 的**估值**（如重置成本参照）（完整列表尚未定义）
+  - 非金钱因素示例：**劳动获益更高**（见 [labor-benefit.md](labor-benefit.md)）、职业更体面、仍在使用该建筑、区位稀缺、急用钱等；亦可引用 [building-valuation-calculator.md](building-valuation-calculator.md) 的**估值**（如重置成本参照）（完整列表尚未定义）
   - 因素方向与正负号按场景配置；转职场景曾约定因素均为「正向偏好」
   - 金钱项与总权重的函数形式（线性、分段）尚未确定
   - **不是**独立物价表；同一角色在不同场景下可得到不同临界金额
@@ -46,6 +46,7 @@
 
 ## 关联
 
+- 劳动获益：[labor-benefit.md](labor-benefit.md)
 - 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)
 - 角色 / 职业：[characters.md](characters.md)
 - 建筑 / 占格交易：[structures.md](structures.md)

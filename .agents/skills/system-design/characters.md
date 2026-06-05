@@ -18,6 +18,11 @@
   - 转职目标限于自由职业
   - 转职是否成功、每日尝试次数上限等细节尚未确定
 
+### 劳动获益
+
+- **状态**：已定
+- **规则**：角色职业经济获益的统一概念为**劳动获益**；雇佣职业按**日薪**计量，自由职业按**产出市值**计量；跨职业比较规则见 [labor-benefit.md](labor-benefit.md)。
+
 ### 雇佣佣金与日薪底价
 
 - **状态**：已定
@@ -61,6 +66,7 @@
 
 ## 关联
 
+- 劳动获益：[labor-benefit.md](labor-benefit.md)
 - 转职计算器：[career-change-calculator.md](career-change-calculator.md)
 - 建造施工：[structures.md](structures.md)
 

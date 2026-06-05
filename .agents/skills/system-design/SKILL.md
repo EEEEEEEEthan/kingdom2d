@@ -26,6 +26,7 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 |------|------|------|
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
 | 经济 / 货币 | [economy.md](economy.md) | 货币流通、总量、交易 |
+| 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=日薪，自由=产出市值 |
 | 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 当事人意愿：>0 日薪、==0 成交价 |
 | 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 建筑实例客观估值（物料+劳动等） |
 | 角色 / 职业 | [characters.md](characters.md) | 建筑工、转职、岗位雇佣、薪酬结算 |
