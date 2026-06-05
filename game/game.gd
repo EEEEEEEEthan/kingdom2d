@@ -51,6 +51,11 @@ func _ready() -> void:
 	else:
 		new_game()
 
+
+func advance_debug_time_by_hours(hours: float = 1.0) -> void:
+	game_time.all_days += hours / 24.0
+
+
 func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
 

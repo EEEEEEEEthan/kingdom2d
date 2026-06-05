@@ -200,6 +200,36 @@ func _sample_scalar_keyframes(key_fractions: Array, key_values: Array, day_fract
 	return key_values[0]
 "
 
+[sub_resource type="GDScript" id="GDScript_editor_time_debug"]
+script/source = "extends Node
+
+const ADVANCE_HOURS := 1.0
+
+var _game: Game:
+	get:
+		return owner as Game
+
+var _kp_add_down := false
+
+
+func _ready() -> void:
+	if not OS.has_feature(\"editor\"):
+		return
+	set_process(true)
+
+
+func _process(_delta: float) -> void:
+	var down := Input.is_physical_key_pressed(KEY_KP_ADD)
+	if down and not _kp_add_down:
+		_game.advance_debug_time_by_hours(ADVANCE_HOURS)
+		var time: GameTime = _game.game_time
+		print(
+			\"debug: 推进1小时 hour=%s day_fraction=%.3f all_days=%.4f\"
+			% [time.hour_of_day, time.day_fraction, time.all_days]
+		)
+	_kp_add_down = down
+"
+
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_dxrkv")
 
@@ -248,3 +278,6 @@ color = Color(1, 0.97, 0.88, 1)
 energy = 1.0
 height = 0.85
 script = SubResource("GDScript_day_night_light")
+
+[node name="EditorTimeDebugController" type="Node" parent="." unique_id=1847293650]
+script = SubResource("GDScript_editor_time_debug")
