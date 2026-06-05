@@ -14,12 +14,11 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 ## 工作流程
 
 1. **先读**：按主题打开下方子文档，避免与设计冲突
-2. **讨论**：未决内容只写入**开放问题**或 [idea-pool.md](idea-pool.md)，不冒充成规则
+2. **讨论**：未决内容只写入**开放问题**，不冒充成规则
 3. **冲突**：发现任何设计冲突（新提议 vs 已有规则、子文档之间、设计 vs 代码现状）时，**必须立即向用户提出**，说明冲突双方，暂停写入或实现，待用户裁决
 4. **记录**：用户明确确认后，写入对应子文档（子文档正文即已决定的设计，无需标注状态）
-5. **idea**：未确认的想法写入 [idea-pool.md](idea-pool.md)；采纳时迁入对应子文档，弃用时在 idea 池标为「已弃用」
-6. **联动**：若决策影响代码结构或命名，实现时同步遵守
-7. **最美角落**：设计或改机制前对照 [beautiful-corners/](beautiful-corners/README.md)；系统须能展现其中的叙事场景
+5. **联动**：若决策影响代码结构或命名，实现时同步遵守
+6. **最美角落**：设计或改机制前对照 [beautiful-corners/](beautiful-corners/README.md)；系统须能展现其中的叙事场景
 
 ## 子文档索引
 
@@ -28,12 +27,11 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
 | 经济 / 货币 | [economy.md](economy.md) | 货币流通、总量、交易 |
 | 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=日薪，自由=产出市值 |
-| 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 雇佣议价：反推日薪底价（>0） |
+| 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 雇佣议价：反推日薪底价（==0） |
 | 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 建筑实例客观估值（物料+劳动等） |
 | 角色 / 职业 | [characters.md](characters.md) | 建筑工、转职、岗位雇佣、薪酬结算 |
 | 建筑 / 选址 | [structures.md](structures.md) | 占地购地、地基填料、雇工施工、购置拆建 |
 | 最美角落 | [beautiful-corners/README.md](beautiful-corners/README.md) | 叙事锚点；系统设计须能展现这些场景 |
-| Idea 池 | [idea-pool.md](idea-pool.md) | 未确认想法，可能用也可能不用 |
 
 后续按系统新增子文档（如 `structures.md`、`time.md`），并在此表登记。
 
@@ -53,7 +51,6 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 
 ## 维护原则
 
-- **idea 非约束**：idea 池内容不得当作设计规则引用或据此实现
 - **冲突优先**：不得忽略、淡化或自行调和设计冲突；未获用户确认前，不得悄悄写入子文档
 - 聊天里的口头约定未写入文档则视为未固化
 - 废止规则时在原文标「已废止」，勿静默删除
