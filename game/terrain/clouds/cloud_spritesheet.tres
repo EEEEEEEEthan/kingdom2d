@@ -1,0 +1,8 @@
+[gd_resource type="CanvasTexture" format=3 uid="uid://dvl1nfiwkrc54"]
+
+[ext_resource type="Texture2D" uid="uid://d4l7cepg4ntxe" path="res://game/terrain/clouds/cloud_spritesheet.png" id="1_ko1ww"]
+[ext_resource type="Texture2D" uid="uid://cw7cf26r06l0y" path="res://game/terrain/clouds/cloud_spritesheet_normal.png" id="2_34tj4"]
+
+[resource]
+diffuse_texture = ExtResource("1_ko1ww")
+normal_texture = ExtResource("2_34tj4")

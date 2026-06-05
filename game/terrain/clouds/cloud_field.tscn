@@ -30,6 +30,9 @@ void fragment() {
 	vec2 sheet_uv = local_uv * frame_size + vec2(float(column), float(row)) * frame_size;
 	vec4 tex = texture(TEXTURE, sheet_uv);
 	COLOR = tex * vec4(1.0, 1.0, 1.0, anim_params.a);
+	if (tex.a > 0.001) {
+		NORMAL_MAP = texture(NORMAL_TEXTURE, sheet_uv).rgb;
+	}
 }
 "
 
