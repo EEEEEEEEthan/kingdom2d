@@ -88,6 +88,7 @@ script = ExtResource("3_5grhd")
 
 [node name="Sprite2D0" type="Sprite2D" parent="." unique_id=13859517]
 unique_name_in_owner = true
+visible = false
 show_behind_parent = true
 light_mask = 0
 scale = Vector2(4, 4)

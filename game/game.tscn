@@ -313,7 +313,7 @@ unique_name_in_owner = true
 light_mask = 0
 z_index = -4096
 position = Vector2(0, 32)
-scale = Vector2(4096, 0.164)
+scale = Vector2(4096, 4)
 texture = SubResource("GradientTexture2D_dxrkv")
 
 [node name="CelestialBody" type="Sprite2D" parent="CelestialLayer" unique_id=1597964607]
