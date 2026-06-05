@@ -38,6 +38,7 @@
 - **说明**：
   - 生产行为的时间数据是价格形成的输入之一
   - 统计口径（均值、中位数、分商品聚合等）尚未确定
+  - 建筑类劳动时间亦供给 [building-valuation-calculator.md](building-valuation-calculator.md)（建筑估值）
 
 ### 价格形成
 

@@ -8,12 +8,14 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 
 - **时间**：现实 1h = 游戏 24h；7 天/月、12 月/年、四季、月相；日内分早市 / 工作 / 休息 / 睡眠
 - **世界**：中心王权旌旗，随机橡树与灌木，地形、云层、日月
-- **角色**：开局 8 人，当前仅 idle 漫游 AI；设计已定职业/转职/佣金，见 [characters.md](characters.md)
-- **建筑**：可建造半穴茅舍；旌旗 / 橡树 / 灌木为环境物
+- **角色**：开局 8 人，当前仅 idle 漫游 AI；设计已定职业/转职/佣金/雇工薪酬，见 [characters.md](characters.md)
+- **建筑**：可建造半穴茅舍（代码为即时放置）；设计已定占地、购地、地基填料与雇建筑工流程，见 [structures.md](structures.md)
 - **持久化**：存档读写
 
 ## 相关子文档
 
 - 经济：[economy.md](economy.md)（货币总量恒定、劳动时间定价、流通货币/商品）
-- 角色：[characters.md](characters.md)（自由/雇佣职业、转职权重、佣金）
-- 建筑：[structures.md](structures.md)（多格占地、向领主购地、组合方案整单审批、购置=拆后自建）
+- 转职计算器：[career-change-calculator.md](career-change-calculator.md)（雇佣日薪 >0、占格成交价 ==0）
+- 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)（客观估值，非成交价）
+- 角色：[characters.md](characters.md)（建筑工、转职、岗位雇佣、按日薪酬结算）
+- 建筑：[structures.md](structures.md)（购地/购置、地基填料、雇工竣工、组合审批）
