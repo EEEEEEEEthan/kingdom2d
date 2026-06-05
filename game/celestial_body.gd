@@ -17,7 +17,6 @@ var _game: Game:
 
 
 func _ready() -> void:
-	top_level = true
 	light_mask = 0
 	centered = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -29,6 +28,7 @@ func _process(_delta: float) -> void:
 
 
 func _update_visual() -> void:
+	modulate = owner.get_node("CanvasModulate").color
 	var day_fraction := _game.game_time.day_fraction
 	var sun_height := _sun_height_from_day_fraction(day_fraction)
 	if sun_height > 0.0:
@@ -75,11 +75,9 @@ func _moon_height_from_day_fraction(day_fraction: float) -> float:
 
 
 func _apply_screen_arc_position(arc_fraction: float, height: float) -> void:
-	var viewport := get_viewport()
-	var half_viewport_width := viewport.get_visible_rect().size.x * 0.5
+	var half_viewport_width := get_viewport().get_visible_rect().size.x * 0.5
 	var offset_x := (0.5 - arc_fraction) * half_viewport_width * 2.0 * _SKY_X_SPAN_RATIO
-	var screen_position := Vector2(
+	position = Vector2(
 		half_viewport_width + offset_x,
 		lerpf(_SKY_Y_HORIZON, _SKY_Y_APEX, height),
-	)
-	global_position = viewport.get_canvas_transform().affine_inverse() * screen_position
+	).round()

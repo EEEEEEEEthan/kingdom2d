@@ -11,7 +11,7 @@ colors = PackedColorArray(0.7117712, 0.80896837, 0.9836268, 1, 0.38431373, 0.552
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_dxrkv"]
 gradient = SubResource("Gradient_dxrkv")
-width = 4
+width = 1
 height = 16
 fill_from = Vector2(0, 1)
 fill_to = Vector2(0, 0)
@@ -126,13 +126,11 @@ var _game: Game:
 	get:
 		return owner as Game
 
-var _canvas_modulate: CanvasModulate
 var _sky_gradient: Gradient
 
 
 func _ready() -> void:
-	_canvas_modulate = owner.get_node(\"CanvasModulate\") as CanvasModulate
-	var sky_texture := owner.get_node(\"Sprite2D\").texture as GradientTexture2D
+	var sky_texture := %Sky.texture as GradientTexture2D
 	_sky_gradient = sky_texture.gradient
 	_apply_day_night()
 
@@ -151,7 +149,7 @@ func _apply_day_night() -> void:
 	height = sun_height
 	rotation = PI * 0.5 - sun_phase
 	var night_tint := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
-	_canvas_modulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
+	%CanvasModulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
 	var sky_top := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_TOP_COLORS, day_fraction)
 	var sky_bottom := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_BOTTOM_COLORS, day_fraction)
 	sky_bottom.a = 0.0
@@ -226,13 +224,23 @@ func _process(_delta: float) -> void:
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_dxrkv")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=591946890]
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1982736450]
+unique_name_in_owner = true
+
+[node name="CelestialLayer" type="CanvasLayer" parent="." unique_id=466522127]
+layer = -1
+
+[node name="Sky" type="Sprite2D" parent="CelestialLayer" unique_id=591946890]
+unique_name_in_owner = true
 light_mask = 0
+z_index = -4096
 position = Vector2(0, 32)
-scale = Vector2(99999, 4)
+scale = Vector2(4096, 0.164)
 texture = SubResource("GradientTexture2D_dxrkv")
 
-[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1982736450]
+[node name="CelestialBody" type="Sprite2D" parent="CelestialLayer" unique_id=1597964607]
+light_mask = 0
+script = ExtResource("6_celestial")
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
 unique_name_in_owner = true
@@ -251,11 +259,6 @@ script = ExtResource("4_4fuuu")
 [node name="CharacterManager" parent="Horizon/Terrain" unique_id=2133390750 instance=ExtResource("5_dxrkv")]
 unique_name_in_owner = true
 position = Vector2(0, -3)
-
-[node name="CelestialBody" type="Sprite2D" parent="." unique_id=1597964607]
-light_mask = 0
-z_index = 8
-script = ExtResource("6_celestial")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=463203866]
 unique_name_in_owner = true
