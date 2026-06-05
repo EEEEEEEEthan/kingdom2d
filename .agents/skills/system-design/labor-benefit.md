@@ -29,7 +29,7 @@
 
 - **规则**：比较两种职业的劳动获益时，雇佣侧取**日薪**，自由侧取**产出市值**，在同一货币尺度下比大小。
 - **说明**：
-  - 劳动获益计入转职计算器**分数模式**的综合得分；**议价模式**不含劳动获益，反推日薪底价见 [characters.md](characters.md) 与 [career-change-calculator.md](career-change-calculator.md)
+  - 转职计算器**分数模式**以目标职业与当前职业的**平均**日劳动获益比较为正面因素；**议价模式**无视劳动获益，反推日薪底价见 [career-change-calculator.md](career-change-calculator.md)
 
 ### 转职抽取
 
