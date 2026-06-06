@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| C1 | **转职计算器各因素得分函数与权重**（体面、刚刚转职、劳动获益差） | [career-change-calculator.md](career-change-calculator.md) | 日常转职、雇佣选人 |
 | C2 | **「平均劳动获益」统计口径**（全场均值 / 滑动窗口） | [career-change-calculator.md](career-change-calculator.md) | 分数模式权重 |
 | C3 | **不转职空白权重**数值 | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 自由职业日常转职 |
 | C4 | **日薪底价：雇佣存续期间锁定还是每日重算** | [career-change-calculator.md](career-change-calculator.md) · [characters.md](characters.md) | 雇员薪酬结算 |
@@ -54,7 +53,7 @@
 ## 依赖关系（简图）
 
 ```
-期望价相关性 ─┬─→ 产出市值 (C5) ─→ 转职分数 (C1/C2)
+期望价相关性 ─┬─→ 产出市值 (C5) ─→ 转职分数 (C2)
                     └─→ 商业净收入 / 住房实际等级 ─→ 建筑估值 ─→ 占格成交价 / 回购价
 
 建筑估值 ─→ luxury-housing / 购置比价
