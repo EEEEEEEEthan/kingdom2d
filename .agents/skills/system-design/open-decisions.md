@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| B3 | **审批排队期间是否锁定涉及格子** | [structures.md](structures.md) | 抢建、整单重验 |
 | B4 | **材料种类、数量、填料耗时** | [structures.md](structures.md) | 地基→填料→雇工链 |
 | B5 | **多格 Footprint 形状模板** | [structures.md](structures.md) | 多格占地实现 |
 
