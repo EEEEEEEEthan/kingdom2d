@@ -15,6 +15,14 @@
 | X10 | 待办队列 UI 节点、校验失败反馈文案 | [structures.md](structures.md) |
 | X11 | 劳动获益 UI / 平衡用途 | [labor-benefit.md](labor-benefit.md) |
 | X12 | 实现层命名与统计缓存 | 各计算器文档 |
+| X13 | 受雇建筑工是否可同时参与多处施工 | [structures.md](structures.md) |
+| X14 | 领主回购后建筑/土地处置与购回 UI | [structures.md](structures.md) |
+| X15 | 雇员薪酬结算时刻（午夜/早市等） | [characters.md](characters.md) |
+| X16 | 商业净收入收支事件统计口径 | [building-valuation-calculator.md](building-valuation-calculator.md) |
+| X17 | 建筑估值金额映射、未竣工工地计价、刷新周期、购地价是否纳入 | [building-valuation-calculator.md](building-valuation-calculator.md) |
+| X18 | 非整日劳动、多商品职业、建筑被动产出是否计入产出市值 | [labor-benefit.md](labor-benefit.md) |
+| X19 | 转职计算器 Context 配置 vs 单表驱动 | [career-change-calculator.md](career-change-calculator.md) |
+| X20 | 同一角色是否可同时拥有自由/雇佣职业或互斥 | [characters.md](characters.md) |
 
 ---
 
