@@ -18,8 +18,6 @@
 
 | # | 问题 | 来源 |
 |---|------|------|
-| X3 | 刚刚转职标记持续时长 | [characters.md](characters.md) |
-| X4 | 雇佣选人：最低价者不可雇时是否取次低 | [career-change-calculator.md](career-change-calculator.md) |
 | X5 | 拆毁是否消耗物料/劳动 | [structures.md](structures.md) |
 | X6 | 购置候选格枚举范围 | [structures.md](structures.md) |
 | X7 | 建造责任方死亡/欠薪时工地处理 | [structures.md](structures.md) |
