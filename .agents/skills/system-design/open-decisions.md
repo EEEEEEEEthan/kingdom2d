@@ -18,7 +18,6 @@
 
 | # | 问题 | 来源 |
 |---|------|------|
-| X2 | 角色死亡/离场时货币处理 | [economy.md](economy.md) |
 | X3 | 刚刚转职标记持续时长 | [characters.md](characters.md) |
 | X4 | 雇佣选人：最低价者不可雇时是否取次低 | [career-change-calculator.md](career-change-calculator.md) |
 | X5 | 拆毁是否消耗物料/劳动 | [structures.md](structures.md) |
