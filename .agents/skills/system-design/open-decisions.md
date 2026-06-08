@@ -10,10 +10,8 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| C2 | **「平均劳动获益」统计口径**（全场均值 / 滑动窗口） | [career-change-calculator.md](career-change-calculator.md) | 分数模式权重 |
 | C3 | **不转职空白权重**数值 | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 自由职业日常转职 |
 | C4 | **日薪底价：雇佣存续期间锁定还是每日重算** | [career-change-calculator.md](career-change-calculator.md) · [characters.md](characters.md) | 雇员薪酬结算 |
-| C5 | **产出市值取哪一周期市价**（当日 / 昨日） | [labor-benefit.md](labor-benefit.md) | 劳动获益 ↔ 价格形成对齐 |
 | C6 | **建筑工：自由职业还是雇佣职业？是否须转职上岗** | [characters.md](characters.md) | 雇工流程与转职池 |
 | C7 | **离职/日常转职：候选权重均 ≤ 0 时如何处理** | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 边缘 case |
 
@@ -53,7 +51,7 @@
 ## 依赖关系（简图）
 
 ```
-期望价相关性 ─┬─→ 产出市值 (C5) ─→ 转职分数 (C2)
+期望价相关性 ─┬─→ 产出市值（完成时市价）─→ 转职分数
                     └─→ 商业净收入 / 住房实际等级 ─→ 建筑估值 ─→ 占格成交价 / 回购价
 
 建筑估值 ─→ luxury-housing / 购置比价
