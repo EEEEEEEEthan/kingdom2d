@@ -6,14 +6,6 @@
 
 ---
 
-## P1 — 转职 / 雇佣闭环（阻塞角色 AI 日循环）
-
-| # | 问题 | 来源 | 阻塞 |
-|---|------|------|------|
-| C7 | **雇佣离职转职：候选权重均 ≤ 0 时如何处理** | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 边缘 case |
-
----
-
 ## P1 — 建造流程（阻塞 structures 实现）
 
 | # | 问题 | 来源 | 阻塞 |

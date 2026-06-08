@@ -32,7 +32,7 @@
 - **规则**：对每个**候选自由职业**代入本计算器（**分数模式**），得到**转职权重**（综合得分）；**≤ 0 丢弃**，**> 0** 纳入 [labor-benefit.md](labor-benefit.md) 的转职抽取池。
 - **说明**：
   - 日常转职：池中 x 个职业权重由空白权重补足至合计 100，抽取规则见 [labor-benefit.md](labor-benefit.md)「转职抽取」
-  - 雇佣离职转自由职业**无**空白，见 [characters.md](characters.md)
+  - 雇佣离职转自由职业**无**空白；解雇时当前获益按 0 计，见 [characters.md](characters.md)、[labor-benefit.md](labor-benefit.md)「转职抽取」
   - 转职与土地、占格无关；上岗雇佣职业走「雇佣选人」（议价模式）
 
 ### 雇佣选人
