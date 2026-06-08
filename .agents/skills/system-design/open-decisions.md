@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| C6 | **建筑工：自由职业还是雇佣职业？是否须转职上岗** | [characters.md](characters.md) | 雇工流程与转职池 |
 | C7 | **雇佣离职转职：候选权重均 ≤ 0 时如何处理** | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 边缘 case |
 
 ---
