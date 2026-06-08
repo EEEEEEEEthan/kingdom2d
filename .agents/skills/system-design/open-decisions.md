@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 |
 |---|------|------|
-| X6 | 购置候选格枚举范围 | [structures.md](structures.md) |
 | X7 | 建造责任方死亡/欠薪时工地处理 | [structures.md](structures.md) |
 | X8 | 空地是否排除环境物占格 | [structures.md](structures.md) |
 | X9 | 各建筑类型邻域/地形规则表 | [structures.md](structures.md) |
