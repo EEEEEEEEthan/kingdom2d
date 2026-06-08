@@ -10,10 +10,9 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| C3 | **不转职空白权重**数值 | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 自由职业日常转职 |
 | C4 | **日薪底价：雇佣存续期间锁定还是每日重算** | [career-change-calculator.md](career-change-calculator.md) · [characters.md](characters.md) | 雇员薪酬结算 |
 | C6 | **建筑工：自由职业还是雇佣职业？是否须转职上岗** | [characters.md](characters.md) | 雇工流程与转职池 |
-| C7 | **离职/日常转职：候选权重均 ≤ 0 时如何处理** | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 边缘 case |
+| C7 | **雇佣离职转职：候选权重均 ≤ 0 时如何处理** | [labor-benefit.md](labor-benefit.md) · [characters.md](characters.md) | 边缘 case |
 
 ---
 

@@ -13,7 +13,7 @@
 - **说明**：
   - 候选不含雇佣职业；上岗走「雇佣选人」
   - 转职与土地、占格无关
-  - 空白权重、池中无 >0 权重时的处理：见 [open-decisions.md](open-decisions.md) **C3**、**C7**
+  - 空白权重补足至 100、命中空白则不转职：见 [labor-benefit.md](labor-benefit.md)「转职抽取」
 
 ### 雇佣职业离职
 
