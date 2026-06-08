@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| B1 | **购地价为全局一口价还是按格/按类型可区分** | [structures.md](structures.md) | 购地审批、组合方案比价 |
 | B2 | **组合方案执行顺序**；任一步失败是否回滚 | [structures.md](structures.md) | [multi-tile-workshop](beautiful-corners/multi-tile-workshop.md) |
 | B3 | **审批排队期间是否锁定涉及格子** | [structures.md](structures.md) | 抢建、整单重验 |
 | B4 | **材料种类、数量、填料耗时** | [structures.md](structures.md) | 地基→填料→雇工链 |
