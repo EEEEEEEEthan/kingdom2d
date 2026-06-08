@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 |
 |---|------|------|
-| X8 | 空地是否排除环境物占格 | [structures.md](structures.md) |
 | X9 | 各建筑类型邻域/地形规则表 | [structures.md](structures.md) |
 | X10 | 待办队列 UI 节点、校验失败反馈文案 | [structures.md](structures.md) |
 | X11 | 劳动获益 UI / 平衡用途 | [labor-benefit.md](labor-benefit.md) |
