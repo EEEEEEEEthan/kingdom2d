@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 | 阻塞 |
 |---|------|------|------|
-| B2 | **组合方案执行顺序**；任一步失败是否回滚 | [structures.md](structures.md) | [multi-tile-workshop](beautiful-corners/multi-tile-workshop.md) |
 | B3 | **审批排队期间是否锁定涉及格子** | [structures.md](structures.md) | 抢建、整单重验 |
 | B4 | **材料种类、数量、填料耗时** | [structures.md](structures.md) | 地基→填料→雇工链 |
 | B5 | **多格 Footprint 形状模板** | [structures.md](structures.md) | 多格占地实现 |
@@ -43,7 +42,7 @@
                     └─→ 商业净收入 / 住房实际等级 ─→ 建筑估值 ─→ 占格成交价 / 回购价
 
 建筑估值 ─→ luxury-housing / 购置比价
-B2/B3 组合审批 ─→ multi-tile-workshop
+领主审批流程 ─→ multi-tile-workshop
 ```
 
 ## 关联
