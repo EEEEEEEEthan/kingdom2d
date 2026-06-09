@@ -88,5 +88,5 @@
 - 生活水平与租约：[needs.md](needs.md)
 - 租意愿计算器：[rent-willingness-calculator.md](rent-willingness-calculator.md)
 - 雇佣与薪酬：[characters.md](characters.md)
-- 价格与产消：[economy.md](economy.md)
+- 价格形成：[economy.md](economy.md)
 - 日内时段：[time.md](time.md)
