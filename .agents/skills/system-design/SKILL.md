@@ -26,7 +26,7 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 |------|------|------|
 | **开放决策** | [open-decisions.md](open-decisions.md) | 未决问题优先级与依赖（讨论时先看） |
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
-| 经济 / 货币 | [economy.md](economy.md) | 市价中位数、流通、早市 |
+| 经济 / 货币 | [economy.md](economy.md) | 经济单位、获益/预测、市价中位数、流通、早市 |
 | 商品估值计算器 | [goods-valuation-calculator.md](goods-valuation-calculator.md) | 个人估值 → 中位数 → 平滑市价 |
 | 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=佣金，生产类=完成时产出市值 |
 | 转职意愿计算器 | [career-change-willingness-calculator.md](career-change-willingness-calculator.md) | 雇佣议价：反推日薪底价（==0） |
