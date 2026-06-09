@@ -15,7 +15,8 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 ## 相关子文档
 
 - **开放决策**：[open-decisions.md](open-decisions.md)（未决问题优先级）
-- 经济：[economy.md](economy.md)（货币总量恒定、需求按标签、市价按品种）
+- 经济：[economy.md](economy.md)（市价中位数、需求按标签、早市）
+- 商品估值计算器：[goods-valuation-calculator.md](goods-valuation-calculator.md)（个人估值 → 中位数 → 平滑市价）
 - 劳动获益：[labor-benefit.md](labor-benefit.md)（雇佣=佣金，生产类=完成时产出市值）
 - 转职意愿计算器：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)（雇佣日薪底价 ==0）
 - 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底 + 竣工保护加成；占格交易成交价即估值）

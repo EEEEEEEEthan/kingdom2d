@@ -21,7 +21,7 @@
 
 - **说明**：
   - 生产类不可仅用现金流入衡量（如采浆果自食无现金收入；食物短缺时采浆果的劳动获益仍可能最高）
-  - 产出市值：自消、入库、售出均计入；未产出部分不计；市价取**生产完成时刻**的当日价格（见 [economy.md](economy.md) 价格形成）
+  - 产出市值：自消、入库、售出均计入；未产出部分不计；市价取**生产完成时刻**的**当日市价**（见 [goods-valuation-calculator.md](goods-valuation-calculator.md)、[economy.md](economy.md)「价格形成」）
   - 雇佣类获益即劳动换得的**佣金**（与 [characters.md](characters.md)「雇员薪酬结算」一致）
 
 ### 平均劳动获益
@@ -70,4 +70,4 @@
 
 - 角色 / 职业：[characters.md](characters.md)
 - 转职意愿计算器：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)
-- 经济 / 货币：[economy.md](economy.md)
+- 商品估值 / 市价：[goods-valuation-calculator.md](goods-valuation-calculator.md)、[economy.md](economy.md)
