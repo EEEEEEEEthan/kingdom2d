@@ -89,9 +89,10 @@
 | D14 | 净收入映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | 竣工加成递减已定 |
 | D15 | 非整日劳动、多商品职业、建筑被动产出是否计入产出市值 | labor-benefit.md | |
 | D16 | 转职计算器 Context 配置 vs 单表驱动 | career-change-calculator.md | 实现向 |
-| D17 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |
-| D18 | 角色死亡时货币/资源/工地（economy + structures 均写「暂不处理」） | economy.md + characters.md + structures.md | 是否纳入首版 |
-| D19 | 拆毁零成本是否导致「只买格不经营」主导策略 | structures.md / economy.md | 平衡观察，可后验调 |
+| D17 | 租意愿计算器因素与等级租金区间聚合 | rent-willingness-calculator.md | |
+| D18 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |
+| D19 | 角色死亡时货币/资源/工地（economy + structures 均写「暂不处理」） | economy.md + characters.md + structures.md | 是否纳入首版 |
+| D20 | 拆毁零成本是否导致「只买格不经营」主导策略 | structures.md / economy.md | 平衡观察，可后验调 |
 
 ---
 
@@ -129,7 +130,8 @@ D08 冷启动 → P2 表内各项
                     └─→ 建筑净收入（租金+营业−税−薪酬）─→ 建筑估值 ─→ 占格成交价
 
 生活水平 ─→ 自建 / 租床 / 【食物】预期库存
-床位租金 ─→ 建筑账本收入
+床位租金 ─→ 建筑账本收入；挂牌日更 ±1% clamp
+租意愿计算器 ─→ 寻租 / 离店 / 等级 R_min R_max
 占格清场 ─→ 土地归领主（无回购）
 
 建筑估值 ─→ luxury-housing / 购置比价
