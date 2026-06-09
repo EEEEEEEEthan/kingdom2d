@@ -29,11 +29,11 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 | 经济 / 货币 | [economy.md](economy.md) | 货币流通、需求按标签、市价按品种 |
 | 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=佣金，生产类=完成时产出市值 |
 | 转职计算器 | [career-change-calculator.md](career-change-calculator.md) | 雇佣议价：反推日薪底价（==0） |
-| 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 商业看净收入、住房看实际住房等级 |
+| 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 净收入估值 + 类型保底 |
 | 角色 / 职业 | [characters.md](characters.md) | 建筑工、转职、岗位雇佣、薪酬结算 |
-| 生活水平 | [needs.md](needs.md) | 需求阶梯、进度条、住房动机与换房 |
+| 生活水平 | [needs.md](needs.md) | 需求阶梯、进度条、租约与换房 |
 | 建筑 / 选址 | [structures.md](structures.md) | 占地购地、地基填料、雇工施工、购置拆建 |
-| 商业经营 | [commerce.md](commerce.md) | 建筑为经济单位、运营储备、商业雇员、铺面代摊 |
+| 建筑运营 | [commerce.md](commerce.md) | 税收、床位租金、运营储备、雇员、代摊 |
 | 时间与日程 | [time.md](time.md) | 日内四时段、标准上岗时长 |
 | 最美角落 | [beautiful-corners/README.md](beautiful-corners/README.md) | 叙事锚点；系统设计须能展现这些场景 |
 

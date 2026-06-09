@@ -18,7 +18,7 @@
 ## 玩家可见的流程
 
 1. 角色比选两处 Footprint 落点，分别估算组合成本（**购地价** + 各**购置格**商业估值）；落点 A 更省，且角色**支付得起**整单
-2. 对落点 A 上须购置的格（澡堂、木匠铺）**询价** → 按现有商业建筑近一年净收入估值
+2. 对落点 A 上须购置的格（澡堂、木匠铺）**询价** → 按该建筑实例近一年净收入估值（含类型保底）
 3. 因方案含空地购地，向领主发起**一条**组合待办，例如：
 
    > {角色}拟在{格左、澡堂格、木匠铺格}建造奢侈住房：格左须购地，澡堂格须向{卖方}购置澡堂后拆除，木匠铺格须向{卖方}购置木匠铺后拆除
@@ -42,5 +42,6 @@
 
 - [structures.md](../structures.md)：多格占地、组合建造方案与领主审批、购置询价、占格建筑交易成交价（= 估值、无议价）、购置即拆后自建、建造施工流程
 - [characters.md](../characters.md)：雇建筑工
-- [building-valuation-calculator.md](../building-valuation-calculator.md)：商业净收入 / 住房实际等级估值
+- [building-valuation-calculator.md](../building-valuation-calculator.md)：净收入估值 + 类型保底
+- [commerce.md](../commerce.md)：建筑运营（税收、床位租金）
 - [economy.md](../economy.md)：购地货币转移
