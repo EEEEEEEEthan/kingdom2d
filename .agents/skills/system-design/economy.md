@@ -127,6 +127,7 @@
 - **说明**：
   - 可作为 [goods-valuation-calculator.md](goods-valuation-calculator.md) 个人估值的**加性因素**（示例：持有现金）
   - 领主钱包不参与该统计；商人离境后其货币不再计入
+  - 开局领主持 **80%** 货币且不计入流通，使领主可通过**只进不出**或**主动放币**（早市收购等）调节场内通胀——**预期**玩法，见 [beautiful-corners/lord-circulation-control.md](beautiful-corners/lord-circulation-control.md)
 
 ### 预期库存
 
@@ -162,3 +163,4 @@
 - 铺面代摊：[commerce.md](commerce.md)「早市铺面代摊」
 - 日内时段：[time.md](time.md)
 - 最美角落（浆果过剩）：[beautiful-corners/berry-glut-career-dead-end.md](beautiful-corners/berry-glut-career-dead-end.md)
+- 最美角落（领主通胀杠杆）：[beautiful-corners/lord-circulation-control.md](beautiful-corners/lord-circulation-control.md)

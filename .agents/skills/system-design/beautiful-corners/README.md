@@ -17,6 +17,7 @@
 | 角落 | 文件 | 串联机制 |
 |------|------|----------|
 | 浆果过剩与转职僵局 | [berry-glut-career-dead-end.md](berry-glut-career-dead-end.md) | 中位数市价、产出市值、转职意愿；**领主破局** |
+| 领主掌控流通与通胀 | [lord-circulation-control.md](lord-circulation-control.md) | 二八持币、流通货币口径；**领主货币政策** |
 | 奢侈住房的稀缺选址 | [luxury-housing.md](luxury-housing.md) | **全流程代表**：邻域选址、宽 Footprint 比选、购置询价、购地、组合审批、拆后自建、建造施工 |
 | 多格铺位的组合购地 | [multi-tile-workshop.md](multi-tile-workshop.md) | 商业作坊视角的组合购地（机制细节亦见 luxury-housing） |
 

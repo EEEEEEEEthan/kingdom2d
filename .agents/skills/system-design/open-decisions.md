@@ -39,7 +39,7 @@
 
 | # | 风险 | 相关文档 |
 |---|------|----------|
-| W01 | 领主 80% 货币不计流通 → 刻意压低流通量；领主只进不出时通胀偏弱 | economy.md |
+| W01 | （已升格最美角落）领主持币与流通口径 → **领主货币政策** | [lord-circulation-control.md](beautiful-corners/lord-circulation-control.md), economy.md |
 | W02 | 浆果过剩 → 市价崩 → 转职僵局；**领主破局**为预期最美角落 | labor-benefit.md, goods-valuation-calculator.md, [berry-glut-career-dead-end.md](beautiful-corners/berry-glut-career-dead-end.md) |
 | W03 | 转职权重和 > 100 时空白为 0，是否归一化未定 → 转职频率波动 | labor-benefit.md |
 | W04 | 角色详情与转职意愿计算器「平均劳动获益」可用不同统计窗口 | labor-benefit.md |
