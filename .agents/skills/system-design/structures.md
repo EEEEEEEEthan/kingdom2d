@@ -2,7 +2,7 @@
 
 ### 建筑分类
 
-- **规则**：建筑分「工作场所」（商业建筑）与「住房」两类；估值模型分岔见 [building-valuation-calculator.md](building-valuation-calculator.md)。
+- **规则**：建筑分「工作场所」（商业建筑）与「住房」两类；估值模型分岔见 [building-valuation-calculator.md](building-valuation-calculator.md)；商业建筑经营见 [commerce.md](commerce.md)。
 - **说明**：
   - 工作场所示例：铁匠铺、酒馆、澡堂
   - 住房示例：茅舍及更高级住宅；每类住房配置**住房等级**
