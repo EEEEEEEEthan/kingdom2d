@@ -6,7 +6,7 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 
 ## 已实现雏形（代码现状）
 
-- **时间**：现实 1h = 游戏 24h；7 天/月、12 月/年、四季、月相；日内分早市 / 工作 / 休息 / 睡眠
+- **时间**：现实 1h = 游戏 24h；7 天/月、12 月/年、四季、月相；日内分早市 / 工作 / 休息 / 睡眠（详见 [time.md](time.md)）
 - **世界**：中心王权旌旗，随机橡树与灌木，地形、云层、日月
 - **角色**：开局 8 人，当前仅 idle 漫游 AI；设计已定职业/转职/佣金/雇工薪酬，见 [characters.md](characters.md)
 - **建筑**：可建造半穴茅舍（代码为即时放置）；设计已定占地、购地、地基填料与雇建筑工流程，见 [structures.md](structures.md)
@@ -21,4 +21,5 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 - 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)（商业看净收入、住房看实际住房等级；占格交易成交价即估值）
 - 角色：[characters.md](characters.md)（建筑工、转职、岗位雇佣、按日薪酬结算）
 - 建筑：[structures.md](structures.md)（购地/购置、地基填料、雇工竣工、组合审批）
+- 商业经营：[commerce.md](commerce.md)；日程：[time.md](time.md)
 - 最美角落：[beautiful-corners/README.md](beautiful-corners/README.md)（叙事锚点，检验系统设计）

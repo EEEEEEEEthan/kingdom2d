@@ -13,6 +13,7 @@
 | R01 | 占格重叠时是否须领主审批、购地价计哪些格 | [structures.md](.agents/skills/system-design/structures.md)「占格覆盖与购地审批」 |
 | R02 | AI 是否可拆玩家建筑 | 同上「AI 选址约束」 |
 | R03 | 商业建筑为经济单位、运营储备、商业雇员 | [commerce.md](.agents/skills/system-design/commerce.md) |
+| R04 | 铺面代摊、分建筑上岗窗口、标准上岗时长 | [commerce.md](.agents/skills/system-design/commerce.md)、[time.md](.agents/skills/system-design/time.md)、[economy.md](.agents/skills/system-design/economy.md)「早市」 |
 
 ---
 
@@ -20,9 +21,7 @@
 
 ### D01 商业建筑经营模型
 
-- **状态**：部分已决（记账/雇员/储备 → [commerce.md](.agents/skills/system-design/commerce.md)）；**营业与消费**仍待决（→ open-decisions **X21**、D05）
-- **未决**：顾客如何消费、早市与店铺分工、建筑类型营业时段
-- **阻塞**：场内供给循环、活商业表现、D04 职业清单
+- **状态**：已决（[commerce.md](.agents/skills/system-design/commerce.md)、[time.md](.agents/skills/system-design/time.md)）；店内选购 AI 细节随 D04/D05 实现期定
 
 ---
 
@@ -68,13 +67,9 @@
 
 ### D05 角色间交易与早市
 
-- **状态**：待决
-- **写入目标**：[economy.md](.agents/skills/system-design/economy.md) + 可选 [overview.md](.agents/skills/system-design/overview.md) / `time.md`
-- **问题**：`overview` 有早市时段，经济假设有交易，但无**谁卖给谁、如何定价成交、早市做什么**的设计。
-- **阻塞**：流通商品、近一年产消统计、食物短缺时转职逻辑的可信度。
-- **讨论要点**：
-  - 市价挂单 vs 即时按日价成交？
-  - 旅行商人与常驻角色交易规则是否相同？
+- **状态**：部分已决（早市双渠道、日价成交 → [economy.md](.agents/skills/system-design/economy.md)「早市」）
+- **未决**：摆摊概率、买家选购、是否支持挂单
+- **阻塞**：流通商品细粒度 AI
 
 ---
 
