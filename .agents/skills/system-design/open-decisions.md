@@ -10,7 +10,6 @@
 
 | # | 问题 | 来源 |
 |---|------|------|
-| X11 | 劳动获益 UI / 平衡用途 | [labor-benefit.md](labor-benefit.md) |
 | X12 | 实现层命名与统计缓存 | 各计算器文档 |
 | X13 | 受雇建筑工是否可同时参与多处施工 | [structures.md](structures.md) |
 | X14 | 领主回购后建筑/土地处置与购回 UI | [structures.md](structures.md) |
