@@ -24,7 +24,7 @@
 
 - **写入目标**：[characters.md](characters.md) + 可选 `careers.md`
 - **问题**：仅「采浆果」示例；谁建铁匠铺/酒馆、生产行为如何触发、与日内时段（工作/早市）关系未写。
-- **阻塞**：转职计算器输入、劳动获益样本、场内供给循环。
+- **阻塞**：转职意愿计算器输入、劳动获益样本、场内供给循环。
 - **讨论要点**：
   - 首版最少几种自由职业？
   - 生产类职业是否必须绑定某类开放上岗窗口的建筑？
@@ -88,7 +88,7 @@
 | D13 | 建筑净收入收支事件统计口径 | building-valuation-calculator.md + commerce.md | |
 | D14 | 净收入映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | 竣工加成递减已定 |
 | D15 | 非整日劳动、多商品职业、建筑被动产出是否计入产出市值 | labor-benefit.md | |
-| D16 | 转职计算器 Context 配置 vs 单表驱动 | career-change-calculator.md | 实现向 |
+| D16 | 转职意愿计算器 Context 配置 vs 单表驱动 | career-change-willingness-calculator.md | 实现向 |
 | D17 | 租意愿计算器因素与等级租金区间聚合 | rent-willingness-calculator.md | |
 | D18 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |
 | D19 | 角色死亡时货币/资源/工地（economy + structures 均写「暂不处理」） | economy.md + characters.md + structures.md | 是否纳入首版 |
@@ -103,7 +103,7 @@
 | W01 | 领主 80% 货币不计流通 → 刻意压低流通量；领主只进不出时通胀偏弱 | economy.md |
 | W02 | 产出市值用完成时市价 ↔ 定价参数互相喂养，转职可能过敏 | labor-benefit.md, economy.md |
 | W03 | 转职权重和 > 100 时空白为 0，是否归一化未定 → 转职频率波动 | labor-benefit.md |
-| W04 | 角色详情与转职计算器「平均劳动获益」可用不同统计窗口 | labor-benefit.md |
+| W04 | 角色详情与转职意愿计算器「平均劳动获益」可用不同统计窗口 | labor-benefit.md |
 
 ---
 

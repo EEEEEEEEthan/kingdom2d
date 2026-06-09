@@ -1,6 +1,6 @@
 # 建筑估值计算器
 
-> 对**建筑实例**给出客观**估值**（货币金额）。与 [career-change-calculator.md](career-change-calculator.md)（雇佣日薪议价）分离。占格购置的报价与成交价即估值（无议价），见 [structures.md](structures.md)「占格建筑交易成交价」。
+> 对**建筑实例**给出客观**估值**（货币金额）。与 [career-change-willingness-calculator.md](career-change-willingness-calculator.md)（雇佣日薪议价）分离。占格购置的报价与成交价即估值（无议价），见 [structures.md](structures.md)「占格建筑交易成交价」。
 
 ### 核心机制
 
@@ -58,7 +58,7 @@
 
 ## 关联
 
-- 转职计算器：[career-change-calculator.md](career-change-calculator.md)
+- 转职意愿计算器：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)
 - 建筑运营：[commerce.md](commerce.md)
 - 建筑 / 占格：[structures.md](structures.md)
 - 经济：[economy.md](economy.md)

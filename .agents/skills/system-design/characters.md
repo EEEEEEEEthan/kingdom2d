@@ -14,7 +14,7 @@
 
 ### 自由职业转职
 
-- **规则**：每个**游戏日**，每名**自由职业**角色进行一次转职判定：对全部候选自由职业代入 [career-change-calculator.md](career-change-calculator.md)（分数模式）得转职权重，再按 [labor-benefit.md](labor-benefit.md)「转职抽取」执行（含**不转职**空白权重）。
+- **规则**：每个**游戏日**，每名**自由职业**角色进行一次转职判定：对全部候选自由职业代入 [career-change-willingness-calculator.md](career-change-willingness-calculator.md)（分数模式）得转职权重，再按 [labor-benefit.md](labor-benefit.md)「转职抽取」执行（含**不转职**空白权重）。
 - **说明**：
   - 候选不含雇佣职业；上岗走「雇佣选人」
   - 转职与土地、占格无关
@@ -22,14 +22,14 @@
 
 ### 雇佣职业离职
 
-- **规则**：角色**不再需要**当前雇佣岗位时（含**被解雇**），同样经转职计算器（分数模式）列举各自由职业权重，再按「转职抽取」执行，但**不设不转职空白**；同时**清除**「刚刚转职」标记。
+- **规则**：角色**不再需要**当前雇佣岗位时（含**被解雇**），同样经转职意愿计算器（分数模式）列举各自由职业权重，再按「转职抽取」执行，但**不设不转职空白**；同时**清除**「刚刚转职」标记。
 - **说明**：
   - 触发时机含岗位撤销、**建筑竣工瞬间解雇建筑工**等；其余场景尚未穷举
   - 判定时当前劳动获益按 **0** 计；候选权重均 ≤ 0 时**不转职**，见 [labor-benefit.md](labor-benefit.md)「转职抽取」
 
 ### 刚刚转职
 
-- **规则**：角色每次**成功转职**（含自由职业互转、入职雇佣职业）后进入「刚刚转职」状态，持续 **7 个游戏日**；作为 [career-change-calculator.md](career-change-calculator.md) 的**负面因素**；在**被解雇**（雇佣岗位结束）时**立即清除**。
+- **规则**：角色每次**成功转职**（含自由职业互转、入职雇佣职业）后进入「刚刚转职」状态，持续 **7 个游戏日**；作为 [career-change-willingness-calculator.md](career-change-willingness-calculator.md) 的**负面因素**；在**被解雇**（雇佣岗位结束）时**立即清除**。
 - **说明**：
   - 负面强度自转职当日起在 7 日内**逐渐递减**，第 7 日结束后归零（具体得分曲线与数值实现期调试）
   - 游戏日定义见 [overview.md](overview.md) 时间系统
@@ -40,7 +40,7 @@
 
 ### 雇佣佣金与日薪底价
 
-- **规则**：单角色接受某一雇佣岗位所需的**日薪底价**，由 [career-change-calculator.md](career-change-calculator.md)（议价模式）反推使总得分 **== 0** 的金额，非独立定价表；成交时写入该次雇佣的**协定日薪**。
+- **规则**：单角色接受某一雇佣岗位所需的**日薪底价**，由 [career-change-willingness-calculator.md](career-change-willingness-calculator.md)（议价模式）反推使总得分 **== 0** 的金额，非独立定价表；成交时写入该次雇佣的**协定日薪**。
 - **说明**：
   - 支付方随场景而定（领主、建造方角色等），见 [economy.md](economy.md)
   - 与自由职业互转无关
@@ -58,7 +58,7 @@
 - **规则**：雇佣岗位可配置**任职条件**；角色须满足该岗位全部条件方可被雇。
 - **说明**：
   - 示例：某职业要求**识字**，某职业要求**强壮**；具体条件与岗位绑定，按类型配置
-  - 条件与转职计算器日薪底价**独立**：底价只反映意愿，能否上岗由任职条件判定
+  - 条件与转职意愿计算器日薪底价**独立**：底价只反映意愿，能否上岗由任职条件判定
 
 ### 角色详情
 
@@ -70,7 +70,7 @@
 
 ### 雇佣选人
 
-- **规则**：需要填补某雇佣岗位时，对场内**每一名角色**（**含发起雇佣者本人**）求该岗位日薪底价，选用**满足任职条件且工资最低**者（须雇主支付得起）。细节见 [career-change-calculator.md](career-change-calculator.md)「雇佣选人」。
+- **规则**：需要填补某雇佣岗位时，对场内**每一名角色**（**含发起雇佣者本人**）求该岗位日薪底价，选用**满足任职条件且工资最低**者（须雇主支付得起）。细节见 [career-change-willingness-calculator.md](career-change-willingness-calculator.md)「雇佣选人」。
 - **说明**：
   - **允许挖墙脚**：候选人**可以**正受他人雇佣；成交后结束其原雇佣关系，转入新岗位
   - 自己雇自己用于收入统计；**玩家 UI 不展示「自己雇佣自己」**
@@ -94,7 +94,7 @@
 
 - **规则**：工地材料填满后，建造责任方按「雇佣选人」（岗位=建筑工）选人上岗；若本人为**满足任职条件且工资最低**者则**自己雇佣自己**。受雇者转职为建筑工；**竣工瞬间**即解雇。
 - **说明**：
-  - 选人走 [career-change-calculator.md](career-change-calculator.md) 议价模式；薪酬按「雇员薪酬结算」，协定日薪锁定至解雇
+  - 选人走 [career-change-willingness-calculator.md](career-change-willingness-calculator.md) 议价模式；薪酬按「雇员薪酬结算」，协定日薪锁定至解雇
   - 竣工解雇后走「雇佣职业离职」转职流程
   - 允许挖墙脚（见「雇佣选人」）
 
@@ -112,5 +112,5 @@
 ## 关联
 
 - 劳动获益：[labor-benefit.md](labor-benefit.md)
-- 转职计算器：[career-change-calculator.md](career-change-calculator.md)
+- 转职意愿计算器：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)
 - 建造施工：[structures.md](structures.md)

@@ -1,6 +1,6 @@
 # 租意愿计算器
 
-> 汇总各因素**得分**，输出角色对某**住房等级**床位的租住意愿及租金区间。与 [career-change-calculator.md](career-change-calculator.md)（雇佣/转职）分离。床位挂牌与日更见 [commerce.md](commerce.md)「床位挂牌租金」；寻租与自建优先级见 [needs.md](needs.md)「住房需求：先租后建」。
+> 汇总各因素**得分**，输出角色对某**住房等级**床位的租住意愿及租金区间。与 [career-change-willingness-calculator.md](career-change-willingness-calculator.md)（雇佣/转职）分离。床位挂牌与日更见 [commerce.md](commerce.md)「床位挂牌租金」；寻租与自建优先级见 [needs.md](needs.md)「住房需求：先租后建」。
 
 ### 核心机制
 
@@ -45,4 +45,4 @@
 - 建筑运营 / 挂牌：[commerce.md](commerce.md)
 - 生活水平 / 先租后建：[needs.md](needs.md)
 - 劳动获益：[labor-benefit.md](labor-benefit.md)
-- 转职计算器（结构参照）：[career-change-calculator.md](career-change-calculator.md)
+- 转职意愿计算器（结构参照）：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)
