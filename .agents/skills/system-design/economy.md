@@ -76,7 +76,7 @@
 - **说明**：
   - 每次生产：累计生产总耗时增加本次耗时，累计生产总量增加本次产量，二者相除即得当前均值
   - 生产行为的时间数据是价格形成的输入之一
-  - 建筑建造须记时；按**建筑类型**同理累计耗时与完成次数求均值，供给商品定价与经济平衡；建筑实例估值见 [building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底）
+  - 建筑建造须记时；按**建筑类型**同理累计耗时与完成次数求均值，供给商品定价与经济平衡；建筑实例估值见 [building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底 + 竣工保护加成）
 
 ### 近一年消费总量
 

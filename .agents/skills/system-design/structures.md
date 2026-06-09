@@ -57,6 +57,7 @@
   - 前置步骤含向领主购地/审批、购置他人建筑并拆除、组合方案整单执行等，见上文各节
   - 各建筑类型的**材料清单与施工耗时**见「建筑材料与施工耗时」；资源标签见 [economy.md](economy.md)「资源与标签」
   - 材料填满后触发「雇佣建筑工」：全场选人、转职上岗；**竣工瞬间**解雇建筑工，见 [characters.md](characters.md)
+  - **竣工瞬间**记录该实例**竣工时刻**，供 [building-valuation-calculator.md](building-valuation-calculator.md)「竣工保护加成」起算
   - 与代码现状的差异：当前建造为放置即完成，无地基/材料/雇工阶段
 
 ### 工地异常（欠薪与死亡）
@@ -178,7 +179,7 @@
   - 买方（角色）询价 → 系统按估值计算器返回单一金额 → 买方**接受或放弃**；不存在还价、卖方保留价或反复出价
   - 卖方被动应答（返回估值即可），无需卖方 AI 参与定价决策
   - 成交时以询价时刻（或实现约定的重验时刻）的估值扣款；组合方案整单重验时须复算各购置格估值仍支付得起
-  - 估值见 [building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底）
+  - 估值见 [building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底 + 竣工保护加成）
 
 ## 最美角落
 

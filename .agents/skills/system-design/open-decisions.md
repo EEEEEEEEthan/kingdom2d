@@ -86,7 +86,7 @@
 | D10 | 受雇建筑工能否同时参与多处施工 | structures.md | 与「责任方仅一处工地」不同维度 |
 | D12 | 雇员薪酬结算时刻：午夜还是早市等 | characters.md + time.md? | 与 D05 联动 |
 | D13 | 建筑净收入收支事件统计口径 | building-valuation-calculator.md + commerce.md | |
-| D14 | 净收入映射、类型保底估值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | |
+| D14 | 净收入映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | 竣工加成递减已定 |
 | D15 | 非整日劳动、多商品职业、建筑被动产出是否计入产出市值 | labor-benefit.md | |
 | D16 | 转职计算器 Context 配置 vs 单表驱动 | career-change-calculator.md | 实现向 |
 | D17 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |

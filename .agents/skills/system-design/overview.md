@@ -18,7 +18,7 @@ Kingdom2D：横向 2D 王国模拟。极窄横条视口（1024×64），地图 5
 - 经济：[economy.md](economy.md)（货币总量恒定、需求按标签、市价按品种）
 - 劳动获益：[labor-benefit.md](labor-benefit.md)（雇佣=佣金，生产类=完成时产出市值）
 - 转职计算器：[career-change-calculator.md](career-change-calculator.md)（雇佣日薪底价 ==0）
-- 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底；占格交易成交价即估值）
+- 建筑估值计算器：[building-valuation-calculator.md](building-valuation-calculator.md)（净收入 + 类型保底 + 竣工保护加成；占格交易成交价即估值）
 - 角色：[characters.md](characters.md)（建筑工、转职、岗位雇佣、按日薪酬结算）
 - 建筑：[structures.md](structures.md)（购地/购置、地基填料、雇工竣工、组合审批）
 - 建筑运营：[commerce.md](commerce.md)；生活水平：[needs.md](needs.md)；日程：[time.md](time.md)
