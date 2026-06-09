@@ -17,7 +17,7 @@
 - **规则**：租意愿由下列因素汇总为得分（示例方向，具体函数实现期调试）：
 - **说明**：
   - **正面**：挂牌日租**低于**最高可出越多、实际住房等级**超出**当前生活水平需求的冗余越多、等
-  - **负面**：日租**高于**保证正收入的最低租金（ affordability 顶）、与当前劳动获益/刚性日耗不匹配、等
+  - **负面**：日租**高于**保证正收入的最低租金（ affordability 顶）、与当前创值/刚性日耗不匹配、等
   - 输入中的**当前挂牌日租**仅用于评估**已有租约**或**指定候选床位**；寻租比价时由流程传入各床挂牌价
 
 ### 自住
@@ -44,5 +44,5 @@
 
 - 建筑运营 / 挂牌：[commerce.md](commerce.md)
 - 生活水平 / 先租后建：[needs.md](needs.md)
-- 劳动获益：[labor-benefit.md](labor-benefit.md)
+- 角色创值：[value-creation.md](value-creation.md)
 - 转职意愿计算器（结构参照）：[career-change-willingness-calculator.md](career-change-willingness-calculator.md)

@@ -17,7 +17,7 @@
 ## 玩家（领主）可见的困境
 
 1. 早市与摆摊：**浆果**堆积、市价低，卖浆果换不到钱
-2. 角色详情：劳动获益下降；长期无人转职去「体面」或高获益职业
+2. 角色详情：创值下降；长期无人转职去「体面」或高创值职业
 3. 待办稀少：无人申请购地建商业，邻域服务等级上不去
 4. 若领主**只进不出**（80% 货币），流通侧更加缺乏调节杠杆
 
@@ -32,14 +32,14 @@
 ## 要展现的设计要点
 
 - **市价 = 众人估值中位数**时，同质劳动扎堆会导致**价格内卷**——这是**预期行为**，不是 bug
-- **转职意愿**与**产出市值**挂钩时，低市价 → 低获益 → 低转职权重，形成**僵局**
+- **转职意愿**与**产出市值**挂钩时，低市价 → 低创值 → 低转职权重，形成**僵局**
 - **破局责任在领主侧**（玩家），系统须提供购地审批、税收、建筑类型差异等**可操作策略**，而非隐藏均衡器
 - 与 [luxury-housing.md](luxury-housing.md) 互补：彼处是「有钱难择址」；此处是「有价无业、无业难建」
 
 ## 关联机制
 
 - [goods-valuation-calculator.md](../goods-valuation-calculator.md)：个人估值 → 中位数 → 平滑市价
-- [labor-benefit.md](../labor-benefit.md)：产出市值、平均劳动获益
+- [value-creation.md](../value-creation.md)：产出市值、职业创值（中位数）
 - [career-change-willingness-calculator.md](../career-change-willingness-calculator.md)：转职权重
 - [economy.md](../economy.md)：早市、流通、领主货币
 - [structures.md](../structures.md)：购地审批、建造

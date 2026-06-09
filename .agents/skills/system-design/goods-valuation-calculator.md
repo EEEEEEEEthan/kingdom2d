@@ -36,11 +36,11 @@
 
 - **规则**：见 [economy.md](economy.md)「价格形成」：**当日市价** = 对** raw 中位价**与**上日市价**做平滑（上日价**参与**计算）；于每日 **0:00** 批处理、**薪酬之后、早市之前**更新（见 [time.md](time.md)「游戏日批处理顺序」）。
 - **说明**：
-  - 早市成交、产出市值（[labor-benefit.md](labor-benefit.md)）、建造材料市价引用等，均使用**当日市价**
+  - 早市成交、产出市值（[value-creation.md](value-creation.md)）、建造材料市价引用等，均使用**当日市价**
 
 ## 关联
 
 - 经济 / 市价：[economy.md](economy.md)
-- 劳动获益（产出市值）：[labor-benefit.md](labor-benefit.md)
+- 角色创值（产出市值）：[value-creation.md](value-creation.md)
 - 资源与标签：[economy.md](economy.md)「资源与标签」
 - 最美角落（浆果过剩）：[beautiful-corners/berry-glut-career-dead-end.md](beautiful-corners/berry-glut-career-dead-end.md)

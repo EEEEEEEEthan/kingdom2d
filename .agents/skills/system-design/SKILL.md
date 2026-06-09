@@ -26,12 +26,12 @@ description: 维护并引用 Kingdom2D 系统设计文档。在讨论游戏设�
 |------|------|------|
 | **开放决策** | [open-decisions.md](open-decisions.md) | 未决问题优先级与依赖（讨论时先看） |
 | 项目概览 | [overview.md](overview.md) | 定位、技术约束、已实现雏形 |
-| 经济 / 货币 | [economy.md](economy.md) | 经济单位、获益/预测、市价中位数、流通、早市 |
+| 经济 / 货币 | [economy.md](economy.md) | 经济单位、创值/预测、市价中位数、流通、早市 |
 | 商品估值计算器 | [goods-valuation-calculator.md](goods-valuation-calculator.md) | 个人估值 → 中位数 → 平滑市价 |
-| 劳动获益 | [labor-benefit.md](labor-benefit.md) | 职业经济获益：雇佣=佣金，生产类=完成时产出市值 |
+| 角色创值 | [value-creation.md](value-creation.md) | 个体创值：雇佣=佣金，自由职业=完成时产出市值；职业取中位数 |
 | 转职意愿计算器 | [career-change-willingness-calculator.md](career-change-willingness-calculator.md) | 雇佣议价：反推日薪底价（==0） |
 | 租意愿计算器 | [rent-willingness-calculator.md](rent-willingness-calculator.md) | 租入/续租意愿、可出租金区间 |
-| 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 净收入 + 类型保底 + 竣工保护加成 |
+| 建筑估值计算器 | [building-valuation-calculator.md](building-valuation-calculator.md) | 创值（售品+床位租金）+ 类型保底 + 竣工保护加成 |
 | 角色 / 职业 | [characters.md](characters.md) | 建筑工、转职、岗位雇佣、薪酬结算 |
 | 生活水平 | [needs.md](needs.md) | 需求阶梯、进度条、租约与换房 |
 | 建筑 / 选址 | [structures.md](structures.md) | 占地购地、地基填料、雇工施工、购置拆建 |

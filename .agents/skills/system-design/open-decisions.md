@@ -22,10 +22,10 @@
 
 | # | 议题 | 写入目标 | 备注 |
 |---|------|----------|------|
-| D13 | 建筑净收入收支事件统计口径 | building-valuation-calculator.md + commerce.md | |
+| D13 | 建筑账本收支事件统计口径（与创值售品/床位租金子集区分） | building-valuation-calculator.md + commerce.md | |
 | D21 | 领主与场内角色的市场交易渠道（领主不参与早市；阈值调节已定） | economy.md | 与 lord-circulation / berry-glut 破局手段相关 |
-| D14 | 净收入映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | 竣工加成递减已定 |
-| D15 | 非整日劳动、多商品职业 | labor-benefit.md | 建筑被动产出**不计入**雇员产出市值（已定，见 commerce.md） |
+| D14 | 创值映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期 | building-valuation-calculator.md | 竣工加成递减已定 |
+| D15 | 非整日劳动、多商品职业 | value-creation.md | 建筑被动产出**不计入**雇员产出市值（已定，见 commerce.md） |
 | D16 | 转职意愿计算器 Context 配置 vs 单表驱动 | career-change-willingness-calculator.md | 实现向 |
 | D17 | 租意愿计算器因素与等级租金区间聚合 | rent-willingness-calculator.md | |
 | D18 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |
@@ -39,9 +39,9 @@
 | # | 风险 | 相关文档 |
 |---|------|----------|
 | W01 | （已升格最美角落）领主持币与流通口径 → **领主货币政策** | [lord-circulation-control.md](beautiful-corners/lord-circulation-control.md), economy.md |
-| W02 | 浆果过剩 → 市价崩 → 转职僵局；**领主破局**为预期最美角落 | labor-benefit.md, goods-valuation-calculator.md, [berry-glut-career-dead-end.md](beautiful-corners/berry-glut-career-dead-end.md) |
-| W03 | 转职权重和 > 100 时空白为 0，是否归一化未定 → 转职频率波动 | labor-benefit.md |
-| W04 | 角色详情与转职意愿计算器「平均劳动获益」可用不同统计窗口 | labor-benefit.md |
+| W02 | 浆果过剩 → 市价崩 → 转职僵局；**领主破局**为预期最美角落 | value-creation.md, goods-valuation-calculator.md, [berry-glut-career-dead-end.md](beautiful-corners/berry-glut-career-dead-end.md) |
+| W03 | 转职权重和 > 100 时空白为 0，是否归一化未定 → 转职频率波动 | value-creation.md |
+| W04 | 角色详情与转职意愿计算器「个体创值 / 职业创值」可用不同统计窗口 | value-creation.md |
 
 ---
 
@@ -66,7 +66,7 @@ P2 表内各项
 
 0:00 批处理：薪酬 → 市价 → 日常转职；12:00 租意愿
 
-建筑净收入（租金+营业−税−薪酬）─→ 建筑估值 ─→ 占格成交价
+建筑创值（售品+床位租金，含自租）─→ 建筑估值 ─→ 占格成交价；账本净收支 ─→ 运营储备
 生活水平 ─→ 自建 / 租床 / 【食物】预期库存
 占格清场 ─→ 土地归领主（无回购）
 
