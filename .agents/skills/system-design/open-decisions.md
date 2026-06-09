@@ -14,14 +14,6 @@
 
 ## P1 — 规则歧义（已定机制内的洞或冲突）
 
-### D07 欠薪后工地状态
-
-- **写入目标**：[structures.md](structures.md)
-- **已决**：欠薪 → 解雇建筑工 → **占格清场**（取消建造），见 [structures.md](structures.md)「工地异常（欠薪与死亡）」。
-- **仍待决**：责任方死亡时工地如何处理。
-
----
-
 ### D08 服务等级与商业冷启动（部分已决）
 
 - **写入目标**：[structures.md](structures.md) + [needs.md](needs.md)
@@ -51,7 +43,7 @@
 | D16 | 转职意愿计算器 Context 配置 vs 单表驱动 | career-change-willingness-calculator.md | 实现向 |
 | D17 | 租意愿计算器因素与等级租金区间聚合 | rent-willingness-calculator.md | |
 | D18 | 实现层命名与统计缓存 | 各计算器文档 | 实现向 |
-| D19 | 角色死亡时货币/资源/工地（economy + structures 均写「暂不处理」） | economy.md + characters.md + structures.md | 是否纳入首版 |
+| D19 | 角色死亡时货币/资源归属（工地清场已定，见 structures「工地异常」） | economy.md + characters.md | 死亡首版不实现 |
 | D20 | 拆毁零成本是否导致「只买格不经营」主导策略 | structures.md / economy.md | 平衡观察，可后验调 |
 
 ---
