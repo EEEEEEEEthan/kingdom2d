@@ -13,6 +13,7 @@
 - **说明**：
   - **服务等级**：由目标格周围建筑覆盖决定；等级阶梯要求邻域内存在指定类型建筑（示例：2 级须覆盖酒馆，3 级还须覆盖铁匠铺）
   - 实际住房等级约束**选址**（能否达到目标类型的有效居住品质）与 [needs.md](needs.md) **生活水平**；**不**用于占格购置估值（估值走净收入，见 [building-valuation-calculator.md](building-valuation-calculator.md)）
+  - 生活水平须**先**出现【服务】诉求、**后**才解锁须高**服务等级**的升档住房，见 [needs.md](needs.md)「阶梯顺序：先【服务】、后高阶住房」
   - 邻域半径、等级阶梯与设施类型表按类型配置；奢侈住房示例见 [beautiful-corners/luxury-housing.md](beautiful-corners/luxury-housing.md)
 
 ### Footprint 与入口
