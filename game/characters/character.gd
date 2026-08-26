@@ -4,10 +4,8 @@ class_name Character
 const _KEY_ID = 1
 const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
-const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
-
 var id: int
-@export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
+var move_speed_pixels_per_second := 6.0
 
 
 func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool:
