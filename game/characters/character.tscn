@@ -3,6 +3,61 @@
 [ext_resource type="Script" uid="uid://blk7dkr6ylt2w" path="res://game/characters/character.gd" id="1_85w1m"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_bwt3b"]
 
+[sub_resource type="GDScript" id="GDScript_ai_brain"]
+script/source = "extends Node
+
+const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
+const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
+const _IDLE_WANDER_RADIUS_PIXELS = 32.0
+
+var ai_task_stack := CharacterAiTaskStack.new()
+var _ai_context: CharacterAiContext
+
+func _ready() -> void:
+	set_process(true)
+
+func _process(delta_seconds: float) -> void:
+	ai_task_stack.tick(delta_seconds, _get_ai_context())
+	if ai_task_stack.is_empty():
+		_schedule_idle_wander()
+
+func push_ai_task(task: CharacterAiTask) -> void:
+	ai_task_stack.push(task, _get_ai_context())
+
+func abandon_ai_tasks() -> void:
+	ai_task_stack.abandon(_get_ai_context())
+
+func deserialize(ai_data: Dictionary) -> void:
+	ai_task_stack.deserialize(ai_data, _get_ai_context())
+
+func serialize() -> Dictionary:
+	return ai_task_stack.serialize()
+
+func _get_ai_context() -> CharacterAiContext:
+	if not _ai_context:
+		_ai_context = CharacterAiContext.new(owner)
+	return _ai_context
+
+func _schedule_idle_wander() -> void:
+	var wait_duration_seconds := randf_range(_IDLE_WANDER_WAIT_SECONDS_MIN, _IDLE_WANDER_WAIT_SECONDS_MAX)
+	var wait_task := CharacterAiWaitDurationTask.new({
+		CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: wait_duration_seconds,
+	})
+	var move_task := CharacterAiMoveToWorldXTask.new({
+		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: _pick_idle_wander_target_world_x(),
+	})
+	push_ai_task(move_task)
+	push_ai_task(wait_task)
+
+func _pick_idle_wander_target_world_x() -> float:
+	var map_min_world_x: float = Game.get_position_by_cell_index(0) + Game.HALF_TILE_SIZE
+	var map_max_world_x: float = Game.get_position_by_cell_index(Game.MAP_CELL_COUNT - 1) + Game.HALF_TILE_SIZE
+	var offset_pixels := randf_range(-_IDLE_WANDER_RADIUS_PIXELS, _IDLE_WANDER_RADIUS_PIXELS)
+	if is_zero_approx(offset_pixels):
+		offset_pixels = 1.0 if randf() < 0.5 else -1.0
+	return clampf(owner.position.x + offset_pixels, map_min_world_x, map_max_world_x)
+"
+
 [sub_resource type="Texture2D" id="Texture2D_ewbhm"]
 resource_local_to_scene = false
 resource_name = ""
@@ -12,6 +67,10 @@ metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [node name="Character" type="Node2D" unique_id=1482639207]
 script = ExtResource("1_85w1m")
+
+[node name="AiBrain" type="Node" parent="." unique_id=1480187077]
+unique_name_in_owner = true
+script = SubResource("GDScript_ai_brain")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
 texture = SubResource("Texture2D_ewbhm")
