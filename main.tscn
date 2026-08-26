@@ -101,7 +101,7 @@ func open_for_character(character: Character) -> void:
 			_windows_by_character.erase(character)
 			inspector_window.queue_free()
 		)
-	inspector_window.inspect_character(character)
+	await inspector_window.inspect_character(character)
 "
 
 [node name="Main" type="Node" unique_id=1799066687]

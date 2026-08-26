@@ -6,8 +6,9 @@ func inspect_character(character: Character) -> void:
 	if not is_node_ready():
 		await ready
 	if not has_node("%InventoryPanel"):
-		var inventory_panel := %InventoryPanelPlaceHolder.create_instance()
+		var inventory_panel := %InventoryPanelPlaceHolder.create_instance() as Control
 		inventory_panel.name = "InventoryPanel"
+		inventory_panel.owner = self
 		inventory_panel.unique_name_in_owner = true
 	%InventoryPanel.inventory = character.inventory
 	var mouse_position := DisplayServer.mouse_get_position()
