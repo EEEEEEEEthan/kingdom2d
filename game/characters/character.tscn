@@ -83,17 +83,30 @@ extends Sprite2D
 [sub_resource type="GDScript" id="GDScript_hover"]
 script/source = "extends Area2D
 
+var _press_started := false
+var _press_position := Vector2.ZERO
+
 func _mouse_enter() -> void:
 	owner.outline = Color.WHITE
 
 func _mouse_exit() -> void:
 	owner.outline = Color.TRANSPARENT
+	_press_started = false
 
 func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
 	if not event is InputEventMouseButton:
 		return
 	var mouse_button := event as InputEventMouseButton
-	if mouse_button.button_index != MOUSE_BUTTON_LEFT or not mouse_button.pressed:
+	if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if mouse_button.pressed:
+		_press_started = true
+		_press_position = mouse_button.position
+		return
+	if not _press_started:
+		return
+	_press_started = false
+	if mouse_button.position.distance_to(_press_position) > 4.0:
 		return
 	owner.inspect_requested.emit()
 	_viewport.set_input_as_handled()
