@@ -4,6 +4,7 @@ class_name Character
 const _KEY_ID = 1
 const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
+const _KEY_INVENTORY = 4
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
@@ -12,6 +13,7 @@ const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 var id: int
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
 var ai_task_stack := CharacterAiTaskStack.new()
+var inventory := Inventory.new()
 
 var _ai_context: CharacterAiContext
 
@@ -45,12 +47,14 @@ func deserialize(data: Dictionary) -> void:
 	id = data[_KEY_ID]
 	position = Vector2(data[_KEY_POSITION], 0)
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
+	inventory.deserialize(data.get(_KEY_INVENTORY, {}))
 
 func serialize() -> Dictionary:
 	return {
 		_KEY_ID: id,
 		_KEY_POSITION: position.x,
 		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
+		_KEY_INVENTORY: inventory.serialize(),
 	}
 
 func _get_ai_context() -> CharacterAiContext:
