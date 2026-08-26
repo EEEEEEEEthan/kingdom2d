@@ -6,5 +6,5 @@
     "github.com/EEEEEEEEthan/godot_pull_requests",
     "github.com/EEEEEEEEthan/godot_runtime_mcp"
   ],
-  "install": "git submodule update --init --recursive\nbash .cursor/install-agent-skills.sh\npython3 -m pip install -q -r addons/godot_runtime_mcp/requirements.txt 'mcp>=1,<2'\nbash .engine-prepare.sh\n.engine/.engine --headless --path . --import --quit"
+  "install": "git submodule update --init --recursive\nbash .cursor/install-agent-skills.sh\nbash .cursor/install-godot-runtime-mcp.sh\nbash .engine-prepare.sh\n.engine/.engine --headless --path . --import --quit"
 }
