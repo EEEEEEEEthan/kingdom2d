@@ -12,6 +12,7 @@ var _duration_seconds: float
 var _elapsed_seconds: float
 var _item_type_id: ItemTypeId.TypeId
 var _item_count: int
+var _holding_claim := false
 
 func _init(save_payload: Dictionary) -> void:
 	_structure_id = save_payload[KEY_STRUCTURE_ID]
@@ -28,7 +29,15 @@ func get_progress_ratio() -> float:
 		return 1.0
 	return clampf(_elapsed_seconds / _duration_seconds, 0.0, 1.0)
 
+func on_enter(context: CharacterAiContext) -> void:
+	_holding_claim = context.structure_manager.try_claim_harvest(
+			_structure_id,
+			context.character.id
+	)
+
 func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
+	if not _holding_claim:
+		return Status.FAILED
 	var structure := context.structure_manager.get_structure_by_id(_structure_id)
 	if not structure:
 		return Status.FAILED
@@ -38,6 +47,12 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 	context.character.inventory.add_item(_item_type_id, _item_count)
 	structure.queue_free()
 	return Status.SUCCEEDED
+
+func on_exit(context: CharacterAiContext) -> void:
+	if not _holding_claim:
+		return
+	context.structure_manager.release_harvest_claim(_structure_id, context.character.id)
+	_holding_claim = false
 
 func _serialize_payload() -> Dictionary:
 	return {

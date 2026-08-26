@@ -143,6 +143,8 @@ func _find_nearest_work_target() -> Structure:
 			continue
 		if structure.config.id != target_type_id:
 			continue
+		if _get_ai_context().structure_manager.is_harvest_claimed_by_other(structure.id, owner.id):
+			continue
 		var distance := absf(structure.position.x - owner.position.x)
 		if distance >= nearest_distance:
 			continue
