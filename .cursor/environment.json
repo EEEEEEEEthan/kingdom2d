@@ -1,0 +1,5 @@
+{
+  "name": "the_little_prince",
+  "repositoryDependencies": ["github.com/EEEEEEEEthan/AgentSkills"],
+  "install": "bash .cursor/install-agent-skills.sh && bash .engine-prepare.sh && .engine/.engine --headless --path . --import --quit"
+}
