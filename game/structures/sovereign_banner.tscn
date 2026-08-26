@@ -4,7 +4,8 @@
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="2_tex"]
 
 [sub_resource type="GDScript" id="GDScript_sovereign_banner"]
-script/source = "extends Structure
+script/source = "@tool
+extends Structure
 
 func _serialize() -> Dictionary:
 	return {}

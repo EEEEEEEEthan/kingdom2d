@@ -90,20 +90,20 @@ func _quantize_position(sample_position: Vector2) -> Vector2:
 	return Vector2(roundi(sample_position.x), roundi(sample_position.y))
 
 
-func _build_clustered_positions(instance_count: int, random: RandomNumberGenerator) -> PackedVector2Array:
+func _build_clustered_positions(sprite_count: int, random: RandomNumberGenerator) -> PackedVector2Array:
 	var positions := PackedVector2Array()
-	positions.resize(instance_count)
+	positions.resize(sprite_count)
 	var half_width := int(area_size.x * 0.5)
 	var half_height := int(area_size.y * 0.5)
 	var index := 0
-	while index < instance_count:
+	while index < sprite_count:
 		var mass_center := Vector2(
 			random.randi_range(-half_width, half_width),
 			random.randi_range(-half_height, half_height),
 		)
 		var sprites_in_mass := mini(
 			random.randi_range(SPRITES_PER_MASS_MIN, SPRITES_PER_MASS_MAX),
-			instance_count - index,
+			sprite_count - index,
 		)
 		for _sprite in sprites_in_mass:
 			positions[index] = mass_center + _sample_cluster_offset(random)
