@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "godot-game": {
+      "command": "python3",
+      "args": ["addons/godot_runtime_mcp/agent_mcp.py"]
+    }
+  }
+}

@@ -4,3 +4,6 @@
 [submodule "addons/godot_pull_requests"]
 	path = addons/godot_pull_requests
 	url = https://github.com/EEEEEEEEthan/godot_pull_requests.git
+[submodule "addons/godot_runtime_mcp"]
+	path = addons/godot_runtime_mcp
+	url = https://github.com/EEEEEEEEthan/godot_runtime_mcp.git
