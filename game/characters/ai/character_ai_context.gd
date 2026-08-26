@@ -11,6 +11,10 @@ var day_time_period: GameTime.DayTimePeriod:
 	get:
 		return game_time.day_time_period
 
+var structure_manager: StructureManager:
+	get:
+		return _resolve_game().structure_manager
+
 func _init(owner_character: Character) -> void:
 	character = owner_character
 

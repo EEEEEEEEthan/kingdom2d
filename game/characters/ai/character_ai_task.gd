@@ -18,6 +18,8 @@ static func deserialize(data: Dictionary) -> CharacterAiTask:
 			return CharacterAiWaitDurationTask.new(payload)
 		CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
 			return CharacterAiMoveToWorldXTask.new(payload)
+		CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+			return CharacterAiHarvestStructureTask.new(payload)
 		_:
 			printerr("CharacterAiTask type_id not found: %s" % type_id)
 			return null
@@ -36,6 +38,10 @@ func _serialize_payload() -> Dictionary:
 
 func on_enter(_context: CharacterAiContext) -> void:
 	pass
+
+func get_progress_ratio() -> float:
+	return -1.0
+
 
 func tick(_delta_seconds: float, _context: CharacterAiContext) -> Status:
 	return Status.SUCCEEDED

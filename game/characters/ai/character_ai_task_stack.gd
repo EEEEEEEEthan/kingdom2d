@@ -15,6 +15,10 @@ func peek() -> CharacterAiTask:
 		return null
 	return _tasks[_tasks.size() - 1]
 
+
+func get_tasks() -> Array[CharacterAiTask]:
+	return _tasks
+
 func push(task: CharacterAiTask, context: CharacterAiContext) -> void:
 	_tasks.append(task)
 	task.on_enter(context)

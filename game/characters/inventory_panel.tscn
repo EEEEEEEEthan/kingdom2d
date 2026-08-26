@@ -6,18 +6,29 @@
 script/source = "extends Label
 
 func refresh_item_counts(inventory: Inventory) -> void:
-	text = \"%s × %s\" % [
-			ItemTypeId.get_display_name(ItemTypeId.TypeId.IRON_COIN),
-			inventory.get_item_count(ItemTypeId.TypeId.IRON_COIN),
-	]
+	var lines: PackedStringArray = []
+	for item_id in inventory.item_counts:
+		var item_count: int = inventory.item_counts[item_id]
+		if item_count <= 0:
+			continue
+		lines.append(\"%s × %s\" % [
+				ItemTypeId.get_display_name(item_id as ItemTypeId.TypeId),
+				item_count,
+		])
+	text = \"\\n\".join(lines) if not lines.is_empty() else \"空\"
+
 "
 
 [node name="InventoryPanel" type="Control"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_inventory_panel")
 
 [node name="InventoryLabel" type="Label" parent="."]

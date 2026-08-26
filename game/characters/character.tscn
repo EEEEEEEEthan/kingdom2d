@@ -13,14 +13,26 @@ const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 
 var ai_task_stack := CharacterAiTaskStack.new()
 var _ai_context: CharacterAiContext
+var _scheduling_work := false
+var _mode_initialized := false
 
 func _ready() -> void:
 	set_process(true)
 
 func _process(delta_seconds: float) -> void:
-	ai_task_stack.tick(delta_seconds, _get_ai_context())
+	var context := _get_ai_context()
+	var want_work := context.day_time_period == GameTime.DayTimePeriod.WORK
+	var currently_working := _scheduling_work if _mode_initialized else _stack_has_harvest_task()
+	if currently_working != want_work:
+		abandon_ai_tasks()
+	_scheduling_work = want_work
+	_mode_initialized = true
+	ai_task_stack.tick(delta_seconds, context)
 	if ai_task_stack.is_empty():
-		_schedule_idle_wander()
+		if want_work:
+			_schedule_work()
+		else:
+			_schedule_idle_wander()
 
 func push_ai_task(task: CharacterAiTask) -> void:
 	ai_task_stack.push(task, _get_ai_context())
@@ -33,6 +45,38 @@ func deserialize(ai_data: Dictionary) -> void:
 
 func serialize() -> Dictionary:
 	return ai_task_stack.serialize()
+
+func get_behavior_text() -> String:
+	if ai_task_stack.is_empty():
+		return \"无\"
+	var top_task := ai_task_stack.peek()
+	match top_task.get_type_id():
+		CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
+			return \"前往工作点\" if _scheduling_work else \"闲逛\"
+		CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
+			return \"寻找工作目标\" if _scheduling_work else \"歇息\"
+		CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+			match owner.occupation:
+				OccupationId.TypeId.LUMBERJACK:
+					return \"砍树\"
+				OccupationId.TypeId.SCAVENGER:
+					return \"采集灌木\"
+				_:
+					return \"工作\"
+		_:
+			return \"未知\"
+
+func get_work_progress_ratio() -> float:
+	for task in ai_task_stack.get_tasks():
+		if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+			return task.get_progress_ratio()
+	return -1.0
+
+func _stack_has_harvest_task() -> bool:
+	for task in ai_task_stack.get_tasks():
+		if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+			return true
+	return false
 
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:
@@ -49,6 +93,62 @@ func _schedule_idle_wander() -> void:
 	})
 	push_ai_task(move_task)
 	push_ai_task(wait_task)
+
+func _schedule_work() -> void:
+	var structure := _find_nearest_work_target()
+	if not structure:
+		push_ai_task(CharacterAiWaitDurationTask.new({
+			CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: 1.0,
+		}))
+		return
+	var harvest_payload := {}
+	match owner.occupation:
+		OccupationId.TypeId.LUMBERJACK:
+			harvest_payload = {
+				CharacterAiHarvestStructureTask.KEY_STRUCTURE_ID: structure.id,
+				CharacterAiHarvestStructureTask.KEY_DURATION_SECONDS: 10.0,
+				CharacterAiHarvestStructureTask.KEY_ITEM_TYPE_ID: ItemTypeId.TypeId.LOG,
+				CharacterAiHarvestStructureTask.KEY_ITEM_COUNT: 1,
+			}
+		OccupationId.TypeId.SCAVENGER:
+			harvest_payload = {
+				CharacterAiHarvestStructureTask.KEY_STRUCTURE_ID: structure.id,
+				CharacterAiHarvestStructureTask.KEY_DURATION_SECONDS: 5.0,
+				CharacterAiHarvestStructureTask.KEY_ITEM_TYPE_ID: ItemTypeId.TypeId.BERRY,
+				CharacterAiHarvestStructureTask.KEY_ITEM_COUNT: 5,
+			}
+		_:
+			push_ai_task(CharacterAiWaitDurationTask.new({
+				CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: 1.0,
+			}))
+			return
+	push_ai_task(CharacterAiHarvestStructureTask.new(harvest_payload))
+	push_ai_task(CharacterAiMoveToWorldXTask.new({
+		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: structure.position.x,
+	}))
+
+func _find_nearest_work_target() -> Structure:
+	var target_type_id := StructureConfig.TypeId.NONE
+	match owner.occupation:
+		OccupationId.TypeId.LUMBERJACK:
+			target_type_id = StructureConfig.TypeId.OAK
+		OccupationId.TypeId.SCAVENGER:
+			target_type_id = StructureConfig.TypeId.BUSH
+		_:
+			return null
+	var nearest_structure: Structure = null
+	var nearest_distance := INF
+	for structure in _get_ai_context().structure_manager.index_to_structures:
+		if not structure:
+			continue
+		if structure.config.id != target_type_id:
+			continue
+		var distance := absf(structure.position.x - owner.position.x)
+		if distance >= nearest_distance:
+			continue
+		nearest_distance = distance
+		nearest_structure = structure
+	return nearest_structure
 
 func _pick_idle_wander_target_world_x() -> float:
 	var map_min_world_x: float = Game.get_position_by_cell_index(0) + Game.HALF_TILE_SIZE

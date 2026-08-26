@@ -14,6 +14,11 @@ func _init(save_payload: Dictionary) -> void:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.WAIT_DURATION
 
+func get_progress_ratio() -> float:
+	if _duration_seconds <= 0.0:
+		return 1.0
+	return clampf(_elapsed_seconds / _duration_seconds, 0.0, 1.0)
+
 func tick(delta_seconds: float, _context: CharacterAiContext) -> Status:
 	_elapsed_seconds += delta_seconds
 	if _elapsed_seconds >= _duration_seconds:

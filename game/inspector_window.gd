@@ -10,7 +10,13 @@ func inspect_character(character: Character) -> void:
 		inventory_panel.name = "InventoryPanel"
 		inventory_panel.owner = self
 		inventory_panel.unique_name_in_owner = true
+	if not has_node("%AiStatusPanel"):
+		var ai_status_panel := %AiStatusPanelPlaceHolder.create_instance() as Control
+		ai_status_panel.name = "AiStatusPanel"
+		ai_status_panel.owner = self
+		ai_status_panel.unique_name_in_owner = true
 	%InventoryPanel.inventory = character.inventory
+	%AiStatusPanel.character = character
 	var mouse_position := DisplayServer.mouse_get_position()
 	var window_position := mouse_position + Vector2i(24, 24)
 	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse_position, Vector2.ONE))
