@@ -13,16 +13,10 @@ const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
 
 
 func _ready() -> void:
-	get_tree().node_added.connect(_on_tree_node_added)
 	await get_tree().process_frame
 	for child in owner.get_children():
 		if child is Window:
 			_attach_hook(child as Window)
-
-
-func _on_tree_node_added(added_node: Node) -> void:
-	if added_node is Window:
-		_attach_hook(added_node as Window)
 
 
 func _attach_hook(window: Window) -> void:
