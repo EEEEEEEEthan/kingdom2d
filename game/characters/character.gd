@@ -11,6 +11,12 @@ const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 
 var id: int
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
+var outline := false:
+	set(value):
+		outline = value
+		if not is_node_ready():
+			await ready
+		%Sprite2D.set_instance_shader_parameter("outline_enabled", outline)
 var ai_task_stack := CharacterAiTaskStack.new()
 
 var _ai_context: CharacterAiContext
