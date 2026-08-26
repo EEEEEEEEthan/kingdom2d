@@ -13,16 +13,16 @@ const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
 
 
 func _ready() -> void:
-	owner.child_entered_tree.connect(_on_owner_child_entered_tree)
+	get_tree().node_added.connect(_on_tree_node_added)
 	await get_tree().process_frame
 	for child in owner.get_children():
 		if child is Window:
 			_attach_hook(child as Window)
 
 
-func _on_owner_child_entered_tree(entered_child: Node) -> void:
-	if entered_child is Window:
-		_attach_hook(entered_child as Window)
+func _on_tree_node_added(added_node: Node) -> void:
+	if added_node is Window:
+		_attach_hook(added_node as Window)
 
 
 func _attach_hook(window: Window) -> void:
@@ -86,24 +86,6 @@ func _place_near_global_mouse() -> void:
 	position = pos
 "
 
-[sub_resource type="GDScript" id="GDScript_inspector_windows"]
-script/source = "extends Node
-
-var _windows_by_character: Dictionary[Character, InspectorWindow] = {}
-
-
-func open_for_character(character: Character) -> void:
-	var inspector_window: InspectorWindow = _windows_by_character.get(character)
-	if inspector_window == null:
-		inspector_window = %InspectorWindowPlaceHolder.create_instance() as InspectorWindow
-		_windows_by_character[character] = inspector_window
-		character.tree_exiting.connect(func () -> void:
-			_windows_by_character.erase(character)
-			inspector_window.queue_free()
-		)
-	await inspector_window.inspect_character(character)
-"
-
 [node name="Main" type="Node" unique_id=1799066687]
 script = ExtResource("1_main")
 
@@ -117,12 +99,6 @@ visible = false
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 unique_name_in_owner = true
-
-[node name="InspectorWindowPlaceHolder" parent="." unique_id=1888000100 instance_placeholder="res://game/inspector_window.tscn"]
-unique_name_in_owner = true
-
-[node name="InspectorWindows" type="Node" parent="." unique_id=1888000101]
-script = SubResource("GDScript_inspector_windows")
 
 [node name="DisplayScaleWheelController" type="Node" parent="." unique_id=93423411]
 script = SubResource("GDScript_display_scale_wheel")
@@ -148,7 +124,6 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="character_inspect_requested" from="GameWindow" to="InspectorWindows" method="open_for_character"]
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
