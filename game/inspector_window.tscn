@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://binspectwin001"]
+
+[ext_resource type="Script" path="res://game/inspector_window.gd" id="1_inspector_window"]
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
+atlas = ExtResource("2_theme")
+region = Rect2(5, 5, 6, 6)
+
+[node name="InspectorWindow" type="Window"]
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+title = "检视"
+position = Vector2i(100, 36)
+size = Vector2i(192, 128)
+visible = false
+always_on_top = true
+content_scale_mode = 1
+content_scale_stretch = 1
+content_scale_factor = 2.0
+script = ExtResource("1_inspector_window")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_bg")
+
+[node name="InventoryPanelPlaceHolder" parent="." instance_placeholder="res://game/characters/inventory_panel.tscn"]
+unique_name_in_owner = true
+
+[connection signal="close_requested" from="." to="." method="hide"]

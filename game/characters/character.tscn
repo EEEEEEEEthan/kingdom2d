@@ -95,7 +95,7 @@ func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> vo
 	var mouse_button := event as InputEventMouseButton
 	if mouse_button.button_index != MOUSE_BUTTON_LEFT or not mouse_button.pressed:
 		return
-	owner.inventory_open_requested.emit()
+	owner.inspect_requested.emit()
 	_viewport.set_input_as_handled()
 "
 
