@@ -85,17 +85,23 @@ script/source = "extends Area2D
 
 var _is_hovered := false
 
-func _mouse_enter() -> void:
+func _on_mouse_entered() -> void:
 	_is_hovered = true
 	owner.outline = Color.WHITE
 
-func _mouse_exit() -> void:
+func _on_mouse_exited() -> void:
 	_is_hovered = false
 	owner.outline = Color.TRANSPARENT
+
+func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
+	_try_open_inventory(event)
 
 func _input(event: InputEvent) -> void:
 	if not _is_hovered:
 		return
+	_try_open_inventory(event)
+
+func _try_open_inventory(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
 		return
 	var mouse_button := event as InputEventMouseButton
@@ -125,6 +131,7 @@ outline = Color(1, 1, 1, 0)
 
 [node name="HoverArea" type="Area2D" parent="." unique_id=2118567250]
 collision_mask = 0
+input_pickable = true
 monitoring = false
 monitorable = false
 script = SubResource("GDScript_hover")
@@ -132,3 +139,6 @@ script = SubResource("GDScript_hover")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea" unique_id=1460613511]
 position = Vector2(0, -3)
 shape = SubResource("RectangleShape2D_hover")
+
+[connection signal="mouse_entered" from="HoverArea" to="HoverArea" method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="HoverArea" to="HoverArea" method="_on_mouse_exited"]
