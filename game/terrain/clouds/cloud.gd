@@ -3,7 +3,7 @@ extends Node2D
 class_name Cloud
 
 const MULTIMESH_SCRIPT := preload("res://game/terrain/clouds/cloud_multimesh.gd")
-const CLOUD_TEXTURE := preload("res://game/terrain/clouds/cloud_spritesheet.tres")
+const CLOUD_TEXTURE := preload("res://game/terrain/clouds/cloud_spritesheet.png")
 
 var _multimesh_view: MultiMeshInstance2D
 

@@ -1,18 +1,12 @@
 [gd_scene format=4 uid="uid://ykbasbose6tk"]
 
 [ext_resource type="Texture2D" uid="uid://bfqch5tjt2fd3" path="res://game/terrain/terrain.png" id="1_0rasl"]
-[ext_resource type="Texture2D" uid="uid://bl6nwqv1nb67" path="res://game/terrain/terrain_normal.png" id="2_rx45g"]
 [ext_resource type="Script" uid="uid://c7lsurn21ti7c" path="res://game/terrain/terrain.gd" id="3_5grhd"]
 [ext_resource type="PackedScene" uid="uid://4ga80fnd4r6o" path="res://game/terrain/clouds/cloud_field.tscn" id="4_ci4kj"]
 [ext_resource type="Texture2D" uid="uid://bvgc2mej64wk2" path="res://game/terrain/mountains.png" id="5_mountains"]
-[ext_resource type="Texture2D" uid="uid://btxu0bc4c3kmi" path="res://game/terrain/mountains_normal.png" id="6_mountains_normal"]
-
-[sub_resource type="CanvasTexture" id="CanvasTexture_rx45g"]
-diffuse_texture = ExtResource("1_0rasl")
-normal_texture = ExtResource("2_rx45g")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_l7s0s"]
-texture = SubResource("CanvasTexture_rx45g")
+texture = ExtResource("1_0rasl")
 texture_region_size = Vector2i(8, 4)
 use_texture_padding = false
 0:0/next_alternative_id = 3
@@ -77,10 +71,6 @@ height = 17
 fill_from = Vector2(0, 1)
 fill_to = Vector2(0, 0)
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_mountains"]
-diffuse_texture = ExtResource("5_mountains")
-normal_texture = ExtResource("6_mountains_normal")
-
 [node name="Terrain" type="TileMapLayer" unique_id=391382551]
 tile_map_data = PackedByteArray("AAAHAP//AAACAAAAAAAGAP//AAAFAAAAAAAFAP//AAAEAAAAAAAEAP//AAADAAAAAAADAP//AAAEAAAAAAACAP//AAACAAAAAAABAP//AAACAAAAAAAAAP//AAAAAAAAAAAIAP//AAAGAAAAAAA=")
 tile_set = SubResource("TileSet_x280b")
@@ -90,7 +80,6 @@ script = ExtResource("3_5grhd")
 unique_name_in_owner = true
 visible = false
 show_behind_parent = true
-light_mask = 0
 scale = Vector2(4, 4)
 texture = SubResource("GradientTexture2D_5grhd")
 offset = Vector2(0, -9)
@@ -118,7 +107,7 @@ repeat_times = 40
 
 [node name="Sprite2D1" type="Sprite2D" parent="Parallaxes/Parallax2DMountain1" unique_id=1342626762]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_mountains")
+texture = ExtResource("5_mountains")
 offset = Vector2(0, -25.78)
 region_enabled = true
 region_rect = Rect2(0, 0, 1216, 48)
@@ -142,7 +131,7 @@ repeat_times = 6
 
 [node name="Sprite2D2" type="Sprite2D" parent="Parallaxes/Parallax2DMountain2" unique_id=606335718]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_mountains")
+texture = ExtResource("5_mountains")
 offset = Vector2(0, -24.025)
 region_enabled = true
 region_rect = Rect2(0, 48, 1216, 48)
@@ -154,7 +143,7 @@ repeat_times = 6
 
 [node name="Sprite2D3" type="Sprite2D" parent="Parallaxes/Parallax2DMountain3" unique_id=1712520175]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_mountains")
+texture = ExtResource("5_mountains")
 offset = Vector2(0, -24.38)
 region_enabled = true
 region_rect = Rect2(0, 96, 1216, 48)
@@ -166,7 +155,7 @@ repeat_times = 40
 
 [node name="Sprite2D4" type="Sprite2D" parent="Parallaxes/Parallax2DMountain4" unique_id=1941642327]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_mountains")
+texture = ExtResource("5_mountains")
 offset = Vector2(0, -24.1)
 region_enabled = true
 region_rect = Rect2(0, 144, 1216, 48)

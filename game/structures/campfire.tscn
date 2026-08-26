@@ -10,17 +10,6 @@ script = ExtResource("2_s7fkd")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAGCAYAAAAYLBS/AAAAAXNSR0IArs4c6QAAAHVJREFUGJVlziEOg1AQBNAHqSJBV32BRFb2Qj0sF0Ai/hFIsL+mS7d0zO5MZibTvZ4PMJdBQlvrAd1FB308HxO0eOYytMzD11+EttbD4g7njWAU3/Ik2MtkrBsY62b58oYuz/sLZOxl+inu8+YI7GU6jVmL4BtYUjKuOh4J6wAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="Texture2D" id="Texture2D_u5opy"]
-resource_local_to_scene = false
-resource_name = ""
-script = ExtResource("2_s7fkd")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA0AAAAGCAYAAAAYLBS/AAAAAXNSR0IArs4c6QAAAHlJREFUGJVty7ENwyAQheEflC7tDZDS6W6EjMAIjMIojMAo18VlaksuXZMiwiLgV909vc8FfdPnwR2gvjgAHBe5jcWHo3Zvu/+wH0yNSdCwAGBhISfp8YRqTIKZYLYDoGVFTSbor0CKWxv+8AB9Azm7ExR7nkMt6wS/IW011pRw6VsAAAAASUVORK5CYII="
-metadata/_custom_type_script = "uid://xqi7kv2y70eo"
-
-[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
-diffuse_texture = SubResource("Texture2D_dxrkv")
-normal_texture = SubResource("Texture2D_u5opy")
-
 [sub_resource type="Texture2D" id="Texture2D_s7fkd"]
 resource_local_to_scene = false
 resource_name = ""
@@ -43,7 +32,7 @@ func _process(delta: float) -> void:
 [node name="Campfire" unique_id=1642746995 instance=ExtResource("1_x36yl")]
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
-texture = SubResource("CanvasTexture_4fuuu")
+texture = SubResource("Texture2D_dxrkv")
 offset = Vector2(0, 1)
 
 [node name="Flame" type="Sprite2D" parent="." index="1" unique_id=620438040]
