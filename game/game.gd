@@ -13,6 +13,8 @@ const _SERKEY_CHARACTER_MANAGER = 2
 const _SERKEY_TERRAIN = 3
 const _SERKEY_DAYS = 4
 
+signal character_inventory_open_requested(character: Character)
+
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
 
@@ -46,6 +48,9 @@ var character_manager: CharacterManager:
 		%Terrain.view_height = value
 
 func _ready() -> void:
+	character_manager.character_inventory_open_requested.connect(
+			character_inventory_open_requested.emit
+	)
 	if FileAccess.file_exists(SAVE_FILE_PATH):
 		load_game()
 	else:
