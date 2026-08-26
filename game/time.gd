@@ -92,12 +92,12 @@ var season: Seasons:
 		printerr("unexpected month %s" %month)
 		return  Seasons.SPRING
 
-static func get_day_time_period_for_hour(hour_of_day: int) -> DayTimePeriod:
-	if hour_of_day >= _HOUR_MORNING_MARKET_START and hour_of_day < _HOUR_WORK_START:
+static func get_day_time_period_for_hour(hour: int) -> DayTimePeriod:
+	if hour >= _HOUR_MORNING_MARKET_START and hour < _HOUR_WORK_START:
 		return DayTimePeriod.MORNING_MARKET
-	if hour_of_day >= _HOUR_WORK_START and hour_of_day < _HOUR_REST_START:
+	if hour >= _HOUR_WORK_START and hour < _HOUR_REST_START:
 		return DayTimePeriod.WORK
-	if hour_of_day >= _HOUR_REST_START and hour_of_day < _HOUR_SLEEP_START:
+	if hour >= _HOUR_REST_START and hour < _HOUR_SLEEP_START:
 		return DayTimePeriod.REST
 	return DayTimePeriod.SLEEP
 
