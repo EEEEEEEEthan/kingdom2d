@@ -6,7 +6,8 @@ const _KEY_STRUCTURES = 2
 
 var _next_id = 0
 var index_to_structures: Array[Structure] = []
-var _harvest_claims: Dictionary[int, int] = {}
+## structure_id -> Vector2i(character_id, behavior_token)
+var _harvest_claims: Dictionary[int, Vector2i] = {}
 
 
 func clear() -> void:
@@ -19,25 +20,23 @@ func clear() -> void:
 	index_to_structures.resize(Game.MAP_CELL_COUNT)
 
 
-func try_claim_harvest(structure_id: int, character_id: int) -> bool:
-	var current_claimer_id: int = _harvest_claims.get(structure_id, 0)
-	if current_claimer_id == character_id:
-		return true
-	if current_claimer_id != 0:
+func try_claim_harvest(structure_id: int, character_id: int, behavior_token: int) -> bool:
+	var current_claim: Vector2i = _harvest_claims.get(structure_id, Vector2i.ZERO)
+	if _is_harvest_claim_live(current_claim) and current_claim.x != character_id:
 		return false
-	_harvest_claims[structure_id] = character_id
+	_harvest_claims[structure_id] = Vector2i(character_id, behavior_token)
 	return true
 
 
-func release_harvest_claim(structure_id: int, character_id: int) -> void:
-	if _harvest_claims.get(structure_id, 0) != character_id:
-		return
-	_harvest_claims.erase(structure_id)
-
-
-func is_harvest_claimed_by_other(structure_id: int, character_id: int) -> bool:
-	var current_claimer_id: int = _harvest_claims.get(structure_id, 0)
-	return current_claimer_id != 0 and current_claimer_id != character_id
+func is_harvest_claimed_by_other(
+		structure_id: int,
+		character_id: int,
+		behavior_token: int
+) -> bool:
+	var current_claim: Vector2i = _harvest_claims.get(structure_id, Vector2i.ZERO)
+	if not _is_harvest_claim_live(current_claim):
+		return false
+	return current_claim.x != character_id or current_claim.y != behavior_token
 
 
 func serialize() -> Dictionary:
@@ -87,3 +86,22 @@ func _register_structure(structure: Structure) -> void:
 	await structure.tree_exiting
 	_harvest_claims.erase(structure_id)
 	index_to_structures[structure.cell_index] = null
+
+
+func _is_harvest_claim_live(claim: Vector2i) -> bool:
+	if claim.x <= 0:
+		return false
+	var character := _resolve_game().character_manager.get_character(claim.x)
+	if character == null or not is_instance_valid(character):
+		return false
+	return character.get_ai_behavior_token() == claim.y
+
+
+func _resolve_game() -> Game:
+	var node: Node = self
+	while node:
+		if node is Game:
+			return node
+		node = node.get_parent()
+	assert(false, "StructureManager must live under Game")
+	return null

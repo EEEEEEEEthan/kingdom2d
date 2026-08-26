@@ -37,9 +37,17 @@ func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool
 func get_ai_behavior_text() -> String:
 	return %AiBrain.get_behavior_text()
 
-
 func get_ai_work_progress_ratio() -> float:
 	return %AiBrain.get_work_progress_ratio()
+
+func get_ai_behavior_token() -> int:
+	return %AiBrain.get_behavior_token()
+
+func interrupt_ai() -> void:
+	%AiBrain.interrupt()
+
+func push_ai_task(task: CharacterAiTask) -> void:
+	%AiBrain.push_ai_task(task)
 
 
 func deserialize(data: Dictionary) -> void:

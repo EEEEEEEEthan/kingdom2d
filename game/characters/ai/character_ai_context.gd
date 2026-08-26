@@ -15,6 +15,10 @@ var structure_manager: StructureManager:
 	get:
 		return _resolve_game().structure_manager
 
+var character_manager: CharacterManager:
+	get:
+		return _resolve_game().character_manager
+
 func _init(owner_character: Character) -> void:
 	character = owner_character
 

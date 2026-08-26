@@ -7,44 +7,52 @@
 [sub_resource type="GDScript" id="GDScript_ai_brain"]
 script/source = "extends Node
 
-const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
-const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
-const _IDLE_WANDER_RADIUS_PIXELS = 32.0
+const _KEY_BEHAVIOR_TOKEN = 2
+const _KEY_BEHAVIOR_TYPE = 3
 
 var ai_task_stack := CharacterAiTaskStack.new()
 var _ai_context: CharacterAiContext
-var _scheduling_work := false
-var _mode_initialized := false
+var _behavior_token := 0
+var _behavior_type: CharacterAiBehaviorTypeId.TypeId = CharacterAiBehaviorTypeId.TypeId.NONE
+var _behavior: CharacterAiBehavior = CharacterAiBehavior.new()
 
 func _ready() -> void:
 	set_process(true)
 
 func _process(delta_seconds: float) -> void:
 	var context := _get_ai_context()
-	var want_work := context.day_time_period == GameTime.DayTimePeriod.WORK
-	var currently_working := _scheduling_work if _mode_initialized else _stack_has_harvest_task()
-	if currently_working != want_work:
-		abandon_ai_tasks()
-	_scheduling_work = want_work
-	_mode_initialized = true
+	var desired_type := _desired_behavior_type(context)
+	if _behavior_type != desired_type:
+		interrupt()
+		_behavior_type = desired_type
+		_behavior = CharacterAiBehavior.create(desired_type)
 	ai_task_stack.tick(delta_seconds, context)
 	if ai_task_stack.is_empty():
-		if want_work:
-			_schedule_work()
-		else:
-			_schedule_idle_wander()
+		_behavior.schedule(context)
 
 func push_ai_task(task: CharacterAiTask) -> void:
 	ai_task_stack.push(task, _get_ai_context())
 
-func abandon_ai_tasks() -> void:
+func interrupt() -> void:
+	_behavior_token += 1
 	ai_task_stack.abandon(_get_ai_context())
 
+func get_behavior_token() -> int:
+	return _behavior_token
+
 func deserialize(ai_data: Dictionary) -> void:
+	_behavior_token = ai_data.get(_KEY_BEHAVIOR_TOKEN, 0)
+	_behavior_type = ai_data.get(_KEY_BEHAVIOR_TYPE, CharacterAiBehaviorTypeId.TypeId.NONE) as CharacterAiBehaviorTypeId.TypeId
 	ai_task_stack.deserialize(ai_data, _get_ai_context())
+	if _behavior_type == CharacterAiBehaviorTypeId.TypeId.NONE:
+		_behavior_type = _infer_behavior_type()
+	_behavior = CharacterAiBehavior.create(_behavior_type)
 
 func serialize() -> Dictionary:
-	return ai_task_stack.serialize()
+	var data := ai_task_stack.serialize()
+	data[_KEY_BEHAVIOR_TOKEN] = _behavior_token
+	data[_KEY_BEHAVIOR_TYPE] = _behavior_type
+	return data
 
 func get_behavior_text() -> String:
 	if ai_task_stack.is_empty():
@@ -52,9 +60,9 @@ func get_behavior_text() -> String:
 	var top_task := ai_task_stack.peek()
 	match top_task.get_type_id():
 		CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
-			return \"前往工作点\" if _scheduling_work else \"闲逛\"
+			return \"前往工作点\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"闲逛\"
 		CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
-			return \"寻找工作目标\" if _scheduling_work else \"歇息\"
+			return \"寻找工作目标\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"歇息\"
 		CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
 			match owner.occupation:
 				OccupationId.TypeId.LUMBERJACK:
@@ -72,93 +80,25 @@ func get_work_progress_ratio() -> float:
 			return task.get_progress_ratio()
 	return -1.0
 
-func _stack_has_harvest_task() -> bool:
-	for task in ai_task_stack.get_tasks():
-		if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
-			return true
-	return false
-
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:
 		_ai_context = CharacterAiContext.new(owner)
 	return _ai_context
 
-func _schedule_idle_wander() -> void:
-	var wait_duration_seconds := randf_range(_IDLE_WANDER_WAIT_SECONDS_MIN, _IDLE_WANDER_WAIT_SECONDS_MAX)
-	var wait_task := CharacterAiWaitDurationTask.new({
-		CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: wait_duration_seconds,
-	})
-	var move_task := CharacterAiMoveToWorldXTask.new({
-		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: _pick_idle_wander_target_world_x(),
-	})
-	push_ai_task(move_task)
-	push_ai_task(wait_task)
-
-func _schedule_work() -> void:
-	var structure := _find_nearest_work_target()
-	if not structure:
-		push_ai_task(CharacterAiWaitDurationTask.new({
-			CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: 1.0,
-		}))
-		return
-	var harvest_payload := {}
+func _desired_behavior_type(context: CharacterAiContext) -> CharacterAiBehaviorTypeId.TypeId:
+	if context.day_time_period != GameTime.DayTimePeriod.WORK:
+		return CharacterAiBehaviorTypeId.TypeId.IDLE_WANDER
 	match owner.occupation:
-		OccupationId.TypeId.LUMBERJACK:
-			harvest_payload = {
-				CharacterAiHarvestStructureTask.KEY_STRUCTURE_ID: structure.id,
-				CharacterAiHarvestStructureTask.KEY_DURATION_SECONDS: 10.0,
-				CharacterAiHarvestStructureTask.KEY_ITEM_TYPE_ID: ItemTypeId.TypeId.LOG,
-				CharacterAiHarvestStructureTask.KEY_ITEM_COUNT: 1,
-			}
-		OccupationId.TypeId.SCAVENGER:
-			harvest_payload = {
-				CharacterAiHarvestStructureTask.KEY_STRUCTURE_ID: structure.id,
-				CharacterAiHarvestStructureTask.KEY_DURATION_SECONDS: 5.0,
-				CharacterAiHarvestStructureTask.KEY_ITEM_TYPE_ID: ItemTypeId.TypeId.BERRY,
-				CharacterAiHarvestStructureTask.KEY_ITEM_COUNT: 5,
-			}
+		OccupationId.TypeId.LUMBERJACK, OccupationId.TypeId.SCAVENGER:
+			return CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK
 		_:
-			push_ai_task(CharacterAiWaitDurationTask.new({
-				CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: 1.0,
-			}))
-			return
-	push_ai_task(CharacterAiHarvestStructureTask.new(harvest_payload))
-	push_ai_task(CharacterAiMoveToWorldXTask.new({
-		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: structure.position.x,
-	}))
+			return CharacterAiBehaviorTypeId.TypeId.IDLE_WANDER
 
-func _find_nearest_work_target() -> Structure:
-	var target_type_id := StructureConfig.TypeId.NONE
-	match owner.occupation:
-		OccupationId.TypeId.LUMBERJACK:
-			target_type_id = StructureConfig.TypeId.OAK
-		OccupationId.TypeId.SCAVENGER:
-			target_type_id = StructureConfig.TypeId.BUSH
-		_:
-			return null
-	var nearest_structure: Structure = null
-	var nearest_distance := INF
-	for structure in _get_ai_context().structure_manager.index_to_structures:
-		if not structure:
-			continue
-		if structure.config.id != target_type_id:
-			continue
-		if _get_ai_context().structure_manager.is_harvest_claimed_by_other(structure.id, owner.id):
-			continue
-		var distance := absf(structure.position.x - owner.position.x)
-		if distance >= nearest_distance:
-			continue
-		nearest_distance = distance
-		nearest_structure = structure
-	return nearest_structure
-
-func _pick_idle_wander_target_world_x() -> float:
-	var map_min_world_x: float = Game.get_position_by_cell_index(0) + Game.HALF_TILE_SIZE
-	var map_max_world_x: float = Game.get_position_by_cell_index(Game.MAP_CELL_COUNT - 1) + Game.HALF_TILE_SIZE
-	var offset_pixels := randf_range(-_IDLE_WANDER_RADIUS_PIXELS, _IDLE_WANDER_RADIUS_PIXELS)
-	if is_zero_approx(offset_pixels):
-		offset_pixels = 1.0 if randf() < 0.5 else -1.0
-	return clampf(owner.position.x + offset_pixels, map_min_world_x, map_max_world_x)
+func _infer_behavior_type() -> CharacterAiBehaviorTypeId.TypeId:
+	for task in ai_task_stack.get_tasks():
+		if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+			return CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK
+	return CharacterAiBehaviorTypeId.TypeId.IDLE_WANDER
 "
 
 [sub_resource type="Texture2D" id="Texture2D_ewbhm"]

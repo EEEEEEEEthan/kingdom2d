@@ -18,6 +18,9 @@ func clear() -> void:
 	_next_id = 0
 	characters.clear()
 
+func get_character(character_id: int) -> Character:
+	return characters.get(character_id)
+
 func create_character() -> Character:
 	var character = _instantiate_character()
 	_next_id += 1
