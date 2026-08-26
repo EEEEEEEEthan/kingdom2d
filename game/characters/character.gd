@@ -9,6 +9,8 @@ var id: int
 
 @export var outline: Color = Color.TRANSPARENT:
 	set(value):
+		if outline == value:
+			return
 		outline = value
 		if not is_node_ready():
 			await ready
