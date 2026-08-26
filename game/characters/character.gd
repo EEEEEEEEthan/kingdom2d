@@ -36,7 +36,13 @@ func deserialize(data: Dictionary) -> void:
 	id = data[_KEY_ID]
 	position = Vector2(data[_KEY_POSITION], 0)
 	%AiBrain.deserialize(data.get(_KEY_AI_TASK_STACK, {}))
-	inventory.deserialize(data.get(_KEY_INVENTORY, {}))
+	if data.has(_KEY_INVENTORY):
+		inventory.deserialize(data[_KEY_INVENTORY])
+	else:
+		inventory.add_item(
+				ItemTypeId.TypeId.IRON_COIN,
+				randi_range(0, 100)
+		)
 
 func serialize() -> Dictionary:
 	return {

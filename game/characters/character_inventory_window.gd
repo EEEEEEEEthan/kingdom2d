@@ -11,7 +11,7 @@ var character: Character:
 			character.tree_exiting.connect(hide)
 		if not is_node_ready():
 			await ready
-		%InventoryLabel.refresh()
+		%InventoryLabel.refresh_item_counts(character.inventory)
 
 
 func _ready() -> void:
@@ -40,3 +40,4 @@ func open_for_character(opened_character: Character) -> void:
 	show()
 	mode = MODE_WINDOWED
 	grab_focus()
+	%InventoryLabel.refresh_item_counts(opened_character.inventory)

@@ -10,18 +10,11 @@ region = Rect2(5, 5, 6, 6)
 [sub_resource type="GDScript" id="GDScript_inventory_label"]
 script/source = "extends Label
 
-func refresh() -> void:
-	if not owner.character:
-		text = \"\"
-		return
-	var inventory: Inventory = owner.character.inventory
-	var lines: PackedStringArray = []
-	for item_id in inventory.item_counts:
-		lines.append(\"%s × %s\" % [
-				ItemTypeId.get_display_name(item_id),
-				inventory.get_item_count(item_id),
-		])
-	text = \"空\" if lines.is_empty() else \"\\n\".join(lines)
+func refresh_item_counts(inventory: Inventory) -> void:
+	text = \"%s × %s\" % [
+			ItemTypeId.get_display_name(ItemTypeId.TypeId.IRON_COIN),
+			inventory.get_item_count(ItemTypeId.TypeId.IRON_COIN),
+	]
 "
 
 [node name="CharacterInventoryWindow" type="Window" unique_id=1888000001]
@@ -58,7 +51,7 @@ offset_right = -8.0
 offset_bottom = -7.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "空"
+text = "铁币 × 0"
 script = SubResource("GDScript_inventory_label")
 
 [connection signal="close_requested" from="." to="." method="hide"]
