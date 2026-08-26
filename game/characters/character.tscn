@@ -10,9 +10,70 @@ script = ExtResource("1_bwt3b")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAICAYAAADeM14FAAAAAXNSR0IArs4c6QAAADJJREFUCJlj7A+zZkAGTFD6PxQzML47PAsmwMDAwMDIUr38AlYtcMDy4c0LAipghsEEAOJJCzUMlDMeAAAAAElFTkSuQmCC"
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
+[sub_resource type="Shader" id="Shader_outline"]
+code = "shader_type canvas_item;
+
+instance uniform bool outline_enabled = false;
+
+void vertex() {
+	if (outline_enabled) {
+		VERTEX += (UV * 2.0 - 1.0);
+	}
+}
+
+void fragment() {
+	vec2 texture_size = 1.0 / TEXTURE_PIXEL_SIZE;
+	float pad = outline_enabled ? 1.0 : 0.0;
+	vec2 uv = (UV * (texture_size + vec2(2.0 * pad)) - vec2(pad)) * TEXTURE_PIXEL_SIZE;
+	vec4 col = vec4(0.0);
+	if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+		col = texture(TEXTURE, uv);
+	}
+	if (!outline_enabled) {
+		COLOR = col;
+		return;
+	}
+	vec2 px = TEXTURE_PIXEL_SIZE;
+	float neighbor_alpha = max(
+			max(texture(TEXTURE, uv + vec2(-px.x, 0.0)).a, texture(TEXTURE, uv + vec2(px.x, 0.0)).a),
+			max(texture(TEXTURE, uv + vec2(0.0, -px.y)).a, texture(TEXTURE, uv + vec2(0.0, px.y)).a)
+	);
+	if (col.a < 0.1 && neighbor_alpha > 0.1) {
+		COLOR = vec4(1.0);
+	} else {
+		COLOR = col;
+	}
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outline"]
+shader = SubResource("Shader_outline")
+
+[sub_resource type="GDScript" id="GDScript_hover_outline"]
+script/source = "extends Node
+
+@onready var _sprite: Sprite2D = %Sprite2D
+
+
+func _process(_delta_seconds: float) -> void:
+	owner.outline = _is_mouse_hovering_sprite()
+
+
+func _is_mouse_hovering_sprite() -> bool:
+	var viewport := get_viewport()
+	if not viewport.get_visible_rect().has_point(viewport.get_mouse_position()):
+		return false
+	return _sprite.get_rect().has_point(_sprite.to_local(_sprite.get_global_mouse_position()))
+"
+
 [node name="Character" type="Node2D" unique_id=1482639207]
 script = ExtResource("1_85w1m")
 
+[node name="HoverOutline" type="Node" parent="."]
+script = SubResource("GDScript_hover_outline")
+
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_outline")
 texture = SubResource("Texture2D_ewbhm")
 offset = Vector2(0, -3)
