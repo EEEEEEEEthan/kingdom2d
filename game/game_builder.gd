@@ -20,7 +20,7 @@ static func build(game) -> void:
 
 
 static func _map_center_cell_index() -> int:
-	return Game.MAP_CELL_COUNT / 2
+	return int(Game.MAP_CELL_COUNT / 2.0)
 
 
 static func _spawn_sovereign_banner(game) -> void:
