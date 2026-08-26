@@ -118,7 +118,7 @@ visible = false
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 unique_name_in_owner = true
 
-[node name="InspectorWindowPlaceHolder" parent="." unique_id=1888000100 instance_placeholder="res://inspector_window.tscn"]
+[node name="InspectorWindowPlaceHolder" parent="." unique_id=1888000100 instance_placeholder="res://game/inspector_window.tscn"]
 unique_name_in_owner = true
 
 [node name="InspectorWindows" type="Node" parent="." unique_id=1888000101]

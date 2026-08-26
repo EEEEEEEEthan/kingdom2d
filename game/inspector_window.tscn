@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://binspectwin001"]
 
-[ext_resource type="Script" path="res://inspector_window.gd" id="1_inspector_window"]
+[ext_resource type="Script" path="res://game/inspector_window.gd" id="1_inspector_window"]
 [ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
