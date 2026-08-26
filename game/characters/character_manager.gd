@@ -4,6 +4,8 @@ class_name CharacterManager
 const _KEY_NEXT_ID = 1
 const _KEY_CHARACTERS = 2
 
+signal character_inventory_open_requested(character: Character)
+
 var _next_id = 0
 var characters: Dictionary[int, Character]
 
@@ -24,7 +26,11 @@ func create_character() -> Character:
 	return character
 
 func _instantiate_character() -> Character:
-	return %CharacterPlaceHolder.create_instance() as Character
+	var character := %CharacterPlaceHolder.create_instance() as Character
+	character.inventory_open_requested.connect(
+			character_inventory_open_requested.emit.bind(character)
+	)
+	return character
 
 func serialize() -> Dictionary:
 	var list: Array[Dictionary]

@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://bcharinvwin001"]
+
+[ext_resource type="Script" path="res://game/characters/character_inventory_window.gd" id="1_inventory_window"]
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
+atlas = ExtResource("2_theme")
+region = Rect2(5, 5, 6, 6)
+
+[sub_resource type="GDScript" id="GDScript_inventory_label"]
+script/source = "extends Label
+
+func refresh_item_counts(inventory: Inventory) -> void:
+	text = \"%s × %s\" % [
+			ItemTypeId.get_display_name(ItemTypeId.TypeId.IRON_COIN),
+			inventory.get_item_count(ItemTypeId.TypeId.IRON_COIN),
+	]
+"
+
+[node name="CharacterInventoryWindow" type="Window" unique_id=1888000001]
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+anisotropic_filtering_level = 0
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+title = "背包"
+position = Vector2i(100, 36)
+size = Vector2i(192, 128)
+always_on_top = true
+content_scale_mode = 1
+content_scale_stretch = 1
+content_scale_factor = 2.0
+script = ExtResource("1_inventory_window")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1888000002]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_bg")
+
+[node name="InventoryLabel" type="Label" parent="." unique_id=1888000003]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 7.0
+offset_right = -8.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "铁币 × 0"
+script = SubResource("GDScript_inventory_label")
+
+[connection signal="close_requested" from="." to="." method="hide"]

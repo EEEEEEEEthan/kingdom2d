@@ -5,7 +5,12 @@ class_name Character
 const _KEY_ID = 1
 const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
+const _KEY_INVENTORY = 4
+
+signal inventory_open_requested
+
 var id: int
+var inventory := Inventory.new()
 
 @export var outline: Color = Color.TRANSPARENT:
 	set(value):
@@ -31,10 +36,18 @@ func deserialize(data: Dictionary) -> void:
 	id = data[_KEY_ID]
 	position = Vector2(data[_KEY_POSITION], 0)
 	%AiBrain.deserialize(data.get(_KEY_AI_TASK_STACK, {}))
+	if data.has(_KEY_INVENTORY):
+		inventory.deserialize(data[_KEY_INVENTORY])
+	else:
+		inventory.add_item(
+				ItemTypeId.TypeId.IRON_COIN,
+				randi_range(0, 100)
+		)
 
 func serialize() -> Dictionary:
 	return {
 		_KEY_ID: id,
 		_KEY_POSITION: position.x,
 		_KEY_AI_TASK_STACK: %AiBrain.serialize(),
+		_KEY_INVENTORY: inventory.serialize(),
 	}

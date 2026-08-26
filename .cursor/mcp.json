@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "godot-game": {
+      "command": "bash",
+      "args": ["addons/godot_runtime_mcp/agent_mcp.sh"]
+    }
+  }
+}
