@@ -1,3 +1,6 @@
 [submodule "addons/godot_editable_texture"]
 	path = addons/godot_editable_texture
 	url = https://github.com/EEEEEEEEthan/godot_editable_texture.git
+[submodule "addons/godot_pull_requests"]
+	path = addons/godot_pull_requests
+	url = https://github.com/EEEEEEEEthan/godot_pull_requests.git
