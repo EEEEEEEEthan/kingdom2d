@@ -78,6 +78,17 @@ extends Sprite2D
 		if not is_node_ready():
 			await ready
 		material = _outline_material if outline.a > 0 else null
+
+func _process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	var hovered := false
+	var viewport := get_viewport()
+	if viewport.get_visible_rect().has_point(viewport.get_mouse_position()):
+		hovered = get_rect().has_point(to_local(get_global_mouse_position()))
+	var color := Color.WHITE if hovered else Color.TRANSPARENT
+	if owner.outline != color:
+		owner.outline = color
 "
 
 [node name="Character" type="Node2D" unique_id=1482639207]
