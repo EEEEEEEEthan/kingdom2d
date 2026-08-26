@@ -78,17 +78,19 @@ extends Sprite2D
 		if not is_node_ready():
 			await ready
 		material = _outline_material if outline.a > 0 else null
+"
 
-func _process(_delta: float) -> void:
-	if Engine.is_editor_hint():
-		return
-	var hovered := false
-	var viewport := get_viewport()
-	if viewport.get_visible_rect().has_point(viewport.get_mouse_position()):
-		hovered = get_rect().has_point(to_local(get_global_mouse_position()))
-	var color := Color.WHITE if hovered else Color.TRANSPARENT
-	if owner.outline != color:
-		owner.outline = color
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hover"]
+size = Vector2(4, 8)
+
+[sub_resource type="GDScript" id="GDScript_hover"]
+script/source = "extends Area2D
+
+func _mouse_enter() -> void:
+	owner.outline = Color.WHITE
+
+func _mouse_exit() -> void:
+	owner.outline = Color.TRANSPARENT
 "
 
 [node name="Character" type="Node2D" unique_id=1482639207]
@@ -105,3 +107,13 @@ offset = Vector2(0, -3)
 script = SubResource("GDScript_85w1m")
 _outline_material = ExtResource("2_ygg2l")
 outline = Color(1, 1, 1, 0)
+
+[node name="HoverArea" type="Area2D" parent="."]
+monitoring = false
+monitorable = false
+collision_mask = 0
+script = SubResource("GDScript_hover")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea"]
+position = Vector2(0, -3)
+shape = SubResource("RectangleShape2D_hover")
