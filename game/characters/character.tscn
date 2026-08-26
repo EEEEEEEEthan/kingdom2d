@@ -83,20 +83,26 @@ extends Sprite2D
 [sub_resource type="GDScript" id="GDScript_hover"]
 script/source = "extends Area2D
 
+var _is_hovered := false
+
 func _mouse_enter() -> void:
+	_is_hovered = true
 	owner.outline = Color.WHITE
 
 func _mouse_exit() -> void:
+	_is_hovered = false
 	owner.outline = Color.TRANSPARENT
 
-func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
+func _input(event: InputEvent) -> void:
+	if not _is_hovered:
+		return
 	if not event is InputEventMouseButton:
 		return
 	var mouse_button := event as InputEventMouseButton
 	if mouse_button.button_index != MOUSE_BUTTON_LEFT or not mouse_button.pressed:
 		return
 	owner.inventory_open_requested.emit()
-	_viewport.set_input_as_handled()
+	get_viewport().set_input_as_handled()
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hover"]
