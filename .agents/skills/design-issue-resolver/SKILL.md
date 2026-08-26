@@ -28,11 +28,12 @@ description: 逐条裁决 Kingdom2D 待办设计问题。当用户想推进开�
    - 一次只问一个；**不抛清单**
 3. **归档**：用户回答后，按 system-design 记录格式写入对应子文档；已解决项从 open-decisions.md **删除**；未定部分保留
 4. **检查冲突**：归档前对照既有设计；发现冲突（新提议 vs 已有规则、子文档之间）必须**立即提出并暂停**，待用户裁决
-5. **问下一个**：重复步骤 1，直至用户叫停
+5. **提交并推送**：每次归档完成后 `git commit -m "<中文消息>" --author="claude and ethan <ethan.tang@coconutislandstudio.com>"` 并 `git push`
+6. **问下一个**：重复步骤 1，直至用户叫停
 
 ## 规则
 
 - **一次一个问题**；归档完成才问下一个
 - 未获用户确认**不写入**子文档
 - 确认的口头约定才固化；未决内容只留在 open-decisions.md
-- 用户要求提交时：`git commit -m "<中文消息>" --author="claude and ethan <ethan.tang@coconutislandstudio.com>"`
+- 提交必须**每次归档后自动执行**，不等用户吩咐：`git commit -m "<中文消息>" --author="claude and ethan <ethan.tang@coconutislandstudio.com>"`，随后 `git push`
