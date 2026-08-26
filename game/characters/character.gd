@@ -5,14 +5,13 @@ const _KEY_ID = 1
 const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
 var id: int
-var move_speed_pixels_per_second := 6.0
 
 
 func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool:
 	var offset := target_world_x - position.x
 	if is_zero_approx(offset):
 		return true
-	var step := move_speed_pixels_per_second * delta_seconds
+	var step := 6.0 * delta_seconds
 	if absf(offset) <= step:
 		position.x = target_world_x
 		return true
