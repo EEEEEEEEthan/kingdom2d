@@ -16,8 +16,7 @@
 
 | # | 议题 | 写入目标 | 备注 |
 |---|------|----------|------|
-| D23 | **毛利创值 vs 净运营**：建筑创值=售品+租金（不含税/薪酬/原料），但运营储备、建造可负担看净支出；**商业投资盈利判定**、**日薪上限**是否改看净利或「创值−运营成本」 | economy.md + commerce.md + structures.md + building-valuation-calculator.md | 创值模型重构后暴露；毛利可能系统性高估可雇性与投资价值 |
-| D24 | **主人自租计入创值**后：占格**估值/购置价**是否接受「现金闭环、创值仍增」；是否在估值或日薪上限等场景**排除自租子集** | economy.md + commerce.md + building-valuation-calculator.md | 纯自住住房创值≈挂牌日租，无外部真实流入；与 D20 购置拆建策略联动 |
+| D23 | **毛利创值 vs 净运营**：建筑创值=售品+租金（不含税/薪酬/原料），但运营储备、建造可负担看净支出；**商业投资盈利判定**、**日薪上限**是否改看净利或「创值−运营成本」 | economy.md + commerce.md + structures.md + building-valuation-calculator.md | 创值模型重构后暴露；毛利可能系统性高估可雇性与投资价值；自租已计入创值/估值/日薪上限（D24 已裁） |
 
 ---
 
@@ -29,7 +28,6 @@
 | D21 | 领主与场内角色的市场交易渠道（领主不参与早市；阈值调节已定） | economy.md | 与 lord-circulation / berry-glut 破局手段相关 |
 | D14 | 创值映射、类型保底峰值、竣工加成峰值、未竣工工地计价、刷新周期；**创值预测**（预期可售出、角色雇主预测） | building-valuation-calculator.md + economy.md | 竣工加成递减已定；新建筑/无样本职业/雇工上限回退均依赖预测 |
 | D25 | 建筑创值「**实际出售商品**」是否含**窗口内服务成交**（酒馆服务、澡堂服务等不可代摊产出） | commerce.md + economy.md | 措辞偏实物；漏计则酒馆主收入不进创值 |
-| D26 | **床位租金**（含自租）入账时刻：0:00 批处理 / 12:00 租意愿 / 挂牌日更 — 与日创值窗口对齐 | commerce.md + time.md + economy.md | 批处理顺序已分 0:00 与 12:00，收租时刻未定 |
 | D27 | **职业创值**该职业**人数为 0** 时：全场中位数回退 vs **创值预测** vs 配置缺省 | value-creation.md + career-change-willingness-calculator.md | 全场仅拾荒者时，伐木工等会误用拾荒者中位数 |
 | D15 | 非整日劳动、多商品职业 | value-creation.md | 建筑被动产出**不计入**雇员产出市值（已定，见 commerce.md） |
 | D16 | 转职意愿计算器 Context 配置 vs 单表驱动 | career-change-willingness-calculator.md | 实现向 |
