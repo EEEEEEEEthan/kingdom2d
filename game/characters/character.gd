@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 class_name Character
 
@@ -6,6 +7,12 @@ const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
 var id: int
 
+@export var outline: bool:
+	set(value):
+		outline = value
+		if not is_node_ready():
+			await ready
+		%Sprite2D.material = load("uid://cybn2e1yn6qii") if outline else null
 
 func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool:
 	var offset := target_world_x - position.x

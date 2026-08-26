@@ -73,5 +73,6 @@ unique_name_in_owner = true
 script = SubResource("GDScript_ai_brain")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
+unique_name_in_owner = true
 texture = SubResource("Texture2D_ewbhm")
 offset = Vector2(0, -3)
