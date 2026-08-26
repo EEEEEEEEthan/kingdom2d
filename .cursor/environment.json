@@ -1,5 +1,9 @@
 {
   "name": "the_little_prince",
-  "repositoryDependencies": ["github.com/EEEEEEEEthan/AgentSkills"],
-  "install": "bash .cursor/install-agent-skills.sh && bash .engine-prepare.sh && .engine/.engine --headless --path . --import --quit"
+  "repositoryDependencies": [
+    "github.com/EEEEEEEEthan/AgentSkills",
+    "github.com/EEEEEEEEthan/godot_editable_texture",
+    "github.com/EEEEEEEEthan/godot_pull_requests"
+  ],
+  "install": "git submodule update --init --recursive\nbash .cursor/install-agent-skills.sh\nbash .engine-prepare.sh\n.engine/.engine --headless --path . --import --quit"
 }
