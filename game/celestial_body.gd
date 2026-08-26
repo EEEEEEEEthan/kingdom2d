@@ -17,7 +17,6 @@ var _game: Game:
 
 
 func _ready() -> void:
-	light_mask = 0
 	centered = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_update_visual()
