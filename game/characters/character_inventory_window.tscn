@@ -18,7 +18,7 @@ func refresh() -> void:
 	var lines: PackedStringArray = []
 	for item_id in inventory.item_counts:
 		lines.append(\"%s × %s\" % [
-				ItemId.get_display_name(item_id),
+				ItemTypeId.get_display_name(item_id),
 				inventory.get_item_count(item_id),
 		])
 	text = \"空\" if lines.is_empty() else \"\\n\".join(lines)

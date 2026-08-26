@@ -50,7 +50,7 @@ static func _spawn_initial_characters(game) -> void:
 		var cell_index := candidate_cell_indices[index]
 		character.position.x = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE
 		character.inventory.add_item(
-				ItemId.TypeId.IRON_COIN,
+				ItemTypeId.TypeId.IRON_COIN,
 				randi_range(_INITIAL_IRON_COIN_COUNT_MIN, _INITIAL_IRON_COIN_COUNT_MAX)
 		)
 

@@ -1,4 +1,4 @@
-class_name ItemId
+class_name ItemTypeId
 
 enum TypeId {
 	NONE = 0,
