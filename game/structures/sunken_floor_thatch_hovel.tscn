@@ -20,13 +20,10 @@ script = ExtResource("2_lq6bd")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAANCAYAAACZ3F9/AAAAAXNSR0IArs4c6QAAAHFJREFUKJFj7A+zZiAHsOAQ/4/GZ0RXwIRL0/XH3xiuP/6GyyCsGpE1oLDxacQwGZccho3YbMAmhtWpxABkjShO2fOcmWHPc2Z09XA1KDbCnISsAcZGdy5MI75AwWor3EZcwY7NRRhOJQXAkhxGkiIEABk4K68A+uzoAAAAAElFTkSuQmCC"
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_1bvp3"]
-diffuse_texture = SubResource("Texture2D_lquwl")
-
 [node name="SunkenFloorThatchHovel" unique_id=1642746995 instance=ExtResource("1_base")]
 script = SubResource("GDScript_sunken_floor_thatch_hovel")
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_1bvp3")
+texture = SubResource("Texture2D_lquwl")
 offset = Vector2(0, -5)

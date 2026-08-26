@@ -24,9 +24,6 @@ script = ExtResource("2_5rvfu")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAUpJREFUeJzt1L1twkAYxvHHASmSJwhCGQGnZAGqZAqKFFkkbcoUKbKIF3BrRogsmIAuuhT4jHV+z5wUIhTx/0k0h5/3w4LL1Hp7f1SorJvBWWhVzM3zftY/Y9VLyZ+j//3HTl/Pd4O6U2vxazK99AAGd+L77BfZQY2/eAEpQ1hLOCnpp+/rhzVcmF0Vc5V1c6i5lHT83vn82AuILdI13m5yqUgbwqidSfGFI7lj31ap4TPramL+3638jTGYK+vGlXUTu2BcWMSfWw2ts+0m7z6WseXHrKuJJA2W9+dWv6x3Cbrw5owN77OSNFvsu3w/Kx2W7zf1z7Zn0Xys52yxT+ovHZb+XH4P8utqotf8tstnTy8PJwcIB1Hvb5CygFHjInlr/v4dMHa7pviX+fAOuDq8gEsPAAAAAAAAAAAAAAAAAAAAAAAAAADn9APn/ppftvgK7QAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_4fuuu"]
-diffuse_texture = SubResource("Texture2D_dxrkv")
-
 [sub_resource type="GDScript" id="GDScript_l17i3"]
 script/source = "@tool
 extends Sprite2D
@@ -41,7 +38,7 @@ growth = 1.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_4fuuu")
+texture = SubResource("Texture2D_dxrkv")
 offset = Vector2(0, -4)
 hframes = 4
 vframes = 8

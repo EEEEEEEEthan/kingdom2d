@@ -20,13 +20,10 @@ script = ExtResource("2_tex")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAkAAAAPCAYAAAA2yOUNAAAAAXNSR0IArs4c6QAAAJNJREFUKJFjdNXSYICBu9944Gxlri9wNhMDJviPLsCCLIGkG1khI0wRYzoHF4YJM398Y2RgYGBgXGNkBNcdfPYsAwMDA8NaY2O4KVjdtNbYmAGmGKvDYQqQTMJUBDMBr0lo7oEDFIdjyGJxOCM2BdisYyx7x4ShARaYDFBJFHaX0D+ITiUFE3R3/Ec3CVsEo7uNAQBfXyY/Kll07wAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_placeholder"]
-diffuse_texture = SubResource("Texture2D_4fuuu")
-
 [node name="SovereignBanner" unique_id=1642746995 instance=ExtResource("1_base")]
 script = SubResource("GDScript_sovereign_banner")
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0" unique_id=1259157771]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_placeholder")
+texture = SubResource("Texture2D_4fuuu")
 offset = Vector2(0, -7)
