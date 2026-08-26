@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://83lmkd6kxucq" path="res://game/game_window.gd" id="1_game_window"]
 [ext_resource type="PackedScene" uid="uid://dpvh6vuxwydj5" path="res://game/game.tscn" id="1_le0pw"]
 [ext_resource type="PackedScene" uid="uid://be5pvkd42sklo" path="res://game/game_hud.tscn" id="2_hud"]
+[ext_resource type="Material" uid="uid://c8palqmatrl001" path="res://game/postprocess/palette_quantize.tres" id="3_palette"]
 
 [sub_resource type="GDScript" id="GDScript_slide"]
 script/source = "extends Node
@@ -254,6 +255,7 @@ script = SubResource("GDScript_drag")
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=-447676268]
 unique_name_in_owner = true
+material = ExtResource("3_palette")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

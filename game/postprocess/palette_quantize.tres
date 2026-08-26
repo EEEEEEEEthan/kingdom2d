@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://c8palqmatrl001"]
+
+[ext_resource type="Shader" uid="uid://c8palqshader01" path="res://game/postprocess/palette_quantize.gdshader" id="1_shader"]
+
+[resource]
+shader = ExtResource("1_shader")
+shader_parameter/palette_count = 24
+shader_parameter/palette = PackedColorArray(0.18, 0.22, 0.42, 1, 0.28, 0.24, 0.46, 1, 0.28, 0.32, 0.55, 1, 0.32, 0.28, 0.48, 1, 0.34, 0.3, 0.52, 1, 0.38, 0.25, 0.55, 1, 0.38, 0.55, 0.98, 1, 0.42, 0.36, 0.58, 1, 0.42, 0.48, 0.72, 1, 0.45, 0.72, 1, 1, 0.48, 0.44, 0.66, 1, 0.5, 0.34375, 0.25, 1, 0.5, 0.44, 0.62, 1, 0.502, 0.439, 1, 1, 0.56, 0.337, 0.231, 1, 0.71, 0.81, 0.98, 1, 0.92, 0.78, 0.62, 1, 0.95, 0.72, 0.5, 1, 0.98, 0.55, 0.32, 1, 1, 1, 1, 1, 0.22, 0.42, 0.22, 1, 0.38, 0.55, 0.28, 1, 0.72, 0.22, 0.18, 1, 0.12, 0.12, 0.14, 1)
