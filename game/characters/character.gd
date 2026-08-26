@@ -7,7 +7,7 @@ const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
 const _KEY_INVENTORY = 4
 
-signal inventory_open_requested
+signal inspect_requested
 
 var id: int
 var inventory := Inventory.new()

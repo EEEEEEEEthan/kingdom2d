@@ -2,7 +2,7 @@ extends Window
 
 signal control_window_open_requested
 signal quit_requested
-signal character_inventory_open_requested(character: Character)
+signal character_inspect_requested(character: Character)
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
@@ -49,7 +49,7 @@ func _ready() -> void:
 	%GameHud.sync_pin_from_pined(pined)
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
-	%Game.character_inventory_open_requested.connect(character_inventory_open_requested.emit)
+	%Game.character_inspect_requested.connect(character_inspect_requested.emit)
 	apply_layout(true)
 	visible = true
 
