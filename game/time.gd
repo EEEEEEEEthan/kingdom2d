@@ -1,4 +1,4 @@
-extends Node
+extends RefCounted
 class_name GameTime
 
 const _DAYS_PER_MONTH = 7
