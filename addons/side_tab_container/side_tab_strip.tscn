@@ -1,16 +1,17 @@
-[gd_scene format=3 uid="uid://csidetabstrip01"]
+[gd_scene format=3 uid="uid://cp544i2vn8bme"]
 
 [ext_resource type="Script" uid="uid://dlbvptlh2vanp" path="res://addons/side_tab_container/side_tab_strip.gd" id="1_strip"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_rt1pf"]
 
-[node name="TabStrip" type="Control"]
-clip_contents = true
-layout_mode = 3
-mouse_filter = 2
+[node name="TabStrip" type="Control" unique_id=449734742]
 process_mode = 3
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
 script = ExtResource("1_strip")
 
-[node name="SideTabPlaceHolder" parent="." instance_placeholder="res://addons/side_tab_container/side_tab.tscn"]
+[node name="SideTabPlaceHolder" parent="." unique_id=486413906 instance_placeholder="res://addons/side_tab_container/side_tab.tscn"]
 unique_name_in_owner = true
-button_group = SubResource("ButtonGroup_tabs")
+layout_mode = 0
+button_group = SubResource("ButtonGroup_rt1pf")

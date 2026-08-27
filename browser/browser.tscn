@@ -118,7 +118,7 @@ script = ExtResource("1_browser")
 unique_name_in_owner = true
 script = SubResource("GDScript_pages")
 
-[node name="DragController" type="Node" parent="."]
+[node name="DragController" type="Node" parent="." unique_id=2071714023]
 script = SubResource("GDScript_drag")
 
 [node name="SideTabContainer" type="Container" parent="." unique_id=1191543281]
