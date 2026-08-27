@@ -40,8 +40,8 @@ func _inspect_target(content: Control) -> Object:
 
 
 func _content_of(page: Control) -> Control:
-	var slot := page.get_node_or_null(\"VBoxContainer/Content\")
-	if slot == null or slot.get_child_count() == 0:
+	var slot := page.get_node(\"VBoxContainer/Content\")
+	if slot.get_child_count() == 0:
 		return null
 	return slot.get_child(0) as Control
 
