@@ -78,7 +78,6 @@ func _ready() -> void:
 	var tabs: SideTabContainer = %Browser.get_node(\"SideTabContainer\")
 	tabs.tab_changed.connect(_sync_browser_current_outline.unbind(1))
 	tabs.child_exiting_tree.connect(_sync_browser_current_outline.unbind(1))
-	%Browser.visibility_changed.connect(_sync_browser_current_outline)
 
 
 func open(character: Character) -> void:
@@ -105,8 +104,6 @@ func _sync_browser_current_outline() -> void:
 
 
 func _character_of_current_page() -> Character:
-	if not %Browser.visible:
-		return null
 	var tabs: SideTabContainer = %Browser.get_node(\"SideTabContainer\")
 	var page := tabs.get_current_tab_control()
 	if page == null:
