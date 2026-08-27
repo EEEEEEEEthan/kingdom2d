@@ -53,6 +53,50 @@ class WheelHook extends Node:
 		controller._try_apply_display_scale_wheel(event)
 "
 
+[sub_resource type="GDScript" id="GDScript_open_settings"]
+script/source = "extends Node
+
+var _panel: Control
+
+
+func open() -> void:
+	if not is_instance_valid(_panel):
+		_panel = %SettingsPanelPlaceHolder.create_instance()
+		_panel.reset_game_requested.connect(%GameWindow.reset_game)
+		_panel.tree_exiting.connect(func() -> void: _panel = null)
+	%Browser.add_page(\"设置\", _panel)
+"
+
+[sub_resource type="GDScript" id="GDScript_open_inspector"]
+script/source = "extends Node
+
+var _panels: Dictionary[Character, InspectorPanel] = {}
+
+
+func open(character: Character) -> void:
+	var panel: InspectorPanel = _panels.get(character)
+	if not is_instance_valid(panel):
+		panel = %InspectorPanelPlaceHolder.create_instance() as InspectorPanel
+		_panels[character] = panel
+		panel.tree_exiting.connect(func() -> void: _panels.erase(character))
+		character.tree_exiting.connect(_on_character_exiting.bind(character, panel), CONNECT_ONE_SHOT)
+	%Browser.add_page(\"角色 %s\" % character.id, panel)
+	await panel.inspect_character(character)
+
+
+func _on_character_exiting(character: Character, panel: InspectorPanel) -> void:
+	_panels.erase(character)
+	if not is_instance_valid(panel):
+		return
+	var slot := panel.get_parent()
+	if slot:
+		var page := slot.get_parent()
+		if page and page.get_parent() != owner:
+			page.queue_free()
+			return
+	panel.queue_free()
+"
+
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
 script/source = "extends ConfirmationDialog
 
@@ -91,6 +135,18 @@ anisotropic_filtering_level = 0
 unique_name_in_owner = true
 visible = false
 
+[node name="OpenSettings" type="Node" parent="."]
+script = SubResource("GDScript_open_settings")
+
+[node name="SettingsPanelPlaceHolder" parent="OpenSettings" instance_placeholder="res://settings_panel.tscn"]
+unique_name_in_owner = true
+
+[node name="OpenInspector" type="Node" parent="."]
+script = SubResource("GDScript_open_inspector")
+
+[node name="InspectorPanelPlaceHolder" parent="OpenInspector" instance_placeholder="res://game/inspector_panel.tscn"]
+unique_name_in_owner = true
+
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 unique_name_in_owner = true
 
@@ -118,10 +174,9 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="control_window_open_requested" from="GameWindow" to="Browser" method="open_settings"]
-[connection signal="inspector_open_requested" from="GameWindow" to="Browser" method="open_inspector"]
+[connection signal="control_window_open_requested" from="GameWindow" to="OpenSettings" method="open"]
+[connection signal="inspector_open_requested" from="GameWindow" to="OpenInspector" method="open"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
-[connection signal="reset_game_requested" from="Browser" to="GameWindow" method="reset_game"]
-[connection signal="control_window_open_requested" from="Tray" to="Browser" method="open_settings"]
+[connection signal="control_window_open_requested" from="Tray" to="OpenSettings" method="open"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]

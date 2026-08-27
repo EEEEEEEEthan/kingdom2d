@@ -1,7 +1,5 @@
 extends Window
 
-signal reset_game_requested
-
 
 func _ready() -> void:
 	visible = false
@@ -21,9 +19,5 @@ func open_near_mouse() -> void:
 	grab_focus()
 
 
-func open_settings() -> void:
-	%Pages.open_settings()
-
-
-func open_inspector(character: Character) -> void:
-	await %Pages.open_inspector(character)
+func add_page(title: String, content: Control) -> Control:
+	return %Pages.add_page(title, content)
