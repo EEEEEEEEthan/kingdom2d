@@ -1,0 +1,131 @@
+[gd_scene format=3 uid="uid://bhoverinfowin01"]
+
+[ext_resource type="Script" path="res://game/hover_info/hover_info_window.gd" id="1_hover_info_window"]
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
+atlas = ExtResource("2_theme")
+region = Rect2(49, 49, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = SubResource("AtlasTexture_bg")
+texture_margin_left = 1.0
+texture_margin_top = 1.0
+texture_margin_right = 1.0
+texture_margin_bottom = 1.0
+
+[sub_resource type="GDScript" id="GDScript_pin_logic"]
+script/source = "extends Node
+
+var _show_progress := 0.0
+var _pin_progress := 0.0
+var _leave_grace := 0.0
+var _started := false
+
+func setup(hover_source: Control, hover_link: String, content: Control) -> void:
+	owner.source = hover_source
+	owner.link = hover_link
+	%ContentHost.add_child(content)
+	%Panel.mouse_entered.connect(func() -> void: owner.hovered = true)
+	%Panel.mouse_exited.connect(func() -> void: owner.hovered = false)
+	owner.visible = true
+	await owner.get_tree().process_frame
+	_fit_to_content()
+	_place_near_mouse()
+
+func _process(delta: float) -> void:
+	var source_hovered := (
+			is_instance_valid(owner.source)
+			and HoverInfoDispatcher.is_current(owner.source, owner.link)
+	)
+	if not owner.pinned:
+		if source_hovered:
+			_show_progress = minf(1.0, _show_progress + delta * 5.0)
+			_pin_progress = minf(1.0, _pin_progress + delta * 0.7)
+			_started = true
+			if _pin_progress >= 1.0:
+				owner.pinned = true
+				var box := StyleBoxFlat.new()
+				box.bg_color = Color(0.8509804, 0.627451, 0.4, 1)
+				%Panel.add_theme_stylebox_override(\"panel\", box)
+		else:
+			_show_progress = maxf(0.0, _show_progress - delta * 5.0)
+	else:
+		if owner.hovered or source_hovered:
+			_leave_grace = 0.0
+			_show_progress = minf(1.0, _show_progress + delta * 5.0)
+		else:
+			_leave_grace += delta
+			if _leave_grace > 0.25:
+				_show_progress = maxf(0.0, _show_progress - delta * 5.0)
+	%Panel.modulate = Color(1, 1, 1, _show_progress)
+	if _started and _show_progress <= 0.0:
+		owner.queue_free()
+
+func _fit_to_content() -> void:
+	var min_size: Vector2 = %Panel.get_combined_minimum_size()
+	var scale: float = owner.content_scale_factor
+	owner.size = Vector2i(
+			maxi(8, ceili(min_size.x * scale)),
+			maxi(8, ceili(min_size.y * scale))
+	)
+
+func _place_near_mouse() -> void:
+	var mouse := DisplayServer.mouse_get_position()
+	var win_size: Vector2i = owner.size
+	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse, Vector2.ONE))
+	var usable := DisplayServer.screen_get_usable_rect(screen)
+	var pos := Vector2i(mouse.x + 16, mouse.y - win_size.y / 2)
+	if pos.x + win_size.x > usable.position.x + usable.size.x:
+		pos.x = mouse.x - win_size.x - 16
+	if pos.y + win_size.y > usable.position.y + usable.size.y:
+		pos.y = usable.position.y + usable.size.y - win_size.y
+	if pos.y < usable.position.y:
+		pos.y = usable.position.y
+	if pos.x < usable.position.x:
+		pos.x = usable.position.x
+	owner.current_screen = screen
+	owner.position = pos
+"
+
+[node name="HoverInfoWindow" type="Window"]
+oversampling_override = 1.0
+position = Vector2i(0, 0)
+size = Vector2i(8, 8)
+visible = false
+wrap_controls = true
+transient = true
+unresizable = true
+borderless = true
+always_on_top = true
+popup_window = true
+unfocusable = true
+content_scale_mode = 1
+content_scale_stretch = 1
+content_scale_factor = 2.0
+script = ExtResource("1_hover_info_window")
+
+[node name="Panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ContentHost" type="VBoxContainer" parent="Panel/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="PinLogic" type="Node" parent="."]
+unique_name_in_owner = true
+script = SubResource("GDScript_pin_logic")

@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.8")
 [autoload]
 
 Settings="*res://settings.gd"
+HoverInfoDispatcher="*res://game/hover_info/hover_info_dispatcher.gd"
 GameMcp="*res://addons/godot_runtime_mcp/game_mcp.gd"
 
 [debug]

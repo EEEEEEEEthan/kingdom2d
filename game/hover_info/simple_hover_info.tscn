@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://bsimplehover01"]
+
+[sub_resource type="GDScript" id="GDScript_simple_hover"]
+script/source = "extends VBoxContainer
+
+func setup(title: String, content: String) -> void:
+	%Title.text = title
+	%Content.text = content
+"
+
+[node name="SimpleHoverInfo" type="VBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+theme_override_constants/separation = 2
+script = SubResource("GDScript_simple_hover")
+
+[node name="Title" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="Content" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 3

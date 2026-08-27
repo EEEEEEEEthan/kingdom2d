@@ -1,6 +1,6 @@
 extends Control
 
-@onready var _status_label: Label = %StatusLabel
+@onready var _status_label: RichTextLabel = %StatusLabel
 
 var character: Character:
 	set(value):

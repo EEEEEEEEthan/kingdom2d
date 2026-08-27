@@ -3,21 +3,29 @@
 [ext_resource type="Script" path="res://game/characters/ai/ai_status_panel.gd" id="1_ai_status_panel"]
 
 [sub_resource type="GDScript" id="GDScript_status_label"]
-script/source = "extends Label
+script/source = "extends RichTextLabel
+
+var _last_text := \"\"
 
 func refresh(character: Character) -> void:
 	if not character:
-		text = \"\"
+		if _last_text != \"\":
+			_last_text = \"\"
+			text = \"\"
 		return
 	var progress_ratio := character.ai_work_progress_ratio
 	var progress_text := \"无\"
 	if progress_ratio >= 0.0:
 		progress_text = \"%s%%\" % int(round(progress_ratio * 100.0))
-	text = \"职业 %s\\n行为 %s\\n进度 %s\" % [
-			OccupationId.get_display_name(character.occupation),
+	var next_text := \"职业 %s\\n行为 %s\\n进度 %s\" % [
+			OccupationId.get_bbcode(character.occupation),
 			character.ai_behavior_text,
 			progress_text,
 	]
+	if next_text == _last_text:
+		return
+	_last_text = next_text
+	text = next_text
 "
 
 [node name="AiStatusPanel" type="Control"]
@@ -32,7 +40,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_ai_status_panel")
 
-[node name="StatusLabel" type="Label" parent="."]
+[node name="StatusLabel" type="RichTextLabel" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -44,6 +52,10 @@ offset_right = -8.0
 offset_bottom = -7.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 text = "职业
 行为
 进度"
