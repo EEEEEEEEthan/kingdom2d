@@ -1,7 +1,7 @@
 extends RefCounted
 class_name CharacterAiTaskStack
 
-## 任务自底向上执行；栈顶返回 FAILED 时整栈废弃。
+## 任务自底向上执行。栈顶 FAILED 只丢弃当前任务序列，不递增行为 token。
 
 const _KEY_TASKS = 1
 
@@ -14,6 +14,10 @@ func peek() -> CharacterAiTask:
 	if _tasks.is_empty():
 		return null
 	return _tasks[_tasks.size() - 1]
+
+
+func get_tasks() -> Array[CharacterAiTask]:
+	return _tasks
 
 func push(task: CharacterAiTask, context: CharacterAiContext) -> void:
 	_tasks.append(task)

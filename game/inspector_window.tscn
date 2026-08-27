@@ -15,7 +15,7 @@ canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "检视"
 position = Vector2i(100, 36)
-size = Vector2i(192, 128)
+size = Vector2i(192, 176)
 visible = false
 always_on_top = true
 content_scale_mode = 1
@@ -31,7 +31,22 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("AtlasTexture_bg")
 
-[node name="InventoryPanelPlaceHolder" parent="." instance_placeholder="res://game/characters/inventory_panel.tscn"]
+[node name="Panels" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 4.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="InventoryPanelPlaceHolder" parent="Panels" instance_placeholder="res://game/characters/inventory_panel.tscn"]
+unique_name_in_owner = true
+
+[node name="AiStatusPanelPlaceHolder" parent="Panels" instance_placeholder="res://game/characters/ai/ai_status_panel.tscn"]
 unique_name_in_owner = true
 
 [connection signal="close_requested" from="." to="." method="hide"]

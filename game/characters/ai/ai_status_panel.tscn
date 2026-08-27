@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://baistatuspnl01"]
+
+[ext_resource type="Script" path="res://game/characters/ai/ai_status_panel.gd" id="1_ai_status_panel"]
+
+[sub_resource type="GDScript" id="GDScript_status_label"]
+script/source = "extends Label
+
+func refresh(character: Character) -> void:
+	if not character:
+		text = \"\"
+		return
+	var progress_ratio := character.ai_work_progress_ratio
+	var progress_text := \"无\"
+	if progress_ratio >= 0.0:
+		progress_text = \"%s%%\" % int(round(progress_ratio * 100.0))
+	text = \"职业 %s\\n行为 %s\\n进度 %s\" % [
+			OccupationId.get_display_name(character.occupation),
+			character.ai_behavior_text,
+			progress_text,
+	]
+"
+
+[node name="AiStatusPanel" type="Control"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_ai_status_panel")
+
+[node name="StatusLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 0.0
+offset_right = -8.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "职业
+行为
+进度"
+script = SubResource("GDScript_status_label")
