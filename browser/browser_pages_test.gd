@@ -26,10 +26,38 @@ func _init() -> void:
 	browser.add_page("甲", a)
 	await process_frame
 	ok = _check(ok, tabs.current_tab == 0, "refocus first")
+	var target := Node.new()
+	root.add_child(target)
+	var p1 := InspectorPanel.new()
+	p1.inspected = target
+	browser.add_page("检视甲", p1)
+	await process_frame
+	ok = _check(ok, tabs.get_tab_count() == 3, "inspector tab")
+	var p2 := InspectorPanel.new()
+	p2.inspected = target
+	browser.add_page("检视甲", p2)
+	await process_frame
+	ok = _check(ok, tabs.get_tab_count() == 3, "reuse inspector")
+	ok = _check(ok, tabs.current_tab == 2, "focus inspector")
+	var other := Node.new()
+	root.add_child(other)
+	var p3 := InspectorPanel.new()
+	p3.inspected = other
+	browser.add_page("检视乙", p3)
+	await process_frame
+	ok = _check(ok, tabs.get_tab_count() == 4, "other inspector")
+	browser.add_page("检视甲", p2)
+	await process_frame
+	ok = _check(ok, tabs.current_tab == 2, "refocus inspector")
+	ok = _check(ok, tabs.get_tab_count() == 4, "keep other inspector")
 	tabs.close_tab(0)
 	await process_frame
-	ok = _check(ok, tabs.get_tab_count() == 1, "close tab")
+	ok = _check(ok, tabs.get_tab_count() == 3, "close tab")
 	ok = _check(ok, browser.visible, "keep open with tabs")
+	while tabs.get_tab_count() > 1:
+		tabs.close_tab(0)
+		await process_frame
+	ok = _check(ok, tabs.get_tab_count() == 1, "one tab left")
 	tabs.close_tab(0)
 	await process_frame
 	ok = _check(ok, tabs.get_tab_count() == 0, "close last")
