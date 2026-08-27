@@ -6,6 +6,7 @@ signal close_pressed
 
 var _selected := false
 var _dragging := false
+var _refreshing_look := false
 
 
 func _ready() -> void:
@@ -39,7 +40,8 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_MOUSE_EXIT:
 		%CloseButton.visible = false
 	elif what == NOTIFICATION_THEME_CHANGED:
-		_refresh_look()
+		if not _refreshing_look:
+			_refresh_look()
 
 
 func _get_minimum_size() -> Vector2:
@@ -51,8 +53,9 @@ func _get_minimum_size() -> Vector2:
 
 
 func _refresh_look() -> void:
-	if not is_node_ready():
+	if not is_node_ready() or _refreshing_look:
 		return
+	_refreshing_look = true
 	var selected: bool = _selected
 	var selected_style := _style(&"tab_selected")
 	var hovered_style := _style(&"tab_hovered")
@@ -80,6 +83,7 @@ func _refresh_look() -> void:
 		add_theme_color_override(&"font_hover_color", hovered_color)
 		add_theme_color_override(&"font_pressed_color", hovered_color)
 		add_theme_color_override(&"font_focus_color", unselected_color)
+	_refreshing_look = false
 
 
 func _style(style_name: StringName) -> StyleBox:
