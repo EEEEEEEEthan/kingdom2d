@@ -127,6 +127,18 @@ texture_margin_top = 4.0
 texture_margin_right = 3.0
 texture_margin_bottom = 4.0
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_1bvp3"]
+atlas = ExtResource("1_e1x85")
+region = Rect2(1, 1, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mihib"]
+texture = SubResource("AtlasTexture_1bvp3")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+region_rect = Rect2(0, 0, 14, 14)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cjfk0"]
 resource_name = "FlatActivePanel"
 bg_color = Color(0.8509804, 0.627451, 0.4, 1)
@@ -184,10 +196,6 @@ region = Rect2(50, 1, 12, 13)
 atlas = ExtResource("1_e1x85")
 region = Rect2(50, 17, 12, 13)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1bvp3"]
-atlas = ExtResource("1_e1x85")
-region = Rect2(1, 1, 14, 14)
-
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_h2yge"]
 texture = SubResource("AtlasTexture_1bvp3")
 texture_margin_left = 4.0
@@ -242,6 +250,7 @@ HSlider/icons/tick = SubResource("AtlasTexture_6cw85")
 HSlider/styles/grabber_area = SubResource("StyleBoxTexture_vj6dk")
 HSlider/styles/grabber_area_highlight = SubResource("StyleBoxTexture_ttqs8")
 HSlider/styles/slider = SubResource("StyleBoxTexture_wdt2l")
+PanelContainer/styles/panel = SubResource("StyleBoxTexture_mihib")
 PopupMenu/styles/hover = SubResource("StyleBoxFlat_cjfk0")
 PopupMenu/styles/panel = SubResource("StyleBoxTexture_o2i74")
 TabContainer/constants/side_margin = 3

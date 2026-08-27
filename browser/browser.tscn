@@ -1,55 +1,39 @@
 [gd_scene format=3 uid="uid://bh733akrbo5yi"]
 
-[ext_resource type="Script" path="res://browser/browser.gd" id="1_browser"]
+[ext_resource type="Script" uid="uid://b7n1yatgxg80s" path="res://browser/browser.gd" id="1_browser"]
 [ext_resource type="Script" uid="uid://b8cqfqxwh05hh" path="res://ui/side_tab_container.gd" id="1_cns6c"]
 
 [sub_resource type="GDScript" id="GDScript_pages"]
 script/source = "extends Node
 
-const _PAGE_SCENE := preload(\"res://browser/browser_page.tscn\")
-const _SETTINGS_SCENE := preload(\"res://settings_panel.tscn\")
-const _INSPECTOR_SCENE := preload(\"res://game/inspector_panel.tscn\")
-
-var _settings_page: Control
-var _inspector_pages: Dictionary[Character, Control] = {}
-
-
 func _ready() -> void:
-	owner.close_requested.connect(owner.hide)
 	%SideTabContainer.child_exiting_tree.connect(_on_page_exiting_tree)
 
 
-func open_settings() -> void:
-	if is_instance_valid(_settings_page):
-		_focus_page(_settings_page)
-		return
-	var panel := _SETTINGS_SCENE.instantiate() as Control
-	panel.reset_game_requested.connect(func() -> void: owner.reset_game_requested.emit())
-	_settings_page = _add_page(\"设置\", panel)
-
-
-func open_inspector(character: Character) -> void:
-	var existing: Control = _inspector_pages.get(character)
-	if is_instance_valid(existing):
+func add_page(title: String, content: Control) -> Control:
+	var existing := _page_of(content)
+	if existing:
 		_focus_page(existing)
-		return
-	var panel := _INSPECTOR_SCENE.instantiate() as InspectorPanel
-	var page := _add_page(\"角色 %s\" % character.id, panel)
-	_inspector_pages[character] = page
-	await panel.inspect_character(character)
-	character.tree_exiting.connect(_on_inspected_character_exiting.bind(character), CONNECT_ONE_SHOT)
-
-
-func _add_page(title: String, content: Control) -> Control:
-	var page := _PAGE_SCENE.instantiate() as Control
+		return existing
+	var page := %BrowserPage.create_instance() as Control
 	page.name = title
 	page.set_meta(\"tab_title\", title)
+	if content.get_parent():
+		content.get_parent().remove_child(content)
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	page.get_node(\"Content\").add_child(content)
-	%SideTabContainer.add_child(page)
+	page.get_node(\"VBoxContainer/Content\").add_child(content)
 	%SideTabContainer.current_tab = %SideTabContainer.get_tab_count() - 1
 	_ensure_visible()
 	return page
+
+
+func _page_of(content: Control) -> Control:
+	var node: Node = content
+	while node:
+		if node.get_parent() == %SideTabContainer:
+			return node as Control
+		node = node.get_parent()
+	return null
 
 
 func _focus_page(page: Control) -> void:
@@ -67,29 +51,51 @@ func _ensure_visible() -> void:
 	owner.open_near_mouse()
 
 
-func _on_inspected_character_exiting(character: Character) -> void:
-	var page: Control = _inspector_pages.get(character)
-	_inspector_pages.erase(character)
-	if is_instance_valid(page):
-		page.queue_free()
-
-
 func _on_page_exiting_tree(page: Node) -> void:
-	if page == _settings_page:
-		_settings_page = null
-	for character in _inspector_pages.keys():
-		if _inspector_pages[character] == page:
-			_inspector_pages.erase(character)
-			break
-	_hide_if_empty.call_deferred()
-
-
-func _hide_if_empty() -> void:
+	if page is InstancePlaceholder:
+		return
 	if %SideTabContainer.get_tab_count() <= 0:
 		owner.hide()
 "
 
-[node name="Browser" type="Window"]
+[sub_resource type="GDScript" id="GDScript_drag"]
+script/source = "extends Node
+
+var _dragging := false
+var _drag_mouse_offset := Vector2i.ZERO
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mouse_button.pressed:
+			if not _is_blank_area():
+				return
+			_dragging = true
+			_drag_mouse_offset = DisplayServer.mouse_get_position() - owner.position
+		else:
+			_dragging = false
+	elif event is InputEventMouseMotion and _dragging:
+		var mouse := DisplayServer.mouse_get_position()
+		owner.position = mouse - _drag_mouse_offset
+
+
+func _is_blank_area() -> bool:
+	var hovered: Control = owner.get_viewport().gui_get_hovered_control()
+	if hovered == null:
+		return true
+	var node: Node = hovered
+	while node and node != owner:
+		if node is BaseButton or node is Range or node is SideTabStrip:
+			return false
+		node = node.get_parent()
+	return true
+"
+
+[node name="Browser" type="Window" unique_id=1116717873]
+transparent_bg = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
@@ -98,17 +104,24 @@ oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(0, 36)
 size = Vector2i(256, 288)
+wrap_controls = true
+transient = true
+transient_to_focused = true
 always_on_top = true
+transparent = true
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
 script = ExtResource("1_browser")
 
-[node name="Pages" type="Node" parent="."]
+[node name="Pages" type="Node" parent="." unique_id=319564752]
 unique_name_in_owner = true
 script = SubResource("GDScript_pages")
 
-[node name="SideTabContainer" type="Container" parent="."]
+[node name="DragController" type="Node" parent="."]
+script = SubResource("GDScript_drag")
+
+[node name="SideTabContainer" type="Container" parent="." unique_id=1191543281]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -117,3 +130,9 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cns6c")
 metadata/_custom_type_script = "uid://b8cqfqxwh05hh"
+
+[node name="BrowserPage" parent="SideTabContainer" unique_id=775376090 instance_placeholder="res://browser/browser_page.tscn"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[connection signal="close_requested" from="." to="." method="hide"]
