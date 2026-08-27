@@ -26,19 +26,16 @@ func setup(hover_source: Control, hover_link: String, content: Control) -> void:
 	owner.source = hover_source
 	owner.link = hover_link
 	%ContentHost.add_child(content)
-	%Host.mouse_entered.connect(func() -> void: owner.hovered = true)
-	%Host.mouse_exited.connect(func() -> void: owner.hovered = false)
-	owner.popup_window = false
+	owner.close_requested.connect(owner.queue_free)
 	owner.visible = true
 	await owner.get_tree().process_frame
 	_fit_to_content()
 	_place_near_mouse()
 
 func _process(delta: float) -> void:
-	var source_hovered := (
-			is_instance_valid(owner.source)
-			and HoverInfoDispatcher.is_current(owner.source, owner.link)
-	)
+	var source_hovered := _mouse_over_source()
+	var popup_hovered := _mouse_over_popup() or _has_child_popup()
+	owner.hovered = popup_hovered
 	if not owner.pinned:
 		if source_hovered:
 			_show_progress = minf(1.0, _show_progress + delta * 5.0)
@@ -52,7 +49,7 @@ func _process(delta: float) -> void:
 		else:
 			_show_progress = maxf(0.0, _show_progress - delta * 5.0)
 	else:
-		if owner.hovered or source_hovered:
+		if popup_hovered or source_hovered:
 			_leave_grace = 0.0
 			_show_progress = minf(1.0, _show_progress + delta * 5.0)
 		else:
@@ -62,6 +59,31 @@ func _process(delta: float) -> void:
 	%Host.modulate = Color(1, 1, 1, _show_progress)
 	if _started and _show_progress <= 0.0:
 		owner.queue_free()
+
+func _mouse_over_source() -> bool:
+	if not is_instance_valid(owner.source):
+		return false
+	if HoverInfoDispatcher.is_current(owner.source, owner.link):
+		return true
+	return _mouse_over_control(owner.source)
+
+func _mouse_over_popup() -> bool:
+	return Rect2(owner.position, owner.size).has_point(DisplayServer.mouse_get_position())
+
+func _mouse_over_control(control: Control) -> bool:
+	var win := control.get_window()
+	if win == null:
+		return false
+	var scale := win.content_scale_factor
+	var rect := control.get_global_rect()
+	var screen := Rect2(Vector2(win.position) + rect.position * scale, rect.size * scale)
+	return screen.has_point(DisplayServer.mouse_get_position())
+
+func _has_child_popup() -> bool:
+	for child in owner.get_children():
+		if child is HoverInfoPopup:
+			return true
+	return false
 
 func _fit_to_content() -> void:
 	var min_size: Vector2 = owner.get_contents_minimum_size()
@@ -99,7 +121,8 @@ transient = true
 unresizable = true
 borderless = true
 always_on_top = true
-popup_window = false
+popup_window = true
+popup_wm_hint = true
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
