@@ -12,7 +12,7 @@ func _init() -> void:
 	var tabs: SideTabContainer = browser.get_node("%SideTabContainer")
 	ok = _check(ok, tabs.get_tab_count() == 1, "tab count")
 	ok = _check(ok, tabs.get_tab_title(0) == "甲", "title")
-	ok = _check(ok, tabs.get_tab_control(0).get_node("Content").get_child(0) == a, "content")
+	ok = _check(ok, tabs.get_tab_control(0).get_node("VBoxContainer/Content").get_child(0) == a, "content")
 	ok = _check(ok, browser.visible, "show on add")
 	browser.add_page("甲", a)
 	await process_frame
