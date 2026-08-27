@@ -7,6 +7,8 @@ signal tab_selected(tab: int)
 signal tab_close_pressed(tab: int)
 signal active_tab_rearranged(idx_to: int)
 
+var _tab_strip := SideTabStrip.new()
+
 var current_tab: int = -1:
 	set(value):
 		var count := get_tab_count()
@@ -26,8 +28,13 @@ var current_tab: int = -1:
 		if previous != get_tab_control(next):
 			tab_selected.emit(current_tab)
 			tab_changed.emit(current_tab)
-		_refresh_strip()
+		_tab_strip.refresh()
 		queue_sort()
+
+
+func _init() -> void:
+	_tab_strip.name = "TabStrip"
+	add_child(_tab_strip, false, Node.INTERNAL_MODE_BACK)
 
 
 func get_tab_count() -> int:
@@ -37,7 +44,7 @@ func get_tab_count() -> int:
 func get_tab_controls() -> Array[Control]:
 	var pages: Array[Control] = []
 	for child in get_children():
-		if child.name == "TabStrip":
+		if child == _tab_strip:
 			continue
 		if child is Control and not child.is_queued_for_deletion():
 			pages.append(child)
@@ -65,7 +72,7 @@ func set_tab_title(tab_idx: int, title: String) -> void:
 	get_tab_control(tab_idx).set_meta("tab_title", title)
 	update_minimum_size()
 	queue_sort()
-	_refresh_strip()
+	_tab_strip.refresh()
 
 
 func close_tab(tab_idx: int) -> void:
@@ -78,18 +85,22 @@ func rearrange_tab(from_idx: int, to_idx: int) -> void:
 		return
 	var page := get_tab_control(from_idx)
 	var current_page := get_current_tab_control()
-	move_child(page, to_idx + 1)
+	move_child(page, to_idx)
 	current_tab = get_tab_controls().find(current_page)
 	if page == current_page:
 		active_tab_rearranged.emit(current_tab)
-	_refresh_strip()
+	_tab_strip.refresh()
 	queue_sort()
 
 
+func _enter_tree() -> void:
+	if not child_entered_tree.is_connected(_on_child_entered_tree):
+		child_entered_tree.connect(_on_child_entered_tree)
+		child_exiting_tree.connect(_on_child_exiting_tree)
+		child_order_changed.connect(_on_child_order_changed)
+
+
 func _ready() -> void:
-	child_entered_tree.connect(_on_child_entered_tree)
-	child_exiting_tree.connect(_on_child_exiting_tree)
-	child_order_changed.connect(_on_child_order_changed)
 	if current_tab < 0 and get_tab_count() > 0:
 		current_tab = 0
 	else:
@@ -97,9 +108,7 @@ func _ready() -> void:
 
 
 func _get_minimum_size() -> Vector2:
-	if not is_inside_tree():
-		return Vector2.ZERO
-	var strip_min: Vector2 = %TabStrip.get_combined_minimum_size()
+	var strip_min := _tab_strip.get_combined_minimum_size()
 	var page_min := Vector2.ZERO
 	for page in get_tab_controls():
 		page_min = page_min.max(page.get_combined_minimum_size())
@@ -120,17 +129,16 @@ func _apply_page_visibility() -> void:
 func _sort_pages() -> void:
 	if not is_inside_tree() or is_queued_for_deletion():
 		return
-	var strip: Control = %TabStrip
-	var strip_width := strip.get_combined_minimum_size().x
+	var strip_width := _tab_strip.get_combined_minimum_size().x
 	var page_rect := Rect2(0.0, 0.0, size.x - strip_width, size.y)
 	var strip_rect := Rect2(size.x - strip_width, 0.0, strip_width, size.y)
-	fit_child_in_rect(strip, strip_rect)
+	fit_child_in_rect(_tab_strip, strip_rect)
 	for page in get_tab_controls():
 		fit_child_in_rect(page, page_rect)
 
 
 func _on_child_entered_tree(child: Node) -> void:
-	if child.name == "TabStrip" or child.get_parent() != self:
+	if child == _tab_strip or child.get_parent() != self:
 		return
 	if child is Control:
 		if not child.renamed.is_connected(_on_page_renamed):
@@ -139,11 +147,11 @@ func _on_child_entered_tree(child: Node) -> void:
 			current_tab = 0
 		update_minimum_size()
 		queue_sort()
-		_refresh_strip()
+		_tab_strip.refresh()
 
 
 func _on_child_exiting_tree(child: Node) -> void:
-	if child.name == "TabStrip" or child.get_parent() != self:
+	if child == _tab_strip or child.get_parent() != self:
 		return
 	if child is Control and child.renamed.is_connected(_on_page_renamed):
 		child.renamed.disconnect(_on_page_renamed)
@@ -159,7 +167,7 @@ func _on_child_exiting_tree(child: Node) -> void:
 		_apply_page_visibility()
 	update_minimum_size()
 	queue_sort()
-	_refresh_strip()
+	_tab_strip.refresh()
 
 
 func _on_child_order_changed() -> void:
@@ -168,18 +176,9 @@ func _on_child_order_changed() -> void:
 	_apply_page_visibility()
 	update_minimum_size()
 	queue_sort()
-	_refresh_strip()
+	_tab_strip.refresh()
 
 
 func _on_page_renamed() -> void:
 	update_minimum_size()
-	_refresh_strip()
-
-
-func _refresh_strip() -> void:
-	if not is_inside_tree() or is_queued_for_deletion():
-		return
-	var strip := get_node_or_null(^"TabStrip")
-	if strip == null or strip.is_queued_for_deletion():
-		return
-	strip.refresh()
+	_tab_strip.refresh()

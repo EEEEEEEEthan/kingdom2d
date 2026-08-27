@@ -5,7 +5,7 @@ func _init() -> void:
 	var host := Control.new()
 	host.size = Vector2(240, 128)
 	root.add_child(host)
-	var tabs: SideTabContainer = load("res://ui/side_tab_container.tscn").instantiate()
+	var tabs := SideTabContainer.new()
 	host.add_child(tabs)
 	tabs.size = Vector2(240, 128)
 	for title in ["甲", "乙", "丙"]:
@@ -14,7 +14,8 @@ func _init() -> void:
 		page.text = title
 		tabs.add_child(page)
 	await process_frame
-	await process_frame
+	tabs.size = Vector2(240, 128)
+	tabs.notification(Container.NOTIFICATION_SORT_CHILDREN)
 	ok = _check(ok, tabs.get_tab_count() == 3, "tab count")
 	ok = _check(ok, tabs.current_tab == 0, "default tab")
 	ok = _check(ok, tabs.get_tab_title(1) == "乙", "title from name")
