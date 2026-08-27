@@ -19,3 +19,11 @@ func open_near_mouse() -> void:
 	show()
 	mode = MODE_WINDOWED
 	grab_focus()
+
+
+func open_settings() -> void:
+	%Pages.open_settings()
+
+
+func open_inspector(character: Character) -> void:
+	await %Pages.open_inspector(character)
