@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://csidetabdemo01"]
+
+[ext_resource type="PackedScene" uid="uid://csidetabcont01" path="res://ui/side_tab_container.tscn" id="1_tabs"]
+
+[node name="Demo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SideTabContainer" parent="." instance=ExtResource("1_tabs")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="背包" type="Label" parent="SideTabContainer"]
+layout_mode = 2
+text = "背包页"
+
+[node name="状态" type="Label" parent="SideTabContainer"]
+layout_mode = 2
+text = "状态页"
+
+[node name="日志" type="Label" parent="SideTabContainer"]
+layout_mode = 2
+text = "日志页"
+
+[node name="设置" type="Label" parent="SideTabContainer"]
+layout_mode = 2
+text = "设置页"

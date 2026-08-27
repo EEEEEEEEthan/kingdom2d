@@ -1,0 +1,314 @@
+[gd_scene format=3 uid="uid://csidetabcont01"]
+
+[ext_resource type="Script" path="res://ui/side_tab_container.gd" id="1_side_tab"]
+
+[sub_resource type="GDScript" id="GDScript_tab_strip"]
+script/source = "extends Control
+
+var _visual_y: PackedFloat32Array = PackedFloat32Array()
+var _velocity: PackedFloat32Array = PackedFloat32Array()
+var _hover_idx := -1
+var _dragging := false
+var _drag_from := -1
+var _drag_grab := 0.0
+var _drag_y := 0.0
+var _drag_y_vel := 0.0
+var _drop_idx := -1
+var _press_idx := -1
+var _press_local := Vector2.ZERO
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	clip_contents = true
+	refresh()
+
+
+func refresh() -> void:
+	var count := _tab_count()
+	var old := _visual_y.size()
+	_visual_y.resize(count)
+	_velocity.resize(count)
+	for i in count:
+		if i >= old:
+			_visual_y[i] = _slot_y(i, -1, -1)
+			_velocity[i] = 0.0
+	set_process(true)
+	queue_redraw()
+	update_minimum_size()
+
+
+func _tab_count() -> int:
+	if not _can_use_tabs():
+		return 0
+	return _tabs().get_tab_count()
+
+
+func _get_minimum_size() -> Vector2:
+	var count := _tab_count()
+	if count <= 0:
+		return Vector2(18.0, 0.0)
+	var width := 18.0
+	for i in count:
+		width = maxf(width, _title_width(i) + 18.0)
+	return Vector2(width, _tab_height() * float(count))
+
+
+func _tab_height() -> float:
+	return 16.0
+
+
+func _title_width(tab_idx: int) -> float:
+	return _font().get_string_size(_tabs().get_tab_title(tab_idx), HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+
+
+func _font() -> Font:
+	var font := get_theme_font(&\"font\", &\"TabContainer\")
+	if font:
+		return font
+	return ThemeDB.fallback_font
+
+
+func _tabs() -> SideTabContainer:
+	return owner as SideTabContainer
+
+
+func _can_use_tabs() -> bool:
+	return is_inside_tree() and owner is SideTabContainer
+
+
+func _style(tab_idx: int) -> StyleBox:
+	var selected: bool = tab_idx == _tabs().current_tab
+	var hovered: bool = tab_idx == _hover_idx
+	var style_name := &\"tab_unselected\"
+	if selected:
+		style_name = &\"tab_selected\"
+	elif hovered:
+		style_name = &\"tab_hovered\"
+	var style := get_theme_stylebox(style_name, &\"TabContainer\")
+	if style:
+		return style
+	var fallback := StyleBoxFlat.new()
+	fallback.bg_color = Color(0.85, 0.63, 0.4, 1.0) if selected else Color(0.56, 0.34, 0.23, 1.0)
+	return fallback
+
+
+func _close_icon() -> Texture2D:
+	return get_theme_icon(&\"close\", &\"Window\")
+
+
+func _slot_y(tab_idx: int, drag_from: int, drop_idx: int) -> float:
+	var order := _visual_order(drag_from, drop_idx)
+	var slot := order.find(tab_idx)
+	if slot < 0:
+		slot = tab_idx
+	return float(slot) * _tab_height()
+
+
+func _visual_order(drag_from: int, drop_idx: int) -> Array[int]:
+	var count := _tab_count()
+	var order: Array[int] = []
+	for i in count:
+		if i != drag_from:
+			order.append(i)
+	if drag_from >= 0:
+		var insert_at := drag_from if drop_idx < 0 else drop_idx
+		order.insert(clampi(insert_at, 0, order.size()), drag_from)
+	return order
+
+
+func _drop_idx_at_y(y: float) -> int:
+	var count := _tab_count()
+	if count <= 1:
+		return 0
+	return clampi(int(floor(y / _tab_height())), 0, count - 1)
+
+
+func _tab_at_y(y: float) -> int:
+	var count := _tab_count()
+	for i in count:
+		var top := _visual_y[i] if i < _visual_y.size() else _slot_y(i, -1, -1)
+		if y >= top and y < top + _tab_height():
+			return i
+	return -1
+
+
+func _close_rect(tab_idx: int) -> Rect2:
+	var y := _visual_y[tab_idx] if tab_idx < _visual_y.size() else 0.0
+	return Rect2(size.x - 14.0, y + 3.0, 10.0, 10.0)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_on_mouse_moved((event as InputEventMouseMotion).position)
+		accept_event()
+	elif event is InputEventMouseButton:
+		var button := event as InputEventMouseButton
+		if button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if button.pressed:
+			_on_pressed(button.position)
+		else:
+			_on_released()
+		accept_event()
+
+
+func _on_pressed(local_pos: Vector2) -> void:
+	var idx := _tab_at_y(local_pos.y)
+	if idx < 0:
+		return
+	if _close_rect(idx).has_point(local_pos):
+		_tabs().close_tab(idx)
+		_hover_idx = -1
+		return
+	_press_idx = idx
+	_press_local = local_pos
+	_tabs().current_tab = idx
+	set_process_input(true)
+	set_process(true)
+
+
+func _on_released() -> void:
+	if _press_idx < 0 and not _dragging:
+		return
+	if _dragging:
+		_tabs().rearrange_tab(_drag_from, _drop_idx)
+	_dragging = false
+	_drag_from = -1
+	_drop_idx = -1
+	_press_idx = -1
+	_drag_y_vel = 0.0
+	set_process_input(false)
+	set_process(true)
+	queue_redraw()
+
+
+func _on_mouse_moved(local_pos: Vector2) -> void:
+	if _press_idx >= 0 and not _dragging and local_pos.distance_to(_press_local) >= 3.0:
+		_dragging = true
+		_drag_from = _press_idx
+		_drop_idx = _press_idx
+		_drag_grab = _press_local.y - _visual_y[_press_idx]
+		_drag_y = _visual_y[_press_idx]
+		_drag_y_vel = 0.0
+	if _dragging:
+		_drop_idx = _drop_idx_at_y(local_pos.y)
+		queue_redraw()
+		return
+	var idx := _tab_at_y(local_pos.y)
+	if idx != _hover_idx:
+		_hover_idx = idx
+		queue_redraw()
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var button := event as InputEventMouseButton
+		if button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+			_on_released()
+	elif event is InputEventMouseMotion:
+		_on_mouse_moved(get_local_mouse_position())
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_MOUSE_EXIT and not _dragging:
+		_hover_idx = -1
+		queue_redraw()
+
+
+func _process(delta: float) -> void:
+	var count := _tab_count()
+	if _visual_y.size() != count:
+		refresh()
+		count = _tab_count()
+	if count <= 0:
+		set_process(false)
+		return
+	if _dragging:
+		var mouse_y := get_local_mouse_position().y - _drag_grab
+		mouse_y = clampf(mouse_y, 0.0, maxf(0.0, float(count - 1) * _tab_height()))
+		_drop_idx = _drop_idx_at_y(get_local_mouse_position().y)
+		var drag_state := _damp(_drag_y, mouse_y, _drag_y_vel, delta)
+		_drag_y = drag_state.x
+		_drag_y_vel = drag_state.y
+	var moving := _dragging
+	for i in count:
+		var target := _drag_y if _dragging and i == _drag_from else _slot_y(i, _drag_from, _drop_idx)
+		var state := _damp(_visual_y[i], target, _velocity[i], delta)
+		_visual_y[i] = state.x
+		_velocity[i] = state.y
+		if absf(_visual_y[i] - target) > 0.05 or absf(_velocity[i]) > 0.05:
+			moving = true
+	queue_redraw()
+	if not moving:
+		set_process(false)
+
+
+func _damp(current: float, target: float, velocity: float, delta: float) -> Vector2:
+	var omega := 2.0 / 0.12
+	var x := omega * delta
+	var e := 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var change := current - target
+	var temp := (velocity + omega * change) * delta
+	var new_vel := (velocity - omega * temp) * e
+	var new_pos := target + (change + temp) * e
+	if (target - current) * (new_pos - target) > 0.0:
+		return Vector2(target, 0.0)
+	return Vector2(new_pos, new_vel)
+
+
+func _draw() -> void:
+	var count := _tab_count()
+	if count <= 0 or _visual_y.size() != count:
+		return
+	var font := _font()
+	for i in count:
+		var y := _visual_y[i]
+		var rect := Rect2(0.0, y, size.x, _tab_height())
+		_style(i).draw(get_canvas_item(), rect)
+		var color := Color.WHITE
+		if i == _tabs().current_tab:
+			color = get_theme_color(&\"font_selected_color\", &\"TabContainer\")
+		elif i == _hover_idx:
+			color = get_theme_color(&\"font_hovered_color\", &\"TabContainer\")
+		else:
+			color = get_theme_color(&\"font_unselected_color\", &\"TabContainer\")
+		if color.a <= 0.0:
+			color = Color.WHITE
+		font.draw_string(
+				get_canvas_item(),
+				Vector2(4.0, y + 12.0),
+				_tabs().get_tab_title(i),
+				HORIZONTAL_ALIGNMENT_LEFT,
+				size.x - 18.0,
+				10,
+				color
+		)
+		if i == _hover_idx and not _dragging:
+			var close_tex := _close_icon()
+			var close_rect := _close_rect(i)
+			if close_tex:
+				draw_texture_rect(close_tex, close_rect, false)
+			else:
+				draw_line(close_rect.position, close_rect.end, Color.WHITE, 1.0)
+				draw_line(
+						Vector2(close_rect.end.x, close_rect.position.y),
+						Vector2(close_rect.position.x, close_rect.end.y),
+						Color.WHITE,
+						1.0
+				)
+"
+
+[node name="SideTabContainer" type="Container"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_side_tab")
+
+[node name="TabStrip" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 0
+script = SubResource("GDScript_tab_strip")
