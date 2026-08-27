@@ -7,7 +7,7 @@ signal tab_selected(tab: int)
 signal tab_close_pressed(tab: int)
 signal active_tab_rearranged(idx_to: int)
 
-var _tab_strip := SideTabStrip.new()
+var _tab_strip: SideTabStrip
 
 var current_tab: int = -1:
 	set(value):
@@ -33,6 +33,7 @@ var current_tab: int = -1:
 
 
 func _init() -> void:
+	_tab_strip = load("res://addons/side_tab_container/side_tab_strip.tscn").instantiate()
 	_tab_strip.name = "TabStrip"
 	add_child(_tab_strip, false, Node.INTERNAL_MODE_BACK)
 

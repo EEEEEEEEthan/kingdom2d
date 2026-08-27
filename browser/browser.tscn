@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bh733akrbo5yi"]
 
 [ext_resource type="Script" uid="uid://b7n1yatgxg80s" path="res://browser/browser.gd" id="1_browser"]
-[ext_resource type="Script" uid="uid://b8cqfqxwh05hh" path="res://ui/side_tab_container.gd" id="1_cns6c"]
+[ext_resource type="Script" uid="uid://b8cqfqxwh05hh" path="res://addons/side_tab_container/side_tab_container.gd" id="1_cns6c"]
 
 [sub_resource type="GDScript" id="GDScript_pages"]
 script/source = "extends Node
@@ -118,7 +118,7 @@ script = ExtResource("1_browser")
 unique_name_in_owner = true
 script = SubResource("GDScript_pages")
 
-[node name="DragController" type="Node" parent="."]
+[node name="DragController" type="Node" parent="." unique_id=2071714023]
 script = SubResource("GDScript_drag")
 
 [node name="SideTabContainer" type="Container" parent="." unique_id=1191543281]
