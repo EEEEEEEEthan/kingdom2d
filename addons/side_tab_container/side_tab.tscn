@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://csidetabbtn001"]
+
+[ext_resource type="Script" uid="uid://csidetabgd0001" path="res://addons/side_tab_container/side_tab.gd" id="1_side_tab"]
+[ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close"]
+atlas = ExtResource("2_theme")
+region = Rect2(50, 1, 12, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close_pressed"]
+atlas = ExtResource("2_theme")
+region = Rect2(50, 17, 12, 13)
+
+[sub_resource type="GDScript" id="GDScript_close"]
+script/source = "extends TextureButton
+
+func _on_pressed() -> void:
+	owner.close_pressed.emit()
+"
+
+[node name="SideTab" type="Button"]
+custom_minimum_size = Vector2(18, 16)
+offset_right = 36.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 10
+focus_mode = 0
+mouse_filter = 0
+theme_type_variation = &"SideTab"
+text = ""
+clip_text = true
+alignment = 0
+script = ExtResource("1_side_tab")
+
+[node name="CloseButton" type="TextureButton" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -13.0
+offset_top = -5.0
+offset_right = -3.0
+offset_bottom = 5.0
+grow_horizontal = 0
+grow_vertical = 2
+focus_mode = 0
+mouse_filter = 0
+action_mode = 1
+texture_normal = SubResource("AtlasTexture_close")
+texture_pressed = SubResource("AtlasTexture_close_pressed")
+ignore_texture_size = true
+stretch_mode = 5
+script = SubResource("GDScript_close")
+
+[connection signal="pressed" from="CloseButton" to="CloseButton" method="_on_pressed"]

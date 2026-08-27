@@ -24,8 +24,12 @@ func _init() -> void:
 	ok = _check(ok, strip.position.x > 0.0, "tabs on right")
 	ok = _check(ok, is_equal_approx(strip.position.x + strip.size.x, tabs.size.x), "strip flush right")
 	ok = _check(ok, strip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "strip ignores empty hover")
-	ok = _check(ok, strip.get_child_count() > 0 and strip.get_child(0) is Button, "tab is button")
-	var short_tab: Control = strip.get_child(0)
+	var short_tab: Control = null
+	for child in strip.get_children():
+		if child is Button:
+			short_tab = child
+			break
+	ok = _check(ok, short_tab != null, "tab is button")
 	ok = _check(ok, short_tab.size.x < strip.size.x, "tab only as wide as itself")
 	var close_button: BaseButton = short_tab.get_node("CloseButton")
 	ok = _check(ok, close_button is TextureButton, "close is button")

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://csidetabstrip01"]
+
+[ext_resource type="Script" uid="uid://dlbvptlh2vanp" path="res://addons/side_tab_container/side_tab_strip.gd" id="1_strip"]
+
+[node name="TabStrip" type="Control"]
+clip_contents = true
+layout_mode = 3
+mouse_filter = 2
+process_mode = 3
+script = ExtResource("1_strip")

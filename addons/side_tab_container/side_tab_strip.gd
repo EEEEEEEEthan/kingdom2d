@@ -20,9 +20,6 @@ func is_dragging() -> bool:
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	clip_contents = true
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	refresh()
 
 
@@ -48,7 +45,7 @@ func refresh() -> void:
 
 
 func _add_tab_button() -> void:
-	var tab: SideTab = load("res://ui/side_tab.tscn").instantiate()
+	var tab: SideTab = load("res://addons/side_tab_container/side_tab.tscn").instantiate()
 	add_child(tab)
 	tab.button_down.connect(_on_tab_button_down.bind(tab))
 	tab.close_pressed.connect(_on_tab_close_pressed.bind(tab))
