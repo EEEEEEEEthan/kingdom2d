@@ -193,24 +193,6 @@ func _process(_delta: float) -> void:
 	_kp_add_down = down
 "
 
-[sub_resource type="GDScript" id="GDScript_inspector_windows"]
-script/source = "extends Node
-
-var _windows_by_character: Dictionary[Character, InspectorWindow] = {}
-
-
-func open_for_character(character: Character) -> void:
-	var inspector_window: InspectorWindow = _windows_by_character.get(character)
-	if inspector_window == null:
-		inspector_window = %InspectorWindowPlaceHolder.create_instance() as InspectorWindow
-		_windows_by_character[character] = inspector_window
-		character.tree_exiting.connect(func () -> void:
-			_windows_by_character.erase(character)
-			inspector_window.queue_free()
-		)
-	await inspector_window.inspect_character(character)
-"
-
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_dxrkv")
 
@@ -263,10 +245,3 @@ script = SubResource("GDScript_day_night")
 [node name="EditorTimeDebugController" type="Node" parent="." unique_id=1847293650]
 script = SubResource("GDScript_editor_time_debug")
 
-[node name="InspectorWindowPlaceHolder" parent="." unique_id=1888000100 instance_placeholder="res://game/inspector_window.tscn"]
-unique_name_in_owner = true
-
-[node name="InspectorWindows" type="Node" parent="." unique_id=1888000101]
-script = SubResource("GDScript_inspector_windows")
-
-[connection signal="character_inspect_requested" from="Horizon/Terrain/CharacterManager" to="InspectorWindows" method="open_for_character"]

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://n3eb1xsiuq1d"]
 
-[ext_resource type="Script" path="res://control_window.gd" id="1_control_window"]
+[ext_resource type="Script" path="res://settings_panel.gd" id="1_settings_panel"]
 [ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="1_k4ubr"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_us4cm"]
@@ -24,11 +24,9 @@ func _on_value_changed(new_value: float) -> void:
 [sub_resource type="GDScript" id="GDScript_width_slider"]
 script/source = "extends HSlider
 
-const MAX_GAME_WIDTH := 4096
-
 func _ready() -> void:
-	var screen_width := DisplayServer.screen_get_size(owner.current_screen).x
-	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
+	var screen_width := DisplayServer.screen_get_size(get_window().current_screen).x
+	var max_ratio := minf(1.0, float(4096) / float(screen_width))
 	max_value = max_ratio
 	if Settings.game_width_ratio > max_ratio:
 		Settings.game_width_ratio = max_ratio
@@ -55,22 +53,16 @@ func _on_confirmed() -> void:
 	owner.reset_game_requested.emit()
 "
 
-[node name="ControlWindow" type="Window" unique_id=1280178936]
-snap_2d_transforms_to_pixel = true
-snap_2d_vertices_to_pixel = true
-anisotropic_filtering_level = 0
-canvas_item_default_texture_filter = 0
-oversampling_override = 1.0
-title = "Kingdom2D"
-position = Vector2i(100, 36)
-size = Vector2i(256, 288)
-always_on_top = true
-content_scale_mode = 1
-content_scale_stretch = 1
-content_scale_factor = 2.0
-script = ExtResource("1_control_window")
+[node name="SettingsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings_panel")
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=1398113266]
+[node name="TextureRect" type="TextureRect" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -78,7 +70,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("AtlasTexture_us4cm")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=74975574]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -89,15 +81,15 @@ offset_bottom = -7.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer" unique_id=1784099937]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer"]
 layout_mode = 2
 columns = 2
 
-[node name="ScaleLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=1322494843]
+[node name="ScaleLabel" type="Label" parent="VBoxContainer/GridContainer"]
 layout_mode = 2
 text = "缩放"
 
-[node name="ScaleSlider" type="HSlider" parent="VBoxContainer/GridContainer" unique_id=912326887]
+[node name="ScaleSlider" type="HSlider" parent="VBoxContainer/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -108,11 +100,11 @@ tick_count = 8
 ticks_on_borders = true
 script = SubResource("GDScript_scale_slider")
 
-[node name="WidthLabel" type="Label" parent="VBoxContainer/GridContainer" unique_id=2062401688]
+[node name="WidthLabel" type="Label" parent="VBoxContainer/GridContainer"]
 layout_mode = 2
 text = "宽度"
 
-[node name="WidthSlider" type="HSlider" parent="VBoxContainer/GridContainer" unique_id=2015898382]
+[node name="WidthSlider" type="HSlider" parent="VBoxContainer/GridContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -124,13 +116,13 @@ tick_count = 8
 ticks_on_borders = true
 script = SubResource("GDScript_width_slider")
 
-[node name="ResetGame" type="Button" parent="VBoxContainer" unique_id=632707697]
+[node name="ResetGame" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 10
 text = "重置地图"
 script = SubResource("GDScript_reset_game")
 
-[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1983746502]
+[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="."]
 unique_name_in_owner = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
@@ -146,7 +138,6 @@ ok_button_text = "删除"
 dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
 script = SubResource("GDScript_reset_confirm")
 
-[connection signal="close_requested" from="." to="." method="hide"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/ScaleSlider" to="VBoxContainer/GridContainer/ScaleSlider" method="_on_value_changed"]
 [connection signal="value_changed" from="VBoxContainer/GridContainer/WidthSlider" to="VBoxContainer/GridContainer/WidthSlider" method="_on_value_changed"]
 [connection signal="pressed" from="VBoxContainer/ResetGame" to="VBoxContainer/ResetGame" method="_on_pressed"]
