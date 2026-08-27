@@ -45,7 +45,7 @@ func _process(delta: float) -> void:
 	_hover_elapsed += delta
 	if _hover_elapsed < 0.2:
 		return
-	_open_window(current_source, current_link)
+	_open_popup(current_source, current_link)
 
 
 func _set_current(source: Control, link: String) -> void:
@@ -67,7 +67,7 @@ func _action_key(source: Control, link: String) -> String:
 	return "%s:%s" % [source.get_instance_id(), link]
 
 
-func _open_window(source: Control, link: String) -> void:
+func _open_popup(source: Control, link: String) -> void:
 	var key := _action_key(source, link)
 	if _active_keys.has(key):
 		return
@@ -78,23 +78,23 @@ func _open_window(source: Control, link: String) -> void:
 	if not content is Control:
 		return
 	_active_keys[key] = true
-	var hover_window: HoverInfoWindow = (
-			preload("res://game/hover_info/hover_info_window.tscn").instantiate()
+	var hover_popup: HoverInfoPopup = (
+			preload("res://game/hover_info/hover_info_popup.tscn").instantiate()
 	)
-	var parent_window := _find_parent_hover_window(source)
-	if parent_window:
-		parent_window.add_child(hover_window)
+	var parent_popup := _find_parent_hover_popup(source)
+	if parent_popup:
+		parent_popup.add_child(hover_popup)
 	else:
-		source.get_window().add_child(hover_window)
-	hover_window.tree_exited.connect(func() -> void: _active_keys.erase(key))
-	hover_window.setup(source, link, content as Control)
+		source.get_window().add_child(hover_popup)
+	hover_popup.tree_exited.connect(func() -> void: _active_keys.erase(key))
+	hover_popup.setup(source, link, content as Control)
 
 
-func _find_parent_hover_window(source: Control) -> HoverInfoWindow:
+func _find_parent_hover_popup(source: Control) -> HoverInfoPopup:
 	var node: Node = source
 	while node:
-		if node is HoverInfoWindow:
-			return node as HoverInfoWindow
+		if node is HoverInfoPopup:
+			return node as HoverInfoPopup
 		node = node.get_parent()
 	return null
 

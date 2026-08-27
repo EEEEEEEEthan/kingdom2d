@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://bhoverinfowin01"]
+[gd_scene format=3 uid="uid://bhoverinfopop01"]
 
-[ext_resource type="Script" path="res://game/hover_info/hover_info_window.gd" id="1_hover_info_window"]
+[ext_resource type="Script" path="res://game/hover_info/hover_info_popup.gd" id="1_hover_info_popup"]
 [ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
@@ -26,8 +26,9 @@ func setup(hover_source: Control, hover_link: String, content: Control) -> void:
 	owner.source = hover_source
 	owner.link = hover_link
 	%ContentHost.add_child(content)
-	%Panel.mouse_entered.connect(func() -> void: owner.hovered = true)
-	%Panel.mouse_exited.connect(func() -> void: owner.hovered = false)
+	%Host.mouse_entered.connect(func() -> void: owner.hovered = true)
+	%Host.mouse_exited.connect(func() -> void: owner.hovered = false)
+	owner.popup_window = false
 	owner.visible = true
 	await owner.get_tree().process_frame
 	_fit_to_content()
@@ -47,7 +48,7 @@ func _process(delta: float) -> void:
 				owner.pinned = true
 				var box := StyleBoxFlat.new()
 				box.bg_color = Color(0.8509804, 0.627451, 0.4, 1)
-				%Panel.add_theme_stylebox_override(\"panel\", box)
+				owner.add_theme_stylebox_override(\"panel\", box)
 		else:
 			_show_progress = maxf(0.0, _show_progress - delta * 5.0)
 	else:
@@ -58,12 +59,12 @@ func _process(delta: float) -> void:
 			_leave_grace += delta
 			if _leave_grace > 0.25:
 				_show_progress = maxf(0.0, _show_progress - delta * 5.0)
-	%Panel.modulate = Color(1, 1, 1, _show_progress)
+	%Host.modulate = Color(1, 1, 1, _show_progress)
 	if _started and _show_progress <= 0.0:
 		owner.queue_free()
 
 func _fit_to_content() -> void:
-	var min_size: Vector2 = %Panel.get_combined_minimum_size()
+	var min_size: Vector2 = owner.get_contents_minimum_size()
 	var scale: float = owner.content_scale_factor
 	owner.size = Vector2i(
 			maxi(8, ceili(min_size.x * scale)),
@@ -88,7 +89,7 @@ func _place_near_mouse() -> void:
 	owner.position = pos
 "
 
-[node name="HoverInfoWindow" type="Window"]
+[node name="HoverInfoPopup" type="PopupPanel"]
 oversampling_override = 1.0
 position = Vector2i(0, 0)
 size = Vector2i(8, 8)
@@ -98,30 +99,21 @@ transient = true
 unresizable = true
 borderless = true
 always_on_top = true
-popup_window = true
-unfocusable = true
+popup_window = false
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
-script = ExtResource("1_hover_info_window")
-
-[node name="Panel" type="PanelContainer" parent="."]
-unique_name_in_owner = true
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel")
+script = ExtResource("1_hover_info_popup")
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 2
+[node name="Host" type="MarginContainer" parent="."]
+unique_name_in_owner = true
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
 theme_override_constants/margin_bottom = 4
 
-[node name="ContentHost" type="VBoxContainer" parent="Panel/Margin"]
+[node name="ContentHost" type="VBoxContainer" parent="Host"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 2

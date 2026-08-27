@@ -1,5 +1,5 @@
-extends Window
-class_name HoverInfoWindow
+extends PopupPanel
+class_name HoverInfoPopup
 
 var source: Control
 var link: String = ""
