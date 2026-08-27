@@ -14,7 +14,6 @@ var current_tab: int = 0:
 	set(value):
 		if _tabs.is_empty():
 			current_tab = 0
-			_apply_pages()
 			return
 		var next_tab := clampi(value, 0, _tabs.size() - 1)
 		var changed := current_tab != next_tab
@@ -36,9 +35,17 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(TAB_WIDTH, 0)
 	mouse_filter = MOUSE_FILTER_STOP
 	clip_contents = true
+	z_index = 1
 	owner.child_entered_tree.connect(_on_owner_child_entered)
 	owner.child_exiting_tree.connect(_on_owner_child_exiting)
-	owner.resized.connect(_layout)
+	if owner.is_node_ready():
+		_sync_tabs()
+		_layout()
+	else:
+		owner.ready.connect(_on_owner_ready, CONNECT_ONE_SHOT)
+
+
+func _on_owner_ready() -> void:
 	_sync_tabs()
 	_layout()
 
@@ -61,6 +68,8 @@ func restore_closed_tabs() -> void:
 
 
 func _on_owner_child_entered(node: Node) -> void:
+	if not is_inside_tree():
+		return
 	if node.get_parent() != owner:
 		return
 	if node == self:
@@ -70,6 +79,8 @@ func _on_owner_child_entered(node: Node) -> void:
 
 
 func _on_owner_child_exiting(node: Node) -> void:
+	if not is_inside_tree():
+		return
 	if node.get_parent() != owner:
 		return
 	if node == self:
@@ -119,13 +130,12 @@ func _sync_tabs() -> void:
 			_press_tab = null
 		if _dragging == leftover:
 			_dragging = null
-		leftover.queue_free()
+		leftover.free()
 	_tabs = next_tabs
 	if _tabs.is_empty():
 		current_tab = 0
 	else:
 		current_tab = clampi(current_tab, 0, _tabs.size() - 1)
-	_apply_pages()
 
 
 func _tab_height() -> float:
@@ -137,8 +147,6 @@ func _slot_y(tab_index: int) -> float:
 
 
 func _layout() -> void:
-	size = Vector2(TAB_WIDTH, owner.size.y)
-	position = Vector2(owner.size.x - TAB_WIDTH, 0.0)
 	_apply_pages()
 	for i in _tabs.size():
 		var tab := _tabs[i]
@@ -161,7 +169,7 @@ func _apply_pages() -> void:
 		tab.page.offset_top = 0.0
 		tab.page.offset_right = -TAB_WIDTH
 		tab.page.offset_bottom = 0.0
-	move_to_front()
+		tab.page.z_index = 0
 
 
 func _process(delta: float) -> void:
@@ -193,7 +201,6 @@ func _reorder_from_drag() -> void:
 	for tab in _tabs:
 		owner.move_child(tab.page, insert_at)
 		insert_at += 1
-	move_to_front()
 	current_tab = new_index
 
 
