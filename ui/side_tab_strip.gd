@@ -2,14 +2,13 @@
 extends Control
 class_name SideTabStrip
 
+var _buttons: Array[SideTab] = []
 var _visual_y: PackedFloat32Array = PackedFloat32Array()
 var _velocity: PackedFloat32Array = PackedFloat32Array()
-var _hover_idx := -1
 var _dragging := false
 var _drag_from := -1
 var _drag_grab := 0.0
 var _drag_y := 0.0
-var _drag_y_vel := 0.0
 var _drop_idx := -1
 var _press_idx := -1
 var _press_local := Vector2.ZERO
@@ -21,7 +20,7 @@ func is_dragging() -> bool:
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	refresh()
@@ -29,6 +28,10 @@ func _ready() -> void:
 
 func refresh() -> void:
 	var count := _tab_count()
+	while _buttons.size() > count:
+		_buttons.pop_back().queue_free()
+	while _buttons.size() < count:
+		_add_tab_button()
 	var old := _visual_y.size()
 	_visual_y.resize(count)
 	_velocity.resize(count)
@@ -36,9 +39,20 @@ func refresh() -> void:
 		if i >= old:
 			_visual_y[i] = _slot_y(i, -1, -1)
 			_velocity[i] = 0.0
+		_buttons[i].set_tab_title(_tabs().get_tab_title(i))
+		_buttons[i].set_selected(i == _tabs().current_tab)
+		_buttons[i].set_dragging(_dragging)
 	set_process(true)
-	queue_redraw()
 	update_minimum_size()
+	_layout_tabs()
+
+
+func _add_tab_button() -> void:
+	var tab: SideTab = load("res://ui/side_tab.tscn").instantiate()
+	add_child(tab)
+	tab.button_down.connect(_on_tab_button_down.bind(tab))
+	tab.close_pressed.connect(_on_tab_close_pressed.bind(tab))
+	_buttons.append(tab)
 
 
 func _tabs() -> SideTabContainer:
@@ -60,46 +74,13 @@ func _get_minimum_size() -> Vector2:
 	if count <= 0:
 		return Vector2(18.0, 0.0)
 	var width := 18.0
-	for i in count:
-		width = maxf(width, _title_width(i) + 18.0)
+	for tab in _buttons:
+		width = maxf(width, tab.get_combined_minimum_size().x)
 	return Vector2(width, _tab_height() * float(count))
 
 
 func _tab_height() -> float:
 	return 16.0
-
-
-func _title_width(tab_idx: int) -> float:
-	return _font().get_string_size(
-			_tabs().get_tab_title(tab_idx), HORIZONTAL_ALIGNMENT_LEFT, -1, 10
-	).x
-
-
-func _font() -> Font:
-	var font := get_theme_font(&"font", &"TabContainer")
-	if font:
-		return font
-	return ThemeDB.fallback_font
-
-
-func _style(tab_idx: int) -> StyleBox:
-	var selected: bool = tab_idx == _tabs().current_tab
-	var hovered: bool = tab_idx == _hover_idx
-	var style_name := &"tab_unselected"
-	if selected:
-		style_name = &"tab_selected"
-	elif hovered:
-		style_name = &"tab_hovered"
-	var style := get_theme_stylebox(style_name, &"TabContainer")
-	if style:
-		return style
-	var fallback := StyleBoxFlat.new()
-	fallback.bg_color = Color(0.85, 0.63, 0.4, 1.0) if selected else Color(0.56, 0.34, 0.23, 1.0)
-	return fallback
-
-
-func _close_icon() -> Texture2D:
-	return get_theme_icon(&"close", &"Window")
 
 
 func _slot_y(tab_idx: int, drag_from: int, drop_idx: int) -> float:
@@ -129,48 +110,22 @@ func _drop_idx_at_y(y: float) -> int:
 	return clampi(int(floor(y / _tab_height())), 0, count - 1)
 
 
-func _tab_at_y(y: float) -> int:
-	var count := _tab_count()
-	for i in count:
-		var top := _visual_y[i] if i < _visual_y.size() else _slot_y(i, -1, -1)
-		if y >= top and y < top + _tab_height():
-			return i
-	return -1
-
-
-func _close_rect(tab_idx: int) -> Rect2:
-	var y := _visual_y[tab_idx] if tab_idx < _visual_y.size() else 0.0
-	return Rect2(size.x - 14.0, y + 3.0, 10.0, 10.0)
-
-
-func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion:
-		_on_mouse_moved((event as InputEventMouseMotion).position)
-		accept_event()
-	elif event is InputEventMouseButton:
-		var button := event as InputEventMouseButton
-		if button.button_index != MOUSE_BUTTON_LEFT:
-			return
-		if button.pressed:
-			_on_pressed(button.position)
-		else:
-			_on_released()
-		accept_event()
-
-
-func _on_pressed(local_pos: Vector2) -> void:
-	var idx := _tab_at_y(local_pos.y)
+func _on_tab_button_down(tab: SideTab) -> void:
+	var idx := _buttons.find(tab)
 	if idx < 0:
 		return
-	if _close_rect(idx).has_point(local_pos):
-		_tabs().close_tab(idx)
-		_hover_idx = -1
-		return
 	_press_idx = idx
-	_press_local = local_pos
+	_press_local = get_local_mouse_position()
 	_tabs().current_tab = idx
 	set_process_input(true)
 	set_process(true)
+
+
+func _on_tab_close_pressed(tab: SideTab) -> void:
+	var idx := _buttons.find(tab)
+	if idx < 0:
+		return
+	_tabs().close_tab(idx)
 
 
 func _on_released() -> void:
@@ -181,14 +136,17 @@ func _on_released() -> void:
 		var to_idx := _drop_idx
 		_tabs().rearrange_tab(from_idx, to_idx)
 		_remap_visual(from_idx, to_idx)
+		_remap_buttons(from_idx, to_idx)
 	_dragging = false
 	_drag_from = -1
 	_drop_idx = -1
 	_press_idx = -1
-	_drag_y_vel = 0.0
+	for i in _buttons.size():
+		_buttons[i].set_dragging(false)
+		_buttons[i].set_selected(i == _tabs().current_tab)
 	set_process_input(false)
 	set_process(true)
-	queue_redraw()
+	_layout_tabs()
 
 
 func _on_mouse_moved(local_pos: Vector2) -> void:
@@ -198,8 +156,9 @@ func _on_mouse_moved(local_pos: Vector2) -> void:
 		_drop_idx = _press_idx
 		_drag_grab = _press_local.y - _visual_y[_press_idx]
 		_drag_y = _visual_y[_press_idx]
-		_drag_y_vel = 0.0
 		_last_step_usec = Time.get_ticks_usec()
+		_buttons[_press_idx].set_dragging(true)
+		move_child(_buttons[_press_idx], get_child_count() - 1)
 		set_process(true)
 	if _dragging:
 		_drop_idx = _drop_idx_at_y(local_pos.y)
@@ -207,11 +166,6 @@ func _on_mouse_moved(local_pos: Vector2) -> void:
 		var delta := clampf(float(now - _last_step_usec) / 1_000_000.0, 0.0, 0.05)
 		_last_step_usec = now
 		_step_visuals(delta)
-		return
-	var idx := _tab_at_y(local_pos.y)
-	if idx != _hover_idx:
-		_hover_idx = idx
-		queue_redraw()
 
 
 func _remap_visual(from_idx: int, to_idx: int) -> void:
@@ -231,6 +185,13 @@ func _remap_visual(from_idx: int, to_idx: int) -> void:
 		_velocity[i] = vs[i]
 
 
+func _remap_buttons(from_idx: int, to_idx: int) -> void:
+	if from_idx == to_idx:
+		return
+	var moved: SideTab = _buttons.pop_at(from_idx)
+	_buttons.insert(to_idx, moved)
+
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var button := event as InputEventMouseButton
@@ -241,9 +202,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_MOUSE_EXIT and not _dragging:
-		_hover_idx = -1
-		queue_redraw()
+	if what == NOTIFICATION_RESIZED:
+		_layout_tabs()
 
 
 func _process(delta: float) -> void:
@@ -252,7 +212,7 @@ func _process(delta: float) -> void:
 
 func _step_visuals(delta: float) -> void:
 	var count := _tab_count()
-	if _visual_y.size() != count:
+	if _visual_y.size() != count or _buttons.size() != count:
 		refresh()
 		count = _tab_count()
 	if count <= 0:
@@ -275,9 +235,18 @@ func _step_visuals(delta: float) -> void:
 		_velocity[i] = state.y
 		if absf(_visual_y[i] - target) > 0.05 or absf(_velocity[i]) > 0.05:
 			moving = true
-	queue_redraw()
+	_layout_tabs()
 	if not moving:
 		set_process(false)
+
+
+func _layout_tabs() -> void:
+	for i in _buttons.size():
+		var tab := _buttons[i]
+		var min_size := tab.get_combined_minimum_size()
+		var y := _visual_y[i] if i < _visual_y.size() else float(i) * _tab_height()
+		tab.size = Vector2(min_size.x, _tab_height())
+		tab.position = Vector2(size.x - tab.size.x, y)
 
 
 func _damp(current: float, target: float, velocity: float, delta: float) -> Vector2:
@@ -291,51 +260,3 @@ func _damp(current: float, target: float, velocity: float, delta: float) -> Vect
 	if (target - current) * (new_pos - target) > 0.0:
 		return Vector2(target, 0.0)
 	return Vector2(new_pos, new_vel)
-
-
-func _draw() -> void:
-	var count := _tab_count()
-	if count <= 0 or _visual_y.size() != count:
-		return
-	var font := _font()
-	var draw_order: Array[int] = []
-	for i in count:
-		if not (_dragging and i == _drag_from):
-			draw_order.append(i)
-	if _dragging and _drag_from >= 0:
-		draw_order.append(_drag_from)
-	for i in draw_order:
-		var y := _visual_y[i]
-		var rect := Rect2(0.0, y, size.x, _tab_height())
-		_style(i).draw(get_canvas_item(), rect)
-		var color := Color.WHITE
-		if i == _tabs().current_tab:
-			color = get_theme_color(&"font_selected_color", &"TabContainer")
-		elif i == _hover_idx:
-			color = get_theme_color(&"font_hovered_color", &"TabContainer")
-		else:
-			color = get_theme_color(&"font_unselected_color", &"TabContainer")
-		if color.a <= 0.0:
-			color = Color.WHITE
-		font.draw_string(
-				get_canvas_item(),
-				Vector2(4.0, y + 12.0),
-				_tabs().get_tab_title(i),
-				HORIZONTAL_ALIGNMENT_LEFT,
-				size.x - 18.0,
-				10,
-				color
-		)
-		if i == _hover_idx and not _dragging:
-			var close_tex := _close_icon()
-			var close_rect := _close_rect(i)
-			if close_tex:
-				draw_texture_rect(close_tex, close_rect, false)
-			else:
-				draw_line(close_rect.position, close_rect.end, Color.WHITE, 1.0)
-				draw_line(
-						Vector2(close_rect.end.x, close_rect.position.y),
-						Vector2(close_rect.position.x, close_rect.end.y),
-						Color.WHITE,
-						1.0
-				)
