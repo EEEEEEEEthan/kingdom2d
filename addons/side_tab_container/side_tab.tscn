@@ -44,8 +44,7 @@ func _on_pressed() -> void:
 
 [node name="SideTab" type="Button" unique_id=1137530185]
 custom_minimum_size = Vector2(18, 16)
-offset_right = 36.0
-offset_bottom = 16.0
+size_flags_horizontal = 8
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBox_normal")

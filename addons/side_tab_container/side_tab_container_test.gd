@@ -21,6 +21,7 @@ func _init() -> void:
 	ok = _check(ok, tabs.get_tab_title(1) == "乙乙乙乙", "title from name")
 	ok = _check(ok, tabs.get_tab_control(0).visible and not tabs.get_tab_control(1).visible, "only current visible")
 	var strip: Control = tabs.get_node("TabStrip")
+	ok = _check(ok, strip is VBoxContainer, "strip is vbox")
 	ok = _check(ok, strip.position.x > 0.0, "tabs on right")
 	ok = _check(ok, is_equal_approx(strip.position.x + strip.size.x, tabs.size.x), "strip flush right")
 	ok = _check(ok, strip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "strip ignores empty hover")
