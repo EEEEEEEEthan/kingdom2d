@@ -8,3 +8,6 @@ layout_mode = 3
 mouse_filter = 2
 process_mode = 3
 script = ExtResource("1_strip")
+
+[node name="SideTabPlaceHolder" parent="." instance_placeholder="res://addons/side_tab_container/side_tab.tscn"]
+unique_name_in_owner = true

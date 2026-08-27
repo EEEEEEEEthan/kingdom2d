@@ -24,6 +24,7 @@ func _init() -> void:
 	ok = _check(ok, strip.position.x > 0.0, "tabs on right")
 	ok = _check(ok, is_equal_approx(strip.position.x + strip.size.x, tabs.size.x), "strip flush right")
 	ok = _check(ok, strip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "strip ignores empty hover")
+	ok = _check(ok, strip.get_node("SideTabPlaceHolder") is InstancePlaceholder, "tab placeholder")
 	var short_tab: Control = null
 	for child in strip.get_children():
 		if child is Button:

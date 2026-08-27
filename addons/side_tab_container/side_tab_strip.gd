@@ -45,8 +45,7 @@ func refresh() -> void:
 
 
 func _add_tab_button() -> void:
-	var tab: SideTab = load("res://addons/side_tab_container/side_tab.tscn").instantiate()
-	add_child(tab)
+	var tab: SideTab = %SideTabPlaceHolder.create_instance() as SideTab
 	tab.button_down.connect(_on_tab_button_down.bind(tab))
 	tab.close_pressed.connect(_on_tab_close_pressed.bind(tab))
 	_buttons.append(tab)
