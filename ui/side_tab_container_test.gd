@@ -30,9 +30,21 @@ func _init() -> void:
 	var strip: Control = tabs.get_node("TabStrip")
 	ok = _check(ok, strip.position.x > 0.0, "tabs on right")
 	ok = _check(ok, is_equal_approx(strip.position.x + strip.size.x, tabs.size.x), "strip flush right")
-	tabs.close_tab(1)
+	ok = _check(ok, strip.mouse_filter == Control.MOUSE_FILTER_IGNORE, "strip ignores empty hover")
+	var tab_button := strip.get_child(0) as Button
+	ok = _check(ok, tab_button != null, "tab is button")
+	ok = _check(ok, tab_button.mouse_filter == Control.MOUSE_FILTER_STOP, "tab button stops mouse")
+	var close_button := tab_button.get_child(0) as TextureButton
+	ok = _check(ok, close_button != null, "close is texture button")
+	ok = _check(ok, close_button.action_mode == BaseButton.ACTION_MODE_BUTTON_RELEASE, "close on release")
+	close_button.button_down.emit()
+	ok = _check(ok, tabs.get_tab_count() == 3, "press does not close")
+	close_button.pressed.emit()
 	await process_frame
-	ok = _check(ok, tabs.get_tab_count() == 2, "close tab")
+	ok = _check(ok, tabs.get_tab_count() == 2, "release closes")
+	tabs.close_tab(0)
+	await process_frame
+	ok = _check(ok, tabs.get_tab_count() == 1, "close tab")
 	if ok:
 		print("SideTabContainer tests passed")
 		quit(0)
