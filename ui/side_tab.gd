@@ -15,12 +15,13 @@ func _ready() -> void:
 	alignment = HORIZONTAL_ALIGNMENT_LEFT
 	clip_text = true
 	add_theme_font_size_override(&"font_size", 10)
+	custom_minimum_size = _title_min_size()
 	_refresh_look()
 
 
 func set_tab_title(title: String) -> void:
 	text = title
-	update_minimum_size()
+	custom_minimum_size = _title_min_size()
 	_refresh_look()
 
 
@@ -44,7 +45,7 @@ func _notification(what: int) -> void:
 			_refresh_look()
 
 
-func _get_minimum_size() -> Vector2:
+func _title_min_size() -> Vector2:
 	var font := get_theme_font(&"font")
 	if font == null:
 		font = ThemeDB.fallback_font
