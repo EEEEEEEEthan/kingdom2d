@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bh733akrbo5yi"]
 
-[ext_resource type="Script" path="res://browser/browser.gd" id="1_browser"]
+[ext_resource type="Script" uid="uid://b7n1yatgxg80s" path="res://browser/browser.gd" id="1_browser"]
 [ext_resource type="Script" uid="uid://b8cqfqxwh05hh" path="res://ui/side_tab_container.gd" id="1_cns6c"]
 
 [sub_resource type="GDScript" id="GDScript_pages"]
@@ -22,7 +22,7 @@ func add_page(title: String, content: Control) -> Control:
 	if content.get_parent():
 		content.get_parent().remove_child(content)
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	page.get_node(\"Content\").add_child(content)
+	page.get_node(\"VBoxContainer/Content\").add_child(content)
 	%SideTabContainer.current_tab = %SideTabContainer.get_tab_count() - 1
 	_ensure_visible()
 	return page
@@ -61,7 +61,8 @@ func _hide_if_empty() -> void:
 		owner.hide()
 "
 
-[node name="Browser" type="Window"]
+[node name="Browser" type="Window" unique_id=1116717873]
+transparent_bg = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
@@ -70,17 +71,21 @@ oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(0, 36)
 size = Vector2i(256, 288)
+wrap_controls = true
+transient = true
+transient_to_focused = true
 always_on_top = true
+transparent = true
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
 script = ExtResource("1_browser")
 
-[node name="Pages" type="Node" parent="."]
+[node name="Pages" type="Node" parent="." unique_id=319564752]
 unique_name_in_owner = true
 script = SubResource("GDScript_pages")
 
-[node name="SideTabContainer" type="Container" parent="."]
+[node name="SideTabContainer" type="Container" parent="." unique_id=1191543281]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0

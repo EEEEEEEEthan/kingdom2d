@@ -17,6 +17,7 @@ func open_near_mouse() -> void:
 	show()
 	mode = MODE_WINDOWED
 	grab_focus()
+	borderless = true
 
 
 func add_page(title: String, content: Control) -> Control:

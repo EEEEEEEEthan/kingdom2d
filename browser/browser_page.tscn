@@ -16,22 +16,25 @@ script = ExtResource("1_f0knp")
 _base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAAXNSR0IArs4c6QAAACJJREFUCJlNx7ENADAIAzCn//8cBlQJb07bIvCs3kBv8hMYQaAGBxuH36EAAAAASUVORK5CYII="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[node name="BrowserPage" type="VBoxContainer" unique_id=1230176985]
+[node name="BrowserPage" type="PanelContainer" unique_id=1192352250]
 offset_right = 150.0
 offset_bottom = 200.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1920621954]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=873859629]
 layout_mode = 2
 
-[node name="Back" type="Button" parent="HBoxContainer" unique_id=1166965650]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1920621954]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1166965650]
 layout_mode = 2
 icon = SubResource("Texture2D_ruk8v")
 
-[node name="Forward" type="Button" parent="HBoxContainer" unique_id=1572328900]
+[node name="Forward" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1572328900]
 layout_mode = 2
 icon = SubResource("Texture2D_f0knp")
 
-[node name="Content" type="Control" parent="." unique_id=743332380]
+[node name="Content" type="Control" parent="VBoxContainer" unique_id=743332380]
 layout_mode = 2
-size_flags_vertical = 3
 size_flags_horizontal = 3
+size_flags_vertical = 3
