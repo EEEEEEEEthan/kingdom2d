@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://b2m5m6t600elm"]
+
+[ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_f0knp"]
+
+[sub_resource type="Texture2D" id="Texture2D_ruk8v"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_f0knp")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAAXNSR0IArs4c6QAAACFJREFUCJlj/P//PwMU/GeCMRgYGBiYYAwYhxGZwwATAABBbwYGwlxF1gAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="Texture2D" id="Texture2D_f0knp"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_f0knp")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAMAAAAFCAYAAACAcVaiAAAAAXNSR0IArs4c6QAAACJJREFUCJlNx7ENADAIAzCn//8cBlQJb07bIvCs3kBv8hMYQaAGBxuH36EAAAAASUVORK5CYII="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[node name="BrowserPage" type="VBoxContainer" unique_id=1230176985]
+offset_right = 150.0
+offset_bottom = 200.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1920621954]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="HBoxContainer" unique_id=1166965650]
+layout_mode = 2
+icon = SubResource("Texture2D_ruk8v")
+
+[node name="Forward" type="Button" parent="HBoxContainer" unique_id=1572328900]
+layout_mode = 2
+icon = SubResource("Texture2D_f0knp")
+
+[node name="Content" type="Control" parent="." unique_id=743332380]
+layout_mode = 2
+size_flags_vertical = 3
