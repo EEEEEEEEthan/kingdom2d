@@ -94,7 +94,7 @@ func _is_harvest_claim_live(claim: Vector2i) -> bool:
 	var character := _resolve_game().character_manager.get_character(claim.x)
 	if character == null or not is_instance_valid(character):
 		return false
-	return character.get_ai_behavior_token() == claim.y
+	return character.ai_behavior_token == claim.y
 
 
 func _resolve_game() -> Game:

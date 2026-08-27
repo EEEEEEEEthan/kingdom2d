@@ -9,13 +9,13 @@ func refresh(character: Character) -> void:
 	if not character:
 		text = \"\"
 		return
-	var progress_ratio := character.get_ai_work_progress_ratio()
+	var progress_ratio := character.ai_work_progress_ratio
 	var progress_text := \"无\"
 	if progress_ratio >= 0.0:
 		progress_text = \"%s%%\" % int(round(progress_ratio * 100.0))
 	text = \"职业 %s\\n行为 %s\\n进度 %s\" % [
 			OccupationId.get_display_name(character.occupation),
-			character.get_ai_behavior_text(),
+			character.ai_behavior_text,
 			progress_text,
 	]
 "

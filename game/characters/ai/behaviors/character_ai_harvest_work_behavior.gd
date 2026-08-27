@@ -57,7 +57,7 @@ func _find_nearest_work_target(context: CharacterAiContext) -> Structure:
 		if context.structure_manager.is_harvest_claimed_by_other(
 				structure.id,
 				character.id,
-				character.get_ai_behavior_token()
+				character.ai_behavior_token
 		):
 			continue
 		var distance := absf(structure.position.x - character.position.x)

@@ -12,9 +12,37 @@ const _KEY_BEHAVIOR_TYPE = 3
 
 var ai_task_stack := CharacterAiTaskStack.new()
 var _ai_context: CharacterAiContext
-var _behavior_token := 0
+var behavior_token := 0
 var _behavior_type: CharacterAiBehaviorTypeId.TypeId = CharacterAiBehaviorTypeId.TypeId.NONE
 var _behavior: CharacterAiBehavior = CharacterAiBehavior.new()
+
+var behavior_text: String:
+	get:
+		if ai_task_stack.is_empty():
+			return \"无\"
+		var top_task := ai_task_stack.peek()
+		match top_task.get_type_id():
+			CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
+				return \"前往工作点\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"闲逛\"
+			CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
+				return \"寻找工作目标\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"歇息\"
+			CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+				match owner.occupation:
+					OccupationId.TypeId.LUMBERJACK:
+						return \"砍树\"
+					OccupationId.TypeId.SCAVENGER:
+						return \"采集灌木\"
+					_:
+						return \"工作\"
+			_:
+				return \"未知\"
+
+var work_progress_ratio: float:
+	get:
+		for task in ai_task_stack.get_tasks():
+			if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
+				return task.get_progress_ratio()
+		return -1.0
 
 func _ready() -> void:
 	set_process(true)
@@ -34,14 +62,11 @@ func push_ai_task(task: CharacterAiTask) -> void:
 	ai_task_stack.push(task, _get_ai_context())
 
 func interrupt() -> void:
-	_behavior_token += 1
+	behavior_token += 1
 	ai_task_stack.abandon(_get_ai_context())
 
-func get_behavior_token() -> int:
-	return _behavior_token
-
 func deserialize(ai_data: Dictionary) -> void:
-	_behavior_token = ai_data.get(_KEY_BEHAVIOR_TOKEN, 0)
+	behavior_token = ai_data.get(_KEY_BEHAVIOR_TOKEN, 0)
 	_behavior_type = ai_data.get(_KEY_BEHAVIOR_TYPE, CharacterAiBehaviorTypeId.TypeId.NONE) as CharacterAiBehaviorTypeId.TypeId
 	ai_task_stack.deserialize(ai_data, _get_ai_context())
 	if _behavior_type == CharacterAiBehaviorTypeId.TypeId.NONE:
@@ -50,35 +75,9 @@ func deserialize(ai_data: Dictionary) -> void:
 
 func serialize() -> Dictionary:
 	var data := ai_task_stack.serialize()
-	data[_KEY_BEHAVIOR_TOKEN] = _behavior_token
+	data[_KEY_BEHAVIOR_TOKEN] = behavior_token
 	data[_KEY_BEHAVIOR_TYPE] = _behavior_type
 	return data
-
-func get_behavior_text() -> String:
-	if ai_task_stack.is_empty():
-		return \"无\"
-	var top_task := ai_task_stack.peek()
-	match top_task.get_type_id():
-		CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
-			return \"前往工作点\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"闲逛\"
-		CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
-			return \"寻找工作目标\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"歇息\"
-		CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
-			match owner.occupation:
-				OccupationId.TypeId.LUMBERJACK:
-					return \"砍树\"
-				OccupationId.TypeId.SCAVENGER:
-					return \"采集灌木\"
-				_:
-					return \"工作\"
-		_:
-			return \"未知\"
-
-func get_work_progress_ratio() -> float:
-	for task in ai_task_stack.get_tasks():
-		if task.get_type_id() == CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
-			return task.get_progress_ratio()
-	return -1.0
 
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:

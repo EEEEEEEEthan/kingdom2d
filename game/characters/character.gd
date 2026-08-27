@@ -14,6 +14,18 @@ var id: int
 var occupation: OccupationId.TypeId = OccupationId.TypeId.NONE
 var inventory := Inventory.new()
 
+var ai_behavior_text: String:
+	get:
+		return %AiBrain.behavior_text
+
+var ai_work_progress_ratio: float:
+	get:
+		return %AiBrain.work_progress_ratio
+
+var ai_behavior_token: int:
+	get:
+		return %AiBrain.behavior_token
+
 @export var outline: Color = Color.TRANSPARENT:
 	set(value):
 		if outline == value:
@@ -33,15 +45,6 @@ func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool
 		return true
 	position.x += signf(offset) * step
 	return false
-
-func get_ai_behavior_text() -> String:
-	return %AiBrain.get_behavior_text()
-
-func get_ai_work_progress_ratio() -> float:
-	return %AiBrain.get_work_progress_ratio()
-
-func get_ai_behavior_token() -> int:
-	return %AiBrain.get_behavior_token()
 
 func interrupt_ai() -> void:
 	%AiBrain.interrupt()

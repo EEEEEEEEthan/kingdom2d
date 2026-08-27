@@ -30,7 +30,7 @@ func get_progress_ratio() -> float:
 	return clampf(_elapsed_seconds / _duration_seconds, 0.0, 1.0)
 
 func on_enter(context: CharacterAiContext) -> void:
-	_claim_token = context.character.get_ai_behavior_token()
+	_claim_token = context.character.ai_behavior_token
 	if not context.structure_manager.try_claim_harvest(
 			_structure_id,
 			context.character.id,
@@ -47,7 +47,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_claim_token
 	):
 		return Status.FAILED
-	if context.character.get_ai_behavior_token() != _claim_token:
+	if context.character.ai_behavior_token != _claim_token:
 		return Status.FAILED
 	var structure := context.structure_manager.get_structure_by_id(_structure_id)
 	if not structure:
