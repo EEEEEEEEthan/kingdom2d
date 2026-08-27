@@ -6,10 +6,6 @@
 [sub_resource type="GDScript" id="GDScript_pages"]
 script/source = "extends Node
 
-const _PAGE_SCENE := preload(\"res://browser/browser_page.tscn\")
-const _SETTINGS_SCENE := preload(\"res://settings_panel.tscn\")
-const _INSPECTOR_SCENE := preload(\"res://game/inspector_panel.tscn\")
-
 var _settings_page: Control
 var _inspector_pages: Dictionary[Character, Control] = {}
 
@@ -23,7 +19,7 @@ func open_settings() -> void:
 	if is_instance_valid(_settings_page):
 		_focus_page(_settings_page)
 		return
-	var panel := _SETTINGS_SCENE.instantiate() as Control
+	var panel := %SettingsPanelPlaceHolder.create_instance() as Control
 	panel.reset_game_requested.connect(func() -> void: owner.reset_game_requested.emit())
 	_settings_page = _add_page(\"设置\", panel)
 
@@ -33,7 +29,7 @@ func open_inspector(character: Character) -> void:
 	if is_instance_valid(existing):
 		_focus_page(existing)
 		return
-	var panel := _INSPECTOR_SCENE.instantiate() as InspectorPanel
+	var panel := %InspectorPanelPlaceHolder.create_instance() as InspectorPanel
 	var page := _add_page(\"角色 %s\" % character.id, panel)
 	_inspector_pages[character] = page
 	await panel.inspect_character(character)
@@ -41,12 +37,12 @@ func open_inspector(character: Character) -> void:
 
 
 func _add_page(title: String, content: Control) -> Control:
-	var page := _PAGE_SCENE.instantiate() as Control
+	var page := %BrowserPage.create_instance() as Control
 	page.name = title
 	page.set_meta(\"tab_title\", title)
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.get_parent().remove_child(content)
 	page.get_node(\"Content\").add_child(content)
-	%SideTabContainer.add_child(page)
 	%SideTabContainer.current_tab = %SideTabContainer.get_tab_count() - 1
 	_ensure_visible()
 	return page
@@ -108,6 +104,12 @@ script = ExtResource("1_browser")
 unique_name_in_owner = true
 script = SubResource("GDScript_pages")
 
+[node name="SettingsPanelPlaceHolder" parent="Pages" instance_placeholder="res://settings_panel.tscn"]
+unique_name_in_owner = true
+
+[node name="InspectorPanelPlaceHolder" parent="Pages" instance_placeholder="res://game/inspector_panel.tscn"]
+unique_name_in_owner = true
+
 [node name="SideTabContainer" type="Container" parent="."]
 unique_name_in_owner = true
 anchors_preset = 15
@@ -117,3 +119,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cns6c")
 metadata/_custom_type_script = "uid://b8cqfqxwh05hh"
+
+[node name="BrowserPage" parent="SideTabContainer" unique_id=775376090 instance_placeholder="res://browser/browser_page.tscn"]
+unique_name_in_owner = true
+layout_mode = 2
