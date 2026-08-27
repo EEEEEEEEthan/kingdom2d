@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://bh733akrbo5yi"]
+
+[ext_resource type="Script" uid="uid://b8cqfqxwh05hh" path="res://ui/side_tab_container.gd" id="1_cns6c"]
+
+[node name="Browser" type="Window" unique_id=1582455216]
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+canvas_item_default_texture_filter = 0
+oversampling_override = 1.0
+position = Vector2i(0, 36)
+size = Vector2i(150, 200)
+
+[node name="SideTabContainer" type="Container" parent="." unique_id=1287420083]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cns6c")
+metadata/_custom_type_script = "uid://b8cqfqxwh05hh"
+
+[node name="BrowserPage" parent="SideTabContainer" unique_id=775376090 instance_placeholder="res://browser/browser_page.tscn"]
+layout_mode = 2
