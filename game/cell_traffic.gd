@@ -8,21 +8,21 @@ const _KEY_LAST_CELL = 4
 const _KEY_STALL_CLAIMS = 5
 
 var _day_index := -1
-var _today := PackedInt32Array()
-var _yesterday := PackedInt32Array()
+var _today: Array[int] = []
+var _yesterday: Array[int] = []
 var _last_cell: Dictionary[int, int] = {}
 var _stall_claims: Dictionary[int, Vector2i] = {}
 
 
 func _init() -> void:
-	_today.resize(Game.MAP_CELL_COUNT)
-	_yesterday.resize(Game.MAP_CELL_COUNT)
+	_today = _zero_counts()
+	_yesterday = _zero_counts()
 
 
 func clear() -> void:
 	_day_index = -1
-	_today.fill(0)
-	_yesterday.fill(0)
+	_today = _zero_counts()
+	_yesterday = _zero_counts()
 	_last_cell.clear()
 	_stall_claims.clear()
 
@@ -45,13 +45,14 @@ func try_claim_stall(cell_index: int, character: Character, character_manager: C
 
 
 func pick_hottest_unclaimed_cell(character_manager: CharacterManager) -> int:
-	var best_count := -1
+	var counts := _counts_for_stall()
+	var best_count := 0
 	var best_cell := -1
 	for cell_index in Game.MAP_CELL_COUNT:
 		var current: Vector2i = _stall_claims.get(cell_index, Vector2i.ZERO)
 		if _is_claim_live(current, character_manager):
 			continue
-		var count: int = _yesterday[cell_index]
+		var count: int = counts[cell_index]
 		if count > best_count:
 			best_count = count
 			best_cell = cell_index
@@ -90,8 +91,8 @@ func serialize() -> Dictionary:
 		stall_rows.append([cell_index, claim.x, claim.y])
 	return {
 		_KEY_DAY_INDEX: _day_index,
-		_KEY_TODAY: _today,
-		_KEY_YESTERDAY: _yesterday,
+		_KEY_TODAY: _today.duplicate(),
+		_KEY_YESTERDAY: _yesterday.duplicate(),
 		_KEY_LAST_CELL: last_cell_pairs,
 		_KEY_STALL_CLAIMS: stall_rows,
 	}
@@ -100,12 +101,8 @@ func serialize() -> Dictionary:
 func deserialize(data: Dictionary) -> void:
 	clear()
 	_day_index = data.get(_KEY_DAY_INDEX, -1)
-	var today = data.get(_KEY_TODAY, PackedInt32Array())
-	var yesterday = data.get(_KEY_YESTERDAY, PackedInt32Array())
-	if today is PackedInt32Array and today.size() == Game.MAP_CELL_COUNT:
-		_today = today
-	if yesterday is PackedInt32Array and yesterday.size() == Game.MAP_CELL_COUNT:
-		_yesterday = yesterday
+	_copy_counts(data.get(_KEY_TODAY), _today)
+	_copy_counts(data.get(_KEY_YESTERDAY), _yesterday)
 	for pair in data.get(_KEY_LAST_CELL, []):
 		_last_cell[int(pair[0])] = int(pair[1])
 	for row in data.get(_KEY_STALL_CLAIMS, []):
@@ -117,8 +114,7 @@ func _sync_day(day_index: int) -> void:
 		return
 	if _day_index >= 0:
 		_yesterday = _today.duplicate()
-		_today = PackedInt32Array()
-		_today.resize(Game.MAP_CELL_COUNT)
+		_today = _zero_counts()
 	_day_index = day_index
 	_stall_claims.clear()
 
@@ -127,7 +123,30 @@ func _note_enter(character_id: int, cell_index: int) -> void:
 	if _last_cell.get(character_id, -1) == cell_index:
 		return
 	_last_cell[character_id] = cell_index
-	_today[cell_index] += 1
+	_today[cell_index] = _today[cell_index] + 1
+
+
+func _counts_for_stall() -> Array[int]:
+	for count in _yesterday:
+		if count > 0:
+			return _yesterday
+	return _today
+
+
+func _zero_counts() -> Array[int]:
+	var counts: Array[int] = []
+	counts.resize(Game.MAP_CELL_COUNT)
+	counts.fill(0)
+	return counts
+
+
+func _copy_counts(source, dest: Array[int]) -> void:
+	if source == null:
+		return
+	if source.size() != Game.MAP_CELL_COUNT:
+		return
+	for cell_index in Game.MAP_CELL_COUNT:
+		dest[cell_index] = int(source[cell_index])
 
 
 func _is_claim_live(claim: Vector2i, character_manager: CharacterManager) -> bool:
