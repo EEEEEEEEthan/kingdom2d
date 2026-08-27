@@ -12,11 +12,16 @@ const _SERKEY_STRUCTURE_MANAGER = 1
 const _SERKEY_CHARACTER_MANAGER = 2
 const _SERKEY_TERRAIN = 3
 const _SERKEY_DAYS = 4
+const _SERKEY_CELL_TRAFFIC = 5
 
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
 
+static func get_cell_index_by_world_x(world_x: float) -> int:
+	return clampi(int(floor(world_x / TILE_SIZE)), 0, MAP_CELL_COUNT - 1)
+
 var game_time: GameTime = GameTime.new(_GAME_START_DAYS)
+var cell_traffic := CellTraffic.new()
 
 var horizon: Node2D:
 	get:
@@ -54,10 +59,12 @@ func _ready() -> void:
 
 func advance_debug_time_by_hours(hours: float = 1.0) -> void:
 	game_time.all_days += hours / 24.0
+	cell_traffic.tick(self)
 
 
 func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
+	cell_traffic.tick(self)
 
 func new_game() -> void:
 	_clear()
@@ -79,6 +86,7 @@ func load_game() -> void:
 	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}))
 	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
 	game_time.all_days = data.get(_SERKEY_DAYS, _GAME_START_DAYS)
+	cell_traffic.deserialize(data.get(_SERKEY_CELL_TRAFFIC, {}))
 
 func save_game() -> void:
 	print("save_game")
@@ -87,12 +95,14 @@ func save_game() -> void:
 		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
 		_SERKEY_CHARACTER_MANAGER: character_manager.serialize(),
 		_SERKEY_TERRAIN: terrain.serialize(),
-		_SERKEY_DAYS: game_time.all_days
+		_SERKEY_DAYS: game_time.all_days,
+		_SERKEY_CELL_TRAFFIC: cell_traffic.serialize(),
 	}
 	file.store_var(data)
 
 func _clear() -> void:
 	game_time.all_days = 0
+	cell_traffic.clear()
 	structure_manager.clear()
 	character_manager.clear()
 	terrain.clear()

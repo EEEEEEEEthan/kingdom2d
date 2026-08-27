@@ -19,6 +19,10 @@ var character_manager: CharacterManager:
 	get:
 		return _resolve_game().character_manager
 
+var cell_traffic: CellTraffic:
+	get:
+		return _resolve_game().cell_traffic
+
 func _init(owner_character: Character) -> void:
 	character = owner_character
 

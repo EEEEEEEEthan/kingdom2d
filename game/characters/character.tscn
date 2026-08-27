@@ -23,9 +23,17 @@ var behavior_text: String:
 		var top_task := ai_task_stack.peek()
 		match top_task.get_type_id():
 			CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X:
-				return \"前往工作点\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"闲逛\"
+				if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK:
+					return \"前往工作点\"
+				if _behavior_type == CharacterAiBehaviorTypeId.TypeId.MORNING_MARKET:
+					return \"前往摆摊\" if _is_stalling() else \"赶往小摊\"
+				return \"闲逛\"
 			CharacterAiTaskTypeId.TypeId.WAIT_DURATION:
-				return \"寻找工作目标\" if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK else \"歇息\"
+				if _behavior_type == CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK:
+					return \"寻找工作目标\"
+				if _behavior_type == CharacterAiBehaviorTypeId.TypeId.MORNING_MARKET:
+					return \"摆摊\" if _is_stalling() else \"看摊\"
+				return \"歇息\"
 			CharacterAiTaskTypeId.TypeId.HARVEST_STRUCTURE:
 				match owner.occupation:
 					OccupationId.TypeId.LUMBERJACK:
@@ -84,7 +92,14 @@ func _get_ai_context() -> CharacterAiContext:
 		_ai_context = CharacterAiContext.new(owner)
 	return _ai_context
 
+func _is_stalling() -> bool:
+	var context := _get_ai_context()
+	return context.cell_traffic.is_character_stalling(owner, context.character_manager)
+
+
 func _desired_behavior_type(context: CharacterAiContext) -> CharacterAiBehaviorTypeId.TypeId:
+	if context.day_time_period == GameTime.DayTimePeriod.MORNING_MARKET:
+		return CharacterAiBehaviorTypeId.TypeId.MORNING_MARKET
 	if context.day_time_period != GameTime.DayTimePeriod.WORK:
 		return CharacterAiBehaviorTypeId.TypeId.IDLE_WANDER
 	match owner.occupation:
