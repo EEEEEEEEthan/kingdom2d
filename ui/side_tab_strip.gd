@@ -13,11 +13,17 @@ var _drag_y_vel := 0.0
 var _drop_idx := -1
 var _press_idx := -1
 var _press_local := Vector2.ZERO
+var _last_step_usec := 0
+
+
+func is_dragging() -> bool:
+	return _dragging
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	refresh()
 
 
@@ -171,7 +177,10 @@ func _on_released() -> void:
 	if _press_idx < 0 and not _dragging:
 		return
 	if _dragging:
-		_tabs().rearrange_tab(_drag_from, _drop_idx)
+		var from_idx := _drag_from
+		var to_idx := _drop_idx
+		_tabs().rearrange_tab(from_idx, to_idx)
+		_remap_visual(from_idx, to_idx)
 	_dragging = false
 	_drag_from = -1
 	_drop_idx = -1
@@ -190,14 +199,36 @@ func _on_mouse_moved(local_pos: Vector2) -> void:
 		_drag_grab = _press_local.y - _visual_y[_press_idx]
 		_drag_y = _visual_y[_press_idx]
 		_drag_y_vel = 0.0
+		_last_step_usec = Time.get_ticks_usec()
+		set_process(true)
 	if _dragging:
 		_drop_idx = _drop_idx_at_y(local_pos.y)
-		queue_redraw()
+		var now := Time.get_ticks_usec()
+		var delta := clampf(float(now - _last_step_usec) / 1_000_000.0, 0.0, 0.05)
+		_last_step_usec = now
+		_step_visuals(delta)
 		return
 	var idx := _tab_at_y(local_pos.y)
 	if idx != _hover_idx:
 		_hover_idx = idx
 		queue_redraw()
+
+
+func _remap_visual(from_idx: int, to_idx: int) -> void:
+	if from_idx == to_idx or _visual_y.is_empty():
+		return
+	var ys: Array = []
+	var vs: Array = []
+	for i in _visual_y.size():
+		ys.append(_visual_y[i])
+		vs.append(_velocity[i])
+	var moved_y: float = ys.pop_at(from_idx)
+	var moved_v: float = vs.pop_at(from_idx)
+	ys.insert(to_idx, moved_y)
+	vs.insert(to_idx, moved_v)
+	for i in ys.size():
+		_visual_y[i] = ys[i]
+		_velocity[i] = vs[i]
 
 
 func _input(event: InputEvent) -> void:
@@ -216,6 +247,10 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
+	_step_visuals(delta)
+
+
+func _step_visuals(delta: float) -> void:
 	var count := _tab_count()
 	if _visual_y.size() != count:
 		refresh()
@@ -224,17 +259,17 @@ func _process(delta: float) -> void:
 		set_process(false)
 		return
 	if _dragging:
+		_drop_idx = _drop_idx_at_y(get_local_mouse_position().y)
 		var mouse_y := get_local_mouse_position().y - _drag_grab
 		mouse_y = clampf(mouse_y, 0.0, maxf(0.0, float(count - 1) * _tab_height()))
-		_drop_idx = _drop_idx_at_y(get_local_mouse_position().y)
-		var drag_state := _damp(_drag_y, mouse_y, _drag_y_vel, delta)
-		_drag_y = drag_state.x
-		_drag_y_vel = drag_state.y
+		_drag_y = mouse_y
+		_visual_y[_drag_from] = mouse_y
+		_velocity[_drag_from] = 0.0
 	var moving := _dragging
 	for i in count:
-		var target := (
-				_drag_y if _dragging and i == _drag_from else _slot_y(i, _drag_from, _drop_idx)
-		)
+		if _dragging and i == _drag_from:
+			continue
+		var target := _slot_y(i, _drag_from, _drop_idx)
 		var state := _damp(_visual_y[i], target, _velocity[i], delta)
 		_visual_y[i] = state.x
 		_velocity[i] = state.y
@@ -263,7 +298,13 @@ func _draw() -> void:
 	if count <= 0 or _visual_y.size() != count:
 		return
 	var font := _font()
+	var draw_order: Array[int] = []
 	for i in count:
+		if not (_dragging and i == _drag_from):
+			draw_order.append(i)
+	if _dragging and _drag_from >= 0:
+		draw_order.append(_drag_from)
+	for i in draw_order:
 		var y := _visual_y[i]
 		var rect := Rect2(0.0, y, size.x, _tab_height())
 		_style(i).draw(get_canvas_item(), rect)

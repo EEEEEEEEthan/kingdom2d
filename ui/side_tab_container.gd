@@ -89,7 +89,6 @@ func rearrange_tab(from_idx: int, to_idx: int) -> void:
 	current_tab = get_tab_controls().find(current_page)
 	if page == current_page:
 		active_tab_rearranged.emit(current_tab)
-	_tab_strip.refresh()
 	queue_sort()
 
 
@@ -176,6 +175,8 @@ func _on_child_order_changed() -> void:
 	_apply_page_visibility()
 	update_minimum_size()
 	queue_sort()
+	if _tab_strip.is_dragging():
+		return
 	_tab_strip.refresh()
 
 
