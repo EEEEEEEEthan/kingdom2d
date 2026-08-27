@@ -7,6 +7,8 @@ static func create(type_id: CharacterAiBehaviorTypeId.TypeId) -> CharacterAiBeha
 			return CharacterAiIdleWanderBehavior.new()
 		CharacterAiBehaviorTypeId.TypeId.HARVEST_WORK:
 			return CharacterAiHarvestWorkBehavior.new()
+		CharacterAiBehaviorTypeId.TypeId.MORNING_MARKET:
+			return CharacterAiMorningMarketBehavior.new()
 		_:
 			return CharacterAiBehavior.new()
 
