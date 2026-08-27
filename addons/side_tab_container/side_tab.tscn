@@ -11,6 +11,36 @@ region = Rect2(50, 1, 12, 13)
 atlas = ExtResource("2_theme")
 region = Rect2(50, 17, 12, 13)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_unselected"]
+atlas = ExtResource("2_theme")
+region = Rect2(65, 33, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_normal"]
+texture = SubResource("AtlasTexture_unselected")
+texture_margin_left = 4.0
+texture_margin_top = 6.0
+texture_margin_right = 4.0
+expand_margin_left = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_hover"]
+texture = SubResource("AtlasTexture_unselected")
+texture_margin_left = 4.0
+texture_margin_top = 6.0
+texture_margin_right = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_selected"]
+atlas = ExtResource("2_theme")
+region = Rect2(49, 33, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBox_pressed"]
+texture = SubResource("AtlasTexture_selected")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+expand_margin_left = 1.0
+expand_margin_right = 1.0
+expand_margin_bottom = 1.0
+
 [sub_resource type="GDScript" id="GDScript_close"]
 script/source = "extends TextureButton
 
@@ -22,10 +52,15 @@ func _on_pressed() -> void:
 custom_minimum_size = Vector2(18, 16)
 offset_right = 36.0
 offset_bottom = 16.0
+theme_override_styles/normal = SubResource("StyleBox_normal")
+theme_override_styles/hover = SubResource("StyleBox_hover")
+theme_override_styles/pressed = SubResource("StyleBox_pressed")
+theme_override_styles/hover_pressed = SubResource("StyleBox_pressed")
+theme_override_styles/focus = SubResource("StyleBox_normal")
+theme_override_styles/disabled = SubResource("StyleBox_normal")
 theme_override_font_sizes/font_size = 10
 focus_mode = 0
 mouse_filter = 0
-theme_type_variation = &"SideTab"
 toggle_mode = true
 action_mode = 0
 text = ""
