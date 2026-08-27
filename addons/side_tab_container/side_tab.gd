@@ -29,3 +29,7 @@ func _notification(what: int) -> void:
 		%CloseButton.visible = not _dragging
 	elif what == NOTIFICATION_MOUSE_EXIT:
 		%CloseButton.visible = false
+
+
+func _on_toggled(toggled_on: bool) -> void:
+	z_index = 1 if toggled_on else 0
