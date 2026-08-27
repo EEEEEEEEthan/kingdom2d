@@ -53,7 +53,7 @@ func _add_page(title: String, content: Control) -> Control:
 
 
 func _focus_page(page: Control) -> void:
-	var pages := %SideTabContainer.get_tab_controls()
+	var pages: Array[Control] = %SideTabContainer.get_tab_controls()
 	var idx := pages.find(page)
 	if idx >= 0:
 		%SideTabContainer.current_tab = idx
