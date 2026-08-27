@@ -85,9 +85,13 @@ func open(character: Character) -> void:
 	if not is_instance_valid(panel):
 		panel = %InspectorPanelPlaceHolder.create_instance() as InspectorPanel
 		_panels[character] = panel
-		panel.tree_exiting.connect(func() -> void: _panels.erase(character); _sync_browser_current_outline())
 		character.tree_exiting.connect(_on_character_exiting.bind(character, panel), CONNECT_ONE_SHOT)
+	panel.character = character
 	%Browser.add_page(\"角色 %s\" % character.id, panel)
+	if is_instance_valid(_browser_outlined) and _browser_outlined != character:
+		_browser_outlined.browser_current = false
+	_browser_outlined = character
+	character.browser_current = true
 	await panel.inspect_character(character)
 	_sync_browser_current_outline()
 
@@ -95,6 +99,8 @@ func open(character: Character) -> void:
 func _sync_browser_current_outline() -> void:
 	var current := _character_of_current_page()
 	if _browser_outlined == current:
+		if is_instance_valid(current):
+			current.browser_current = true
 		return
 	if is_instance_valid(_browser_outlined):
 		_browser_outlined.browser_current = false
@@ -108,15 +114,16 @@ func _character_of_current_page() -> Character:
 	var page := tabs.get_current_tab_control()
 	if page == null:
 		return null
-	for character in _panels:
-		var panel: InspectorPanel = _panels[character]
-		if not is_instance_valid(panel):
-			continue
-		var node: Node = panel
-		while node:
-			if node == page:
-				return character
-			node = node.get_parent()
+	return _inspector_character_in(page)
+
+
+func _inspector_character_in(node: Node) -> Character:
+	if node is InspectorPanel:
+		return (node as InspectorPanel).character
+	for child in node.get_children():
+		var found := _inspector_character_in(child)
+		if found:
+			return found
 	return null
 
 
