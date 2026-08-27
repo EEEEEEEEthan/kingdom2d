@@ -4,7 +4,6 @@ class_name SideTab
 
 signal close_pressed
 
-var _selected := false
 var _dragging := false
 
 
@@ -17,8 +16,7 @@ func set_tab_title(title: String) -> void:
 
 
 func set_selected(selected: bool) -> void:
-	_selected = selected
-	theme_type_variation = &"SideTabSelected" if selected else &"SideTab"
+	button_pressed = selected
 
 
 func set_dragging(dragging: bool) -> void:

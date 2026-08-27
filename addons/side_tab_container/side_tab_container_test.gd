@@ -32,11 +32,28 @@ func _init() -> void:
 			break
 	ok = _check(ok, short_tab != null, "tab is button")
 	ok = _check(ok, short_tab.size.x < strip.size.x, "tab only as wide as itself")
+	ok = _check(ok, short_tab.toggle_mode, "toggle mode")
+	ok = _check(ok, short_tab.button_pressed, "current tab toggled")
+	var group: ButtonGroup = short_tab.button_group
+	ok = _check(ok, group != null, "has button group")
+	var grouped := 0
+	for child in strip.get_children():
+		if child is Button:
+			ok = _check(ok, child.button_group == group, "shared button group")
+			grouped += 1
+	ok = _check(ok, grouped == 3, "all tabs grouped")
 	var close_button: BaseButton = short_tab.get_node("CloseButton")
 	ok = _check(ok, close_button is TextureButton, "close is button")
 	ok = _check(ok, close_button.action_mode == BaseButton.ACTION_MODE_BUTTON_RELEASE, "close on release")
 	tabs.current_tab = 2
 	ok = _check(ok, tabs.get_current_tab_control().name == "丙", "select tab")
+	var toggled_count := 0
+	for child in strip.get_children():
+		if child is Button:
+			if child.button_pressed:
+				toggled_count += 1
+				ok = _check(ok, child.text == "丙", "toggled tab matches current")
+	ok = _check(ok, toggled_count == 1, "only current toggled")
 	tabs.set_tab_title(2, "丙改")
 	ok = _check(ok, tabs.get_tab_title(2) == "丙改", "set title")
 	tabs.rearrange_tab(0, 2)
