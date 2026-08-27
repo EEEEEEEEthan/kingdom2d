@@ -1,0 +1,338 @@
+[gd_scene format=3 uid="uid://csidetabcont01"]
+
+[ext_resource type="Script" path="res://ui/side_tab_container.gd" id="1_side_tab"]
+
+[sub_resource type="GDScript" id="GDScript_tab_strip"]
+script/source = "extends Control
+
+const TAB_WIDTH := 18.0
+const TAB_GAP := 1.0
+const DRAG_THRESHOLD := 3.0
+const LERP_SPEED := 22.0
+
+var current_tab: int = 0:
+	set(value):
+		if _tabs.is_empty():
+			current_tab = 0
+			_apply_pages()
+			return
+		var next_tab := clampi(value, 0, _tabs.size() - 1)
+		var changed := current_tab != next_tab
+		current_tab = next_tab
+		_apply_pages()
+		if changed:
+			owner.current_tab_changed.emit(current_tab)
+
+var _tabs: Array[TabChrome] = []
+var _closed_pages: Array[Control] = []
+var _titles: Dictionary = {}
+var _press_tab: TabChrome
+var _press_local := Vector2.ZERO
+var _dragging: TabChrome
+var _drag_offset_y := 0.0
+
+
+func _ready() -> void:
+	custom_minimum_size = Vector2(TAB_WIDTH, 0)
+	mouse_filter = MOUSE_FILTER_STOP
+	clip_contents = true
+	owner.child_entered_tree.connect(_on_owner_child_entered)
+	owner.child_exiting_tree.connect(_on_owner_child_exiting)
+	owner.resized.connect(_layout)
+	_sync_tabs()
+	_layout()
+
+
+func set_tab_title(page: Control, title_text: String) -> void:
+	_titles[page] = title_text
+	for tab in _tabs:
+		if tab.page == page:
+			tab.set_title(title_text)
+			return
+
+
+func restore_closed_tabs() -> void:
+	_closed_pages.clear()
+	_sync_tabs()
+	if not _tabs.is_empty() and current_tab >= _tabs.size():
+		current_tab = 0
+	_apply_pages()
+	_layout()
+
+
+func _on_owner_child_entered(node: Node) -> void:
+	if node.get_parent() != owner:
+		return
+	if node == self:
+		return
+	_sync_tabs()
+	_layout()
+
+
+func _on_owner_child_exiting(node: Node) -> void:
+	if node.get_parent() != owner:
+		return
+	if node == self:
+		return
+	_closed_pages.erase(node)
+	_titles.erase(node)
+	_sync_tabs()
+	_layout()
+
+
+func _collect_pages() -> Array[Control]:
+	var pages: Array[Control] = []
+	for child in owner.get_children():
+		if child == self:
+			continue
+		if child is InstancePlaceholder:
+			continue
+		if not child is Control:
+			continue
+		var page := child as Control
+		if page in _closed_pages:
+			continue
+		pages.append(page)
+	return pages
+
+
+func _sync_tabs() -> void:
+	var pages := _collect_pages()
+	var by_page: Dictionary = {}
+	for tab in _tabs:
+		by_page[tab.page] = tab
+	var next_tabs: Array[TabChrome] = []
+	for page in pages:
+		var tab: TabChrome = by_page.get(page)
+		if tab == null:
+			tab = TabChrome.new()
+			tab.strip = self
+			tab.page = page
+			tab.size = Vector2(TAB_WIDTH, _tab_height())
+			add_child(tab)
+			tab.set_title(_titles.get(page, page.name))
+		else:
+			by_page.erase(page)
+		next_tabs.append(tab)
+	for leftover: TabChrome in by_page.values():
+		if _press_tab == leftover:
+			_press_tab = null
+		if _dragging == leftover:
+			_dragging = null
+		leftover.queue_free()
+	_tabs = next_tabs
+	if _tabs.is_empty():
+		current_tab = 0
+	else:
+		current_tab = clampi(current_tab, 0, _tabs.size() - 1)
+	_apply_pages()
+
+
+func _tab_height() -> float:
+	return 40.0
+
+
+func _slot_y(tab_index: int) -> float:
+	return tab_index * (_tab_height() + TAB_GAP)
+
+
+func _layout() -> void:
+	size = Vector2(TAB_WIDTH, owner.size.y)
+	position = Vector2(owner.size.x - TAB_WIDTH, 0.0)
+	_apply_pages()
+	for i in _tabs.size():
+		var tab := _tabs[i]
+		tab.size = Vector2(TAB_WIDTH, _tab_height())
+		if tab != _dragging:
+			tab.position = Vector2(0.0, _slot_y(i))
+
+
+func _apply_pages() -> void:
+	for i in _tabs.size():
+		var tab := _tabs[i]
+		tab.selected = i == current_tab
+		tab.queue_redraw()
+		tab.page.visible = i == current_tab
+		tab.page.anchor_left = 0.0
+		tab.page.anchor_top = 0.0
+		tab.page.anchor_right = 1.0
+		tab.page.anchor_bottom = 1.0
+		tab.page.offset_left = 0.0
+		tab.page.offset_top = 0.0
+		tab.page.offset_right = -TAB_WIDTH
+		tab.page.offset_bottom = 0.0
+	move_to_front()
+
+
+func _process(delta: float) -> void:
+	if _dragging:
+		_dragging.position.y = get_local_mouse_position().y - _drag_offset_y
+		_reorder_from_drag()
+	var weight := 1.0 - exp(-delta * LERP_SPEED)
+	for i in _tabs.size():
+		var tab := _tabs[i]
+		var target := Vector2(0.0, _slot_y(i))
+		if tab == _dragging:
+			continue
+		tab.position = tab.position.lerp(target, weight)
+
+
+func _reorder_from_drag() -> void:
+	var old_index := _tabs.find(_dragging)
+	var center_y := _dragging.position.y + _dragging.size.y * 0.5
+	var new_index := clampi(
+			int(round((center_y - _tab_height() * 0.5) / (_tab_height() + TAB_GAP))),
+			0,
+			_tabs.size() - 1
+	)
+	if new_index == old_index:
+		return
+	_tabs.remove_at(old_index)
+	_tabs.insert(new_index, _dragging)
+	var insert_at := 0
+	for tab in _tabs:
+		owner.move_child(tab.page, insert_at)
+		insert_at += 1
+	move_to_front()
+	current_tab = new_index
+
+
+func _close_rect() -> Rect2:
+	return Rect2(2.0, 1.0, 14.0, 12.0)
+
+
+func _on_tab_gui_input(tab: TabChrome, event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mouse_button.pressed:
+			if tab.hovered and _close_rect().has_point(mouse_button.position):
+				_close_tab(tab)
+				accept_event()
+				return
+			_press_tab = tab
+			_press_local = mouse_button.position
+			_dragging = null
+			current_tab = _tabs.find(tab)
+			accept_event()
+		else:
+			_release_press(tab)
+			accept_event()
+	elif event is InputEventMouseMotion:
+		if _press_tab != tab:
+			return
+		var motion := event as InputEventMouseMotion
+		if _dragging == null and motion.position.distance_to(_press_local) > DRAG_THRESHOLD:
+			_dragging = tab
+			_drag_offset_y = _press_local.y
+			tab.z_index = 1
+			tab.queue_redraw()
+		if _dragging:
+			accept_event()
+
+
+func _input(event: InputEvent) -> void:
+	if _press_tab == null:
+		return
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index == MOUSE_BUTTON_LEFT and not mouse_button.pressed:
+			_release_press(_press_tab)
+
+
+func _release_press(_tab: TabChrome) -> void:
+	if _dragging:
+		_dragging.z_index = 0
+		_dragging = null
+	_press_tab = null
+
+
+func _close_tab(tab: TabChrome) -> void:
+	var page := tab.page
+	if page not in _closed_pages:
+		_closed_pages.append(page)
+	page.visible = false
+	_sync_tabs()
+	_layout()
+	owner.tab_closed.emit(page)
+	if _tabs.is_empty():
+		owner.all_tabs_closed.emit()
+
+
+class TabChrome extends Control:
+	var strip: Node
+	var page: Control
+	var title_label: Label
+	var hovered := false
+	var selected := false
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_STOP
+		title_label = Label.new()
+		title_label.mouse_filter = MOUSE_FILTER_IGNORE
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		title_label.set_anchors_preset(PRESET_FULL_RECT)
+		title_label.offset_top = 10.0
+		add_child(title_label)
+
+	func set_title(title_text: String) -> void:
+		if title_label == null:
+			return
+		var chars: PackedStringArray = []
+		for i in title_text.length():
+			chars.append(title_text[i])
+		title_label.text = \"\\n\".join(chars)
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_MOUSE_ENTER:
+			hovered = true
+			queue_redraw()
+		elif what == NOTIFICATION_MOUSE_EXIT:
+			hovered = false
+			queue_redraw()
+
+	func _gui_input(event: InputEvent) -> void:
+		strip._on_tab_gui_input(self, event)
+
+	func _draw() -> void:
+		var style_name := \"pressed\" if selected else (\"hover\" if hovered else \"normal\")
+		var box: StyleBox = get_theme_stylebox(style_name, \"Button\")
+		box.draw(get_canvas_item(), Rect2(Vector2.ZERO, size))
+		if hovered and strip._dragging == null:
+			var font := get_theme_default_font()
+			font.draw_string(
+					get_canvas_item(),
+					Vector2(4.0, 11.0),
+					\"×\",
+					HORIZONTAL_ALIGNMENT_LEFT,
+					-1,
+					10,
+					Color(0.15, 0.08, 0.05, 1.0)
+			)
+"
+
+[node name="SideTabContainer" type="Control"]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_side_tab")
+
+[node name="TabStrip" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -18.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 0
+script = SubResource("GDScript_tab_strip")

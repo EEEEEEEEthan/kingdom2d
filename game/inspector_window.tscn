@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://game/inspector_window.gd" id="1_inspector_window"]
 [ext_resource type="Texture2D" uid="uid://d1uypro677rg0" path="res://theme.png" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://csidetabcont01" path="res://ui/side_tab_container.tscn" id="3_side_tab"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
 atlas = ExtResource("2_theme")
@@ -31,7 +32,8 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("AtlasTexture_bg")
 
-[node name="Panels" type="VBoxContainer" parent="."]
+[node name="Panels" parent="." instance=ExtResource("3_side_tab")]
+unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -41,7 +43,6 @@ offset_right = 0.0
 offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 0
 
 [node name="InventoryPanelPlaceHolder" parent="Panels" instance_placeholder="res://game/characters/inventory_panel.tscn"]
 unique_name_in_owner = true
@@ -50,3 +51,4 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [connection signal="close_requested" from="." to="." method="hide"]
+[connection signal="all_tabs_closed" from="Panels" to="." method="hide"]

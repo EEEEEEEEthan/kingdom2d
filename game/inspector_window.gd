@@ -17,6 +17,9 @@ func inspect_character(character: Character) -> void:
 		ai_status_panel.unique_name_in_owner = true
 	%InventoryPanel.inventory = character.inventory
 	%AiStatusPanel.character = character
+	%Panels.set_tab_title(%InventoryPanel, "物品")
+	%Panels.set_tab_title(%AiStatusPanel, "状态")
+	%Panels.restore_closed_tabs()
 	var mouse_position := DisplayServer.mouse_get_position()
 	var window_position := mouse_position + Vector2i(24, 24)
 	var screen := DisplayServer.get_screen_from_rect(Rect2(mouse_position, Vector2.ONE))
