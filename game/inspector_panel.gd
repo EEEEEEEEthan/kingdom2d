@@ -1,7 +1,10 @@
 extends Control
 class_name InspectorPanel
 
+var character: Character
+
 func inspect_character(character: Character) -> void:
+	self.character = character
 	if not is_node_ready():
 		await ready
 	if not has_node("%InventoryPanel"):

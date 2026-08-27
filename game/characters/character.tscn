@@ -146,10 +146,10 @@ var _press_started := false
 var _press_position := Vector2.ZERO
 
 func _mouse_enter() -> void:
-	owner.outline = Color.WHITE
+	owner.hovered = true
 
 func _mouse_exit() -> void:
-	owner.outline = Color.TRANSPARENT
+	owner.hovered = false
 	_press_started = false
 
 func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:

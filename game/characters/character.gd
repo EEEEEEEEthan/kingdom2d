@@ -26,6 +26,20 @@ var ai_behavior_token: int:
 	get:
 		return %AiBrain.behavior_token
 
+var hovered := false:
+	set(value):
+		if hovered == value:
+			return
+		hovered = value
+		_refresh_outline()
+
+var browser_current := false:
+	set(value):
+		if browser_current == value:
+			return
+		browser_current = value
+		_refresh_outline()
+
 @export var outline: Color = Color.TRANSPARENT:
 	set(value):
 		if outline == value:
@@ -34,6 +48,9 @@ var ai_behavior_token: int:
 		if not is_node_ready():
 			await ready
 		%Sprite2D.outline = outline
+
+func _refresh_outline() -> void:
+	outline = Color.WHITE if hovered or browser_current else Color.TRANSPARENT
 
 func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool:
 	var offset := target_world_x - position.x

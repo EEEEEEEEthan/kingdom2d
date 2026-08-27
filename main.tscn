@@ -71,6 +71,14 @@ func open() -> void:
 script/source = "extends Node
 
 var _panels: Dictionary[Character, InspectorPanel] = {}
+var _browser_outlined: Character
+
+
+func _ready() -> void:
+	var tabs: SideTabContainer = %Browser.get_node(\"SideTabContainer\")
+	tabs.tab_changed.connect(_sync_browser_current_outline.unbind(1))
+	tabs.child_exiting_tree.connect(_sync_browser_current_outline.unbind(1))
+	%Browser.visibility_changed.connect(_sync_browser_current_outline)
 
 
 func open(character: Character) -> void:
@@ -78,14 +86,49 @@ func open(character: Character) -> void:
 	if not is_instance_valid(panel):
 		panel = %InspectorPanelPlaceHolder.create_instance() as InspectorPanel
 		_panels[character] = panel
-		panel.tree_exiting.connect(func() -> void: _panels.erase(character))
+		panel.tree_exiting.connect(func() -> void: _panels.erase(character); _sync_browser_current_outline())
 		character.tree_exiting.connect(_on_character_exiting.bind(character, panel), CONNECT_ONE_SHOT)
 	%Browser.add_page(\"角色 %s\" % character.id, panel)
 	await panel.inspect_character(character)
+	_sync_browser_current_outline()
+
+
+func _sync_browser_current_outline() -> void:
+	var current := _character_of_current_page()
+	if _browser_outlined == current:
+		return
+	if is_instance_valid(_browser_outlined):
+		_browser_outlined.browser_current = false
+	_browser_outlined = current
+	if is_instance_valid(_browser_outlined):
+		_browser_outlined.browser_current = true
+
+
+func _character_of_current_page() -> Character:
+	if not %Browser.visible:
+		return null
+	var tabs: SideTabContainer = %Browser.get_node(\"SideTabContainer\")
+	var page := tabs.get_current_tab_control()
+	if page == null:
+		return null
+	for character in _panels:
+		var panel: InspectorPanel = _panels[character]
+		if not is_instance_valid(panel):
+			continue
+		var node: Node = panel
+		while node:
+			if node == page:
+				return character
+			node = node.get_parent()
+	return null
 
 
 func _on_character_exiting(character: Character, panel: InspectorPanel) -> void:
 	_panels.erase(character)
+	if character == _browser_outlined:
+		_browser_outlined = null
+		if is_instance_valid(character):
+			character.browser_current = false
 	if not is_instance_valid(panel):
 		return
 	var slot := panel.get_parent()
