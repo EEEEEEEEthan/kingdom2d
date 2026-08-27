@@ -78,10 +78,9 @@ func open(character: Character) -> void:
 	if not is_instance_valid(panel):
 		panel = %InspectorPanelPlaceHolder.create_instance() as InspectorPanel
 		_panels[character] = panel
-		panel.tree_exiting.connect(func() -> void: _panels.erase(character))
 		character.tree_exiting.connect(_on_character_exiting.bind(character, panel), CONNECT_ONE_SHOT)
-	%Browser.add_page(\"角色 %s\" % character.id, panel)
 	await panel.inspect_character(character)
+	%Browser.add_page(\"角色 %s\" % character.id, panel)
 
 
 func _on_character_exiting(character: Character, panel: InspectorPanel) -> void:

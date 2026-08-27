@@ -12,6 +12,8 @@ func _ready() -> void:
 
 func add_page(title: String, content: Control) -> Control:
 	var existing := _page_of(content)
+	if existing == null:
+		existing = _page_inspecting(_inspect_target(content))
 	if existing:
 		_focus_page(existing)
 		return existing
@@ -25,6 +27,32 @@ func add_page(title: String, content: Control) -> Control:
 	%SideTabContainer.current_tab = %SideTabContainer.get_tab_count() - 1
 	_ensure_visible()
 	return page
+
+
+func _inspect_target(content: Control) -> Object:
+	if content == null:
+		return null
+	if content is InspectorPanel:
+		var target: Object = (content as InspectorPanel).inspected
+		if is_instance_valid(target):
+			return target
+	return null
+
+
+func _content_of(page: Control) -> Control:
+	var slot := page.get_node(\"VBoxContainer/Content\")
+	if slot.get_child_count() == 0:
+		return null
+	return slot.get_child(0) as Control
+
+
+func _page_inspecting(target: Object) -> Control:
+	if target == null:
+		return null
+	for page in %SideTabContainer.get_tab_controls():
+		if _inspect_target(_content_of(page)) == target:
+			return page
+	return null
 
 
 func _page_of(content: Control) -> Control:
