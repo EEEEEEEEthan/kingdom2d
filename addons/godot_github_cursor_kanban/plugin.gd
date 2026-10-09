@@ -16,6 +16,7 @@ const _PROPERTY_DOMAIN := "godot.properties"
 var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
+var _refresh_button: Button
 
 
 func _enter_tree() -> void:
@@ -28,11 +29,11 @@ func _enter_tree() -> void:
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
-	var refresh_button := Button.new()
-	refresh_button.text = tr("刷新")
-	refresh_button.pressed.connect(_refresh_cards)
-	content.add_child(refresh_button)
-	content.move_child(refresh_button, 1)
+	_refresh_button = Button.new()
+	_refresh_button.text = tr("刷新")
+	_refresh_button.pressed.connect(_refresh_cards)
+	content.add_child(_refresh_button)
+	content.move_child(_refresh_button, 1)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
@@ -46,8 +47,11 @@ func _enter_tree() -> void:
 
 
 func _refresh_cards() -> void:
-	if _card_list == null:
+	if _card_list == null or _refresh_button == null or _refresh_button.disabled:
 		return
+	_refresh_button.disabled = true
+	# 请求会卡住主线程，先让禁用态画出来。
+	await get_tree().process_frame
 	for child in _card_list.get_children():
 		_card_list.remove_child(child)
 		child.free()
@@ -65,6 +69,8 @@ func _refresh_cards() -> void:
 		card.apply(card_data)
 		card.checkout_requested.connect(_on_checkout_requested)
 		_card_list.add_child(card)
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = false
 
 
 func _on_checkout_requested(branch: String) -> void:
