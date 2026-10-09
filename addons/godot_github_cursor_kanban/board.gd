@@ -8,12 +8,11 @@ static func project_path() -> String:
 	return ProjectSettings.globalize_path("res://").trim_suffix("/")
 
 
-static func origin_slug(path: String) -> String:
-	var output: Array = []
-	var code := OS.execute("git", ["-C", path, "remote", "get-url", "origin"], output, true)
-	if code != 0 or output.is_empty():
+static func origin_slug(path: String, job: Dictionary = {}) -> String:
+	var result := _run("git", PackedStringArray(["-C", path, "remote", "get-url", "origin"]), _ensure_job(job))
+	if not bool(result["ok"]):
 		return ""
-	return _slug_from_remote(str(output[0]).strip_edges())
+	return _slug_from_remote(str(result["text"]).strip_edges())
 
 
 static func _slug_from_remote(remote: String) -> String:
@@ -24,20 +23,20 @@ static func _slug_from_remote(remote: String) -> String:
 	return text
 
 
-static func list_open_prs(repo_slug: String) -> Array[Dictionary]:
+static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
 	var prs: Array[Dictionary] = []
 	if repo_slug.is_empty():
 		return prs
-	var output: Array = []
-	var code := OS.execute("gh", [
+	var result := _run("gh", PackedStringArray([
 		"pr", "list", "--repo", repo_slug, "--state", "open",
 		"--json", "number,title,headRefName,url",
-	], output, true)
-	if code != 0:
+	]), _ensure_job(job))
+	if not bool(result["ok"]):
 		push_warning("看板：拉取未合并 PR 失败。")
 		return prs
-	var parsed: Variant = JSON.parse_string("".join(output))
+	var parsed: Variant = JSON.parse_string(str(result["text"]))
 	if typeof(parsed) != TYPE_ARRAY:
+		push_warning("看板：拉取未合并 PR 失败。")
 		return prs
 	for item in parsed:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -80,56 +79,27 @@ static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]
 
 
 static func _session_from_agent(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
-	var agent_id := str(item.get("id", ""))
 	var run_id := str(item.get("latestRunId", ""))
-	var branch := ""
-	var pr_url := ""
-	var matches_repo := repo_slug.is_empty()
+	var run := {}
 	if not run_id.is_empty():
-		var run := _api_get(token, "/v1/agents/%s/runs/%s" % [agent_id, run_id])
-		var git: Variant = run.get("git", {})
-		if typeof(git) == TYPE_DICTIONARY:
-			var branches: Variant = git.get("branches", [])
-			if typeof(branches) == TYPE_ARRAY:
-				for entry in branches:
-					if typeof(entry) != TYPE_DICTIONARY:
-						continue
-					var repo_url := str(entry.get("repoUrl", ""))
-					if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
-						continue
-					matches_repo = true
-					branch = str(entry.get("branch", ""))
-					pr_url = str(entry.get("prUrl", ""))
-					break
-	if not matches_repo:
-		return {}
-	var status := str(item.get("status", ""))
-	return {
-		"id": agent_id,
-		"name": str(item.get("name", "")),
-		"url": str(item.get("url", "")),
-		"working": status == "ACTIVE",
-		# 列表接口即使带了 includeArchived=false，仍按状态再挡一层。
-		"archived": status == "ARCHIVED",
-		"branch": branch,
-		"pr_url": pr_url,
-	}
+		run = _api_get(token, "/v1/agents/%s/runs/%s" % [str(item.get("id", "")), run_id])
+	return session_from_agent(item, run, repo_slug)
 
 
-static func list_merged_prs(repo_slug: String) -> Array[Dictionary]:
+static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
 	var prs: Array[Dictionary] = []
 	if repo_slug.is_empty():
 		return prs
-	var output: Array = []
-	var code := OS.execute("gh", [
+	var result := _run("gh", PackedStringArray([
 		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
 		"--json", "number,title,headRefName,url",
-	], output, true)
-	if code != 0:
+	]), _ensure_job(job))
+	if not bool(result["ok"]):
 		push_warning("看板：拉取已合并 PR 失败。")
 		return prs
-	var parsed: Variant = JSON.parse_string("".join(output))
+	var parsed: Variant = JSON.parse_string(str(result["text"]))
 	if typeof(parsed) != TYPE_ARRAY:
+		push_warning("看板：拉取已合并 PR 失败。")
 		return prs
 	for item in parsed:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -277,11 +247,62 @@ static func _make_card(session: Dictionary, pr: Dictionary) -> Dictionary:
 
 
 static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
-	var messages: Array[Dictionary] = []
 	if token.is_empty() or agent_id.is_empty():
 		push_warning("看板：没有可刷新的对话。")
-		return messages
+		return []
 	var payload := _api_get(token, "/v0/agents/%s/conversation" % agent_id.uri_encode())
+	return messages_from_payload(payload)
+
+
+static func checkout_branch(path: String, branch: String) -> bool:
+	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
+		push_warning("看板：没有可检出的分支。")
+		return false
+	var job := _ensure_job({})
+	if not bool(_run("git", PackedStringArray(["-C", path, "fetch", "origin", branch]), job)["ok"]):
+		push_warning("看板：拉取远程分支失败。")
+		return false
+	# 丢掉已跟踪文件上的本地修改，再切到远程最新提交。
+	if not bool(_run("git", PackedStringArray(["-C", path, "reset", "--hard"]), job)["ok"]):
+		push_warning("看板：丢弃本地修改失败。")
+		return false
+	# -fd 只删未跟踪且未被 ignore 的文件和目录。
+	if not bool(_run("git", PackedStringArray(["-C", path, "clean", "-fd"]), job)["ok"]):
+		push_warning("看板：清理未跟踪文件失败。")
+		return false
+	if not bool(_run("git", PackedStringArray(["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch]), job)["ok"]):
+		push_warning("看板：检出分支失败。")
+		return false
+	return true
+
+
+static func api_url(path: String) -> String:
+	return _API + path
+
+
+static func api_headers(token: String) -> PackedStringArray:
+	return PackedStringArray([
+		"Authorization: Basic " + Marshalls.utf8_to_base64(token + ":"),
+		"Accept: application/json",
+	])
+
+
+static func agents_path(cursor: String) -> String:
+	var path := "/v1/agents?limit=100&includeArchived=false"
+	if not cursor.is_empty():
+		path += "&cursor=" + cursor.uri_encode()
+	return path
+
+
+static func parse_object(body: PackedByteArray) -> Dictionary:
+	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {}
+	return parsed
+
+
+static func messages_from_payload(payload: Dictionary) -> Array[Dictionary]:
+	var messages: Array[Dictionary] = []
 	var items: Variant = payload.get("messages", [])
 	if typeof(items) != TYPE_ARRAY:
 		return messages
@@ -296,27 +317,91 @@ static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
 	return messages
 
 
-static func checkout_branch(path: String, branch: String) -> bool:
-	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
-		push_warning("看板：没有可检出的分支。")
-		return false
-	if OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true) != 0:
-		push_warning("看板：拉取远程分支失败。")
-		return false
-	# 丢掉已跟踪文件上的本地修改，再切到远程最新提交。
-	if OS.execute("git", ["-C", path, "reset", "--hard"], [], true) != 0:
-		push_warning("看板：丢弃本地修改失败。")
-		return false
-	# -fd 只删未跟踪且未被 ignore 的文件和目录。
-	if OS.execute("git", ["-C", path, "clean", "-fd"], [], true) != 0:
-		push_warning("看板：清理未跟踪文件失败。")
-		return false
-	var output: Array = []
-	var code := OS.execute("git", ["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch], output, true)
-	if code != 0:
-		push_warning("看板：检出分支失败。")
-		return false
-	return true
+static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: String) -> Dictionary:
+	var agent_id := str(item.get("id", ""))
+	var branch := ""
+	var pr_url := ""
+	var matches_repo := repo_slug.is_empty()
+	var git: Variant = run.get("git", {})
+	if typeof(git) == TYPE_DICTIONARY:
+		var branches: Variant = git.get("branches", [])
+		if typeof(branches) == TYPE_ARRAY:
+			for entry in branches:
+				if typeof(entry) != TYPE_DICTIONARY:
+					continue
+				var repo_url := str(entry.get("repoUrl", ""))
+				if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
+					continue
+				matches_repo = true
+				branch = str(entry.get("branch", ""))
+				pr_url = str(entry.get("prUrl", ""))
+				break
+	if not matches_repo:
+		return {}
+	var status := str(item.get("status", ""))
+	return {
+		"id": agent_id,
+		"name": str(item.get("name", "")),
+		"url": str(item.get("url", "")),
+		"working": status == "ACTIVE",
+		# 列表接口即使带了 includeArchived=false，仍按状态再挡一层。
+		"archived": status == "ARCHIVED",
+		"branch": branch,
+		"pr_url": pr_url,
+	}
+
+
+static func _ensure_job(job: Dictionary) -> Dictionary:
+	if job.get("mutex") is Mutex:
+		return job
+	return {"cancel": false, "pids": [], "mutex": Mutex.new()}
+
+
+static func _cancelled(job: Dictionary) -> bool:
+	var mutex: Mutex = job.get("mutex")
+	if mutex == null:
+		return bool(job.get("cancel", false))
+	mutex.lock()
+	var cancel := bool(job.get("cancel", false))
+	mutex.unlock()
+	return cancel
+
+
+static func _run(program: String, args: PackedStringArray, job: Dictionary) -> Dictionary:
+	if _cancelled(job):
+		return {"ok": false, "text": ""}
+	var launched := OS.execute_with_pipe(program, args, false)
+	if typeof(launched) != TYPE_DICTIONARY or not launched.has("pid"):
+		return {"ok": false, "text": ""}
+	var pid := int(launched["pid"])
+	var mutex: Mutex = job["mutex"]
+	mutex.lock()
+	(job["pids"] as Array).append(pid)
+	mutex.unlock()
+	var state := {"killed": false}
+	var killer := Thread.new()
+	killer.start(_watch_pid.bind(pid, job, 20000, state))
+	var stdout: FileAccess = launched.get("stdio")
+	var text := stdout.get_as_text() if stdout else ""
+	if killer.is_started():
+		killer.wait_to_finish()
+	if OS.is_process_running(pid):
+		OS.kill(pid)
+	mutex.lock()
+	(job["pids"] as Array).erase(pid)
+	mutex.unlock()
+	var ok := not bool(state["killed"]) and not _cancelled(job)
+	return {"ok": ok, "text": text}
+
+
+static func _watch_pid(pid: int, job: Dictionary, timeout_ms: int, state: Dictionary) -> void:
+	var start := Time.get_ticks_msec()
+	while OS.is_process_running(pid):
+		if _cancelled(job) or Time.get_ticks_msec() - start >= timeout_ms:
+			state["killed"] = true
+			OS.kill(pid)
+			return
+		OS.delay_msec(50)
 
 
 static func _api_get(token: String, path: String) -> Dictionary:
@@ -324,6 +409,7 @@ static func _api_get(token: String, path: String) -> Dictionary:
 	var err := client.connect_to_host("api.cursor.com", 443, TLSOptions.client())
 	if err != OK:
 		push_warning("看板：连不上 Cursor API。")
+		client.close()
 		return {}
 	var ticks := 0
 	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
@@ -332,9 +418,11 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		ticks += 1
 		if ticks > 500:
 			push_warning("看板：连接 Cursor API 超时。")
+			client.close()
 			return {}
 	if client.get_status() != HTTPClient.STATUS_CONNECTED:
 		push_warning("看板：连接 Cursor API 失败。")
+		client.close()
 		return {}
 	var headers := PackedStringArray([
 		"Authorization: Basic " + Marshalls.utf8_to_base64(token + ":"),
@@ -343,6 +431,7 @@ static func _api_get(token: String, path: String) -> Dictionary:
 	err = client.request(HTTPClient.METHOD_GET, path, headers)
 	if err != OK:
 		push_warning("看板：请求 Cursor API 失败。")
+		client.close()
 		return {}
 	ticks = 0
 	while client.get_status() == HTTPClient.STATUS_REQUESTING:
@@ -350,9 +439,11 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		OS.delay_msec(10)
 		ticks += 1
 		if ticks > 500:
+			client.close()
 			return {}
 	if client.get_response_code() != 200:
 		push_warning("看板：Cursor API 返回 %d。" % client.get_response_code())
+		client.close()
 		return {}
 	var body := PackedByteArray()
 	ticks = 0
@@ -366,7 +457,9 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		ticks += 1
 		if ticks > 500:
 			push_warning("看板：读取 Cursor API 超时。")
+			client.close()
 			return {}
+	client.close()
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
