@@ -22,6 +22,20 @@ var _card_list: VBoxContainer
 var _refresh_button: Button
 var _refreshing := false
 var _chat_windows := {}
+var _thread: Thread
+var _job: Dictionary = {}
+var _http: HTTPRequest
+var _fetch_gen := 0
+var _fetch_token := ""
+var _fetch_slug := ""
+var _fetch_prs: Array[Dictionary] = []
+var _fetch_merged: Array[Dictionary] = []
+var _fetch_sessions: Array[Dictionary] = []
+var _fetch_runs: Array[Dictionary] = []
+var _fetch_cursor := ""
+var _fetch_page := 0
+var _http_kind := ""
+var _run_item: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -51,6 +65,9 @@ func _enter_tree() -> void:
 	toolbar.add_child(main_button)
 	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
+	_http = HTTPRequest.new()
+	_http.timeout = 8.0
+	_http.request_completed.connect(_on_http)
 
 	_dock = EditorDock.new()
 	_dock.title = tr("看板")
@@ -58,6 +75,7 @@ func _enter_tree() -> void:
 	_dock.layout_key = "godot_github_cursor_kanban"
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
+	_dock.add_child(_http)
 	add_dock(_dock)
 	# 启动时只排队，不在主线程上拉会话和 PR。
 	call_deferred("_refresh_cards")
@@ -69,27 +87,168 @@ func _refresh_cards() -> void:
 	_refreshing = true
 	if is_instance_valid(_refresh_button):
 		_refresh_button.disabled = true
+		_refresh_button.tooltip_text = tr("刷新中")
 	var settings := EditorInterface.get_editor_settings()
 	var token := ""
 	if settings.has_setting(_SETTING_TOKEN):
 		token = str(settings.get_setting(_SETTING_TOKEN))
-	WorkerThreadPool.add_task(_load_cards_off_thread.bind(token, _Board.project_path()))
+	_fetch_gen += 1
+	_cancel_work()
+	_join_thread()
+	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
+	_thread = Thread.new()
+	var err := _thread.start(_load_prs_off_thread.bind(token, _Board.project_path(), _job, _fetch_gen))
+	if err != OK:
+		_refreshing = false
+		_set_refresh_idle()
+		push_warning("看板：刷新线程启动失败。")
 
 
-func _load_cards_off_thread(token: String, root: String) -> void:
-	var slug := _Board.origin_slug(root)
-	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
-	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
-	var merged: Array[Dictionary] = _Board.list_merged_prs(slug)
-	var cards := _Board.merge_cards(sessions, prs, merged)
+func _load_prs_off_thread(token: String, root: String, job: Dictionary, gen: int) -> void:
+	var slug := _Board.origin_slug(root, job)
+	var prs: Array = _Board.list_open_prs(slug, job)
+	var merged: Array = _Board.list_merged_prs(slug, job)
 	if is_instance_valid(self):
-		call_deferred("_apply_cards", cards)
+		call_deferred("_continue_refresh", token, slug, prs, merged, gen)
+
+
+func _continue_refresh(token: String, slug: String, prs: Array, merged: Array, gen: int) -> void:
+	if gen != _fetch_gen or not is_inside_tree():
+		return
+	_join_thread()
+	_fetch_token = token
+	_fetch_slug = slug
+	_fetch_prs = _dict_array(prs)
+	_fetch_merged = _dict_array(merged)
+	_fetch_sessions = []
+	_fetch_runs = []
+	_fetch_cursor = ""
+	_fetch_page = 0
+	if token.is_empty():
+		push_warning("看板：未配置 Cursor token，只列出 PR。")
+		_finish_cards()
+		return
+	_request_agents_page()
+
+
+func _request_agents_page() -> void:
+	_http_kind = "agents"
+	var err := _http.request(_Board.api_url(_Board.agents_path(_fetch_cursor)), _Board.api_headers(_fetch_token))
+	if err != OK:
+		push_warning("看板：请求 Cursor API 失败。")
+		_finish_cards()
+
+
+func _request_next_run() -> void:
+	if _fetch_runs.is_empty():
+		_finish_cards()
+		return
+	var entry: Dictionary = _fetch_runs.pop_front()
+	_run_item = entry.get("item", {})
+	_http_kind = "run"
+	var path := "/v1/agents/%s/runs/%s" % [str(_run_item.get("id", "")), str(entry.get("run_id", ""))]
+	var err := _http.request(_Board.api_url(path), _Board.api_headers(_fetch_token))
+	if err != OK:
+		push_warning("看板：请求 Cursor API 失败。")
+		_finish_cards()
+
+
+func _on_http(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if not _refreshing or not is_inside_tree():
+		return
+	if result == HTTPRequest.RESULT_CANCELED:
+		return
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		if result != HTTPRequest.RESULT_SUCCESS:
+			push_warning("看板：连接 Cursor API 失败。")
+		else:
+			push_warning("看板：Cursor API 返回 %d。" % response_code)
+		if _http_kind == "run":
+			_request_next_run()
+		else:
+			_finish_cards()
+		return
+	var payload := _Board.parse_object(body)
+	if _http_kind == "agents":
+		_consume_agents_page(payload)
+	else:
+		_consume_run(payload)
+
+
+func _consume_agents_page(payload: Dictionary) -> void:
+	var items: Variant = payload.get("items", [])
+	if typeof(items) != TYPE_ARRAY:
+		_finish_cards()
+		return
+	for item in items:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		var run_id := str(item.get("latestRunId", ""))
+		if run_id.is_empty():
+			var session := _Board.session_from_agent(item, {}, _fetch_slug)
+			if not session.is_empty():
+				_fetch_sessions.append(session)
+		else:
+			_fetch_runs.append({"item": item, "run_id": run_id})
+	_fetch_page += 1
+	_fetch_cursor = str(payload.get("nextCursor", ""))
+	if _fetch_cursor.is_empty() or _fetch_page >= 5:
+		_request_next_run()
+	else:
+		_request_agents_page()
+
+
+func _consume_run(payload: Dictionary) -> void:
+	var session := _Board.session_from_agent(_run_item, payload, _fetch_slug)
+	if not session.is_empty():
+		_fetch_sessions.append(session)
+	_request_next_run()
+
+
+func _finish_cards() -> void:
+	if not is_inside_tree():
+		_refreshing = false
+		return
+	_apply_cards(_Board.merge_cards(_fetch_sessions, _fetch_prs, _fetch_merged))
+
+
+func _dict_array(items: Array) -> Array[Dictionary]:
+	var typed: Array[Dictionary] = []
+	for item in items:
+		if typeof(item) == TYPE_DICTIONARY:
+			typed.append(item)
+	return typed
+
+
+func _cancel_work() -> void:
+	if not _job.is_empty() and _job.get("mutex") is Mutex:
+		var mutex: Mutex = _job["mutex"]
+		mutex.lock()
+		_job["cancel"] = true
+		var pids: Array = (_job["pids"] as Array).duplicate()
+		mutex.unlock()
+		for pid in pids:
+			if OS.is_process_running(int(pid)):
+				OS.kill(int(pid))
+	if _http:
+		_http.cancel_request()
+
+
+func _join_thread() -> void:
+	if _thread != null and _thread.is_started():
+		_thread.wait_to_finish()
+	_thread = null
+
+
+func _set_refresh_idle() -> void:
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = false
+		_refresh_button.tooltip_text = tr("刷新")
 
 
 func _apply_cards(cards: Array) -> void:
 	_refreshing = false
-	if is_instance_valid(_refresh_button):
-		_refresh_button.disabled = false
+	_set_refresh_idle()
 	if _card_list == null or not is_inside_tree():
 		return
 	for child in _card_list.get_children():
@@ -175,6 +334,10 @@ func _restart_after_branch_switch() -> void:
 
 
 func _exit_tree() -> void:
+	_fetch_gen += 1
+	_refreshing = false
+	_cancel_work()
+	_join_thread()
 	_uninstall_translations()
 	for session_id in _chat_windows.keys():
 		var window: Window = _chat_windows[session_id] as Window
