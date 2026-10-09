@@ -98,6 +98,45 @@ func _init() -> void:
 		_fail("当前时间格式应为 YYYY-MM-DD HH:MM:SS")
 	if _Client.cached_archived("bc-cache") != 0:
 		_fail("未归档的详情应记下未归档")
+	if _Client.cached_pr_url("bc-never") != null:
+		_fail("没见过 PR 时不应有缓存")
+	if _Client.cached_pr_url("bc-cache") != "":
+		_fail("问过但没有 PR 应缓存成空")
+	_Client.remember_repos("bc-pr", {
+		"status": "IDLE",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+		"target": {"branchName": "cursor/map", "prUrl": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+	})
+	if _Client.cached_pr_url("bc-pr") != "https://github.com/EEEEEEEEthan/kingdom2d/pull/9":
+		_fail("会话应缓存唯一的 PR")
+	if _Client.cached_branch("bc-pr") != "cursor/map":
+		_fail("会话应缓存分支")
+	_Client.remember_repos("bc-pr", {
+		"status": "IDLE",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+		"target": {},
+	})
+	if _Client.cached_pr_url("bc-pr") != "https://github.com/EEEEEEEEthan/kingdom2d/pull/9":
+		_fail("之后的空详情不能清掉已缓存的 PR")
+	_Client.remember_repos("bc-none", {
+		"status": "IDLE",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+	})
+	if _Client.cached_pr_url("bc-none") != "":
+		_fail("问过且没有 PR 应缓存成空")
+	if _Client.cached_merged("bc-pr") != -1:
+		_fail("还没查合并时不应命中")
+	_Client.remember_merged("bc-pr", true)
+	if _Client.cached_merged("bc-pr") != 1:
+		_fail("已合并应记下")
+	_Client.remember_repos("bc-pr", {
+		"status": "IDLE",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+		"target": {"branchName": "cursor/map", "prUrl": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+	})
+	if _Client.cached_merged("bc-pr") != 1:
+		_fail("刷新仓库缓存不能丢掉合并状态")
+	_assert_branch_merged()
 	_Client.remember_repos("bc-arch", {
 		"status": "ARCHIVED",
 		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
@@ -125,10 +164,58 @@ func _init() -> void:
 		_fail("应读出新建会话的 id 和名字")
 	if not _Client.agent_from_create({"ok": true}).is_empty():
 		_fail("没有 id 不算新建成功")
+	_Client._list_cache = {}
+	_Client._list_cache_loaded = true
+	_Client.save_session_list("Owner/Repo", [{
+		"id": "bc-list",
+		"name": "缓存里的",
+		"url": "https://cursor.com/agents/bc-list",
+		"working": true,
+	}])
+	var cached_list: Array = _Client.load_session_list("owner/repo")
+	if cached_list.size() != 1 or str(cached_list[0].get("name", "")) != "缓存里的":
+		_fail("会话列表应按仓库缓存")
+	_Client._list_cache_loaded = false
+	var from_disk: Array = _Client.load_session_list("owner/repo")
+	if from_disk.size() != 1 or str(from_disk[0].get("id", "")) != "bc-list":
+		_fail("会话列表缓存应写到磁盘")
+	_Client.save_session_list("owner/repo", [])
+	if not _Client.load_session_list("owner/repo").is_empty():
+		_fail("清空后的会话列表缓存应为空")
 	print("repo_match_test ok")
 	quit(0)
 
 
+func _assert_branch_merged() -> void:
+	var root := "user://kanban_merge_test".replace("user://", OS.get_user_data_dir() + "/")
+	OS.execute("rm", ["-rf", root], [], true)
+	OS.execute("git", ["init", "-b", "master", root], [], true)
+	OS.execute("git", ["-C", root, "config", "user.email", "t@t"], [], true)
+	OS.execute("git", ["-C", root, "config", "user.name", "t"], [], true)
+	var file := FileAccess.open(root + "/a.txt", FileAccess.WRITE)
+	file.store_string("a")
+	file.close()
+	OS.execute("git", ["-C", root, "add", "a.txt"], [], true)
+	OS.execute("git", ["-C", root, "commit", "-m", "a"], [], true)
+	OS.execute("git", ["-C", root, "checkout", "-b", "feature"], [], true)
+	file = FileAccess.open(root + "/a.txt", FileAccess.WRITE)
+	file.store_string("b")
+	file.close()
+	OS.execute("git", ["-C", root, "add", "a.txt"], [], true)
+	OS.execute("git", ["-C", root, "commit", "-m", "b"], [], true)
+	OS.execute("git", ["-C", root, "update-ref", "refs/remotes/origin/master", "master"], [], true)
+	OS.execute("git", ["-C", root, "update-ref", "refs/remotes/origin/feature", "feature"], [], true)
+	if _Client.branch_merged(root, "feature") != 0:
+		_fail("还没合进 master 的分支应留下")
+	OS.execute("git", ["-C", root, "checkout", "master"], [], true)
+	OS.execute("git", ["-C", root, "merge", "--ff-only", "feature"], [], true)
+	OS.execute("git", ["-C", root, "update-ref", "refs/remotes/origin/master", "master"], [], true)
+	if _Client.branch_merged(root, "feature") != 1:
+		_fail("已经合进 master 的分支应删掉")
+	if _Client.branch_merged(root, "master") != 0:
+		_fail("master 自己不算已合并的会话分支")
+
+
 func _fail(message: String) -> void:
 	push_error(message)
-	quit(1)
+	assert(false, message)

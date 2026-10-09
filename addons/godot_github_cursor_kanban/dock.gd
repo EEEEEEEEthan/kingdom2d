@@ -9,6 +9,7 @@ const _SETTING_RESTART := "kanban/restart_editor_after_branch_switch"
 const _SECTION := "kanban"
 
 var _refreshing := false
+var _list_pending := false
 var _next_cursor := ""
 var _repo_slug := ""
 var _page_token := 0
@@ -63,29 +64,26 @@ func _exit_tree() -> void:
 
 
 func _refresh_from_start() -> void:
-	_load_page("", false)
-
-
-func _load_more() -> void:
-	if _next_cursor.is_empty():
-		return
-	_load_page(_next_cursor, true)
-
-
-func _load_page(cursor: String, append: bool) -> void:
 	if _refreshing:
 		return
 	_refreshing = true
 	_page_token += 1
+	_verify_left = 0
+	_archive_checks = []
 	$HBoxContainer/Refresh.disabled = true
-	var more := _more_button()
-	if more:
-		more.disabled = true
 	var token := _token()
 	var page := _page_token
 	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	var slug := _origin_slug(root)
+	if not slug.is_empty():
+		_repo_slug = slug
+	_show_cached_sessions(slug)
+	_fetch_page("", false, page, slug, token)
+
+
+func _fetch_page(cursor: String, append: bool, page: int, slug: String, token: String) -> void:
+	_list_pending = true
 	WorkerThreadPool.add_task(func() -> void:
-		var slug := _origin_slug(root)
 		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug, cursor)
 		payload["repo_slug"] = slug
 		payload["append"] = append
@@ -101,55 +99,61 @@ func _load_page(cursor: String, append: bool) -> void:
 
 func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool, repo_slug: String) -> void:
 	if not is_inside_tree():
+		_list_pending = false
 		_refreshing = false
 		return
 	_next_cursor = next_cursor
 	_page_notice = notice
 	if not repo_slug.is_empty():
 		_repo_slug = repo_slug
+	_list_pending = false
 	var list := $ScrollContainer/VBoxContainer
 	if not append:
-		_clear_cards()
-	else:
-		var more := _more_button()
-		if more:
-			list.remove_child(more)
-			more.free()
+		_remove_notice()
 	var entries: Array = []
+	var seen := {}
 	for session in sessions:
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
 		if bool(session.get("archived", false)):
+			_remove_card(str(session.get("id", "")))
 			continue
 		entries.append(session)
+		seen[str(session.get("id", ""))] = true
 	_page_slots = []
 	_page_slots.resize(entries.size())
-	_archive_checks = []
-	_verify_left = 0
 	var token := _token()
 	var page := _page_token
 	for i in entries.size():
-		var session: Dictionary = entries[i]
+		var session: Dictionary = _with_cached_link(entries[i])
 		var agent_id := str(session.get("id", ""))
 		var cached := _Client.cached_repo_match(agent_id, _repo_slug)
-		if cached == 0:
+		if cached == 0 or _Client.cached_merged(agent_id) == 1:
 			_page_slots[i] = {}
-		elif cached == 1:
-			var archived := _Client.cached_archived(agent_id)
-			if archived == 1:
-				_page_slots[i] = {}
-			elif archived == 0:
-				_page_slots[i] = session
-			else:
-				_verify_left += 1
-				_verify_session(page, i, session, token, _repo_slug)
-			if archived != -1:
+			_remove_card(agent_id)
+			if cached == 1:
 				_archive_checks.append(session)
+		elif cached == 1:
+			_page_slots[i] = session
+			_upsert_card(session)
+			_archive_checks.append(session)
 		else:
 			_verify_left += 1
 			_verify_session(page, i, session, token, _repo_slug)
-	if _verify_left == 0:
-		_commit_page()
+	if not append:
+		for child in list.get_children():
+			var agent_id := str(child.get_meta("session_id", ""))
+			if agent_id.is_empty() or seen.has(agent_id):
+				continue
+			var cached_session: Variant = child.get_meta("session", {})
+			if typeof(cached_session) == TYPE_DICTIONARY:
+				_archive_checks.append(cached_session)
+	_flush_archive_checks()
+	_persist_sessions()
+	if not _next_cursor.is_empty():
+		_fetch_page(_next_cursor, true, _page_token, _repo_slug, token)
+		return
+	_maybe_finish()
 
 
 func _verify_session(page: int, index: int, session: Dictionary, token: String, repo_slug: String) -> void:
@@ -170,10 +174,16 @@ func _verify_session(page: int, index: int, session: Dictionary, token: String, 
 func _on_verified(page: int, index: int, session: Dictionary, patch: Dictionary) -> void:
 	if page != _page_token or not is_inside_tree():
 		return
-	_page_slots[index] = _session_after_patch(session, patch)
+	var merged := _session_after_patch(session, patch)
+	if index >= 0 and index < _page_slots.size():
+		_page_slots[index] = merged
+	if merged.is_empty():
+		_remove_card(str(session.get("id", "")))
+	else:
+		_upsert_card(merged)
 	_verify_left -= 1
-	if _verify_left <= 0:
-		_commit_page()
+	_persist_sessions()
+	_maybe_finish()
 
 
 func _session_after_patch(session: Dictionary, patch: Dictionary) -> Dictionary:
@@ -185,28 +195,31 @@ func _session_after_patch(session: Dictionary, patch: Dictionary) -> Dictionary:
 	merged["name"] = str(patch.get("name", session.get("name", "")))
 	merged["url"] = str(patch.get("url", session.get("url", "")))
 	merged["working"] = bool(patch.get("working", false))
-	merged["branch"] = str(patch.get("branch", session.get("branch", "")))
-	merged["pr_url"] = str(patch.get("pr_url", session.get("pr_url", "")))
+	var branch := str(patch.get("branch", ""))
+	if not branch.is_empty():
+		merged["branch"] = branch
+	var pr_url := str(patch.get("pr_url", ""))
+	if not pr_url.is_empty():
+		merged["pr_url"] = pr_url
 	return merged
 
 
-func _commit_page() -> void:
-	var added := 0
-	for slot in _page_slots:
-		if typeof(slot) != TYPE_DICTIONARY or slot.is_empty():
-			continue
-		_add_card(slot)
-		added += 1
-	_page_slots = []
+func _flush_archive_checks() -> void:
 	var checks := _archive_checks
 	_archive_checks = []
-	_finish_page(added)
 	var token := _token()
 	var page := _page_token
 	for session in checks:
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
 		_refresh_archive(page, session, token, _repo_slug)
+
+
+func _maybe_finish() -> void:
+	if _list_pending or _verify_left > 0 or not _next_cursor.is_empty():
+		return
+	_page_slots = []
+	_finish_page(_card_count())
 
 
 func _refresh_archive(page: int, session: Dictionary, token: String, repo_slug: String) -> void:
@@ -219,6 +232,7 @@ func _refresh_archive(page: int, session: Dictionary, token: String, repo_slug: 
 		)
 		_Client.remember_repos(agent_id, detail)
 		var patch := _Client.detail_patch(detail, repo_slug)
+		patch = _drop_if_branch_merged(agent_id, session, patch)
 		if is_instance_valid(self):
 			call_deferred("_on_archive", page, session, patch)
 	)
@@ -232,15 +246,79 @@ func _on_archive(page: int, session: Dictionary, patch: Dictionary) -> void:
 		return
 	if patch.is_empty():
 		_remove_card(agent_id)
+		_persist_sessions()
 		_show_empty_if_needed()
 		return
 	var merged := _session_after_patch(session, patch)
+	_remove_notice()
+	_upsert_card(merged)
+	_persist_sessions()
+
+
+func _show_cached_sessions(repo_slug: String) -> void:
+	_clear_cards()
+	for session in _Client.load_session_list(repo_slug):
+		if typeof(session) != TYPE_DICTIONARY:
+			continue
+		session = _with_cached_link(session)
+		if _Client.cached_merged(str(session.get("id", ""))) == 1:
+			continue
+		_add_card(session)
+
+
+func _with_cached_link(session: Dictionary) -> Dictionary:
+	var copy := session.duplicate()
+	var agent_id := str(copy.get("id", ""))
+	var pr: Variant = _Client.cached_pr_url(agent_id)
+	if pr != null and str(copy.get("pr_url", "")).is_empty():
+		copy["pr_url"] = str(pr)
+	var branch := _Client.cached_branch(agent_id)
+	if not branch.is_empty() and str(copy.get("branch", "")).is_empty():
+		copy["branch"] = branch
+	return copy
+
+
+func _drop_if_branch_merged(agent_id: String, session: Dictionary, patch: Dictionary) -> Dictionary:
+	if bool(patch.get("_error", false)) or patch.is_empty():
+		return patch
+	var branch := str(patch.get("branch", session.get("branch", "")))
+	if branch.is_empty():
+		branch = _Client.cached_branch(agent_id)
+	if branch.is_empty() or branch == "master":
+		_Client.remember_merged(agent_id, false)
+		return patch
+	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	if OS.execute("git", ["-C", root, "fetch", "origin", branch, "master"], [], true) != 0:
+		return patch
+	var merged := _Client.branch_merged(root, branch)
+	if merged == 1:
+		_Client.remember_merged(agent_id, true)
+		return {}
+	if merged == 0:
+		_Client.remember_merged(agent_id, false)
+	return patch
+
+
+func _persist_sessions() -> void:
+	if _repo_slug.is_empty():
+		return
+	var sessions: Array = []
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		var session: Variant = child.get_meta("session", null)
+		if typeof(session) != TYPE_DICTIONARY:
+			continue
+		sessions.append(session)
+	_Client.save_session_list(_repo_slug, sessions)
+
+
+func _upsert_card(session: Dictionary) -> void:
+	var agent_id := str(session.get("id", ""))
 	var card := _find_card(agent_id)
 	if card:
-		card.apply(merged)
+		card.set_meta("session", session.duplicate())
+		card.apply(session)
 		return
-	_remove_notice()
-	_add_card(merged)
+	_add_card(session)
 
 
 func _add_card(session: Dictionary) -> void:
@@ -248,15 +326,11 @@ func _add_card(session: Dictionary) -> void:
 	var card := _CARD.instantiate()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.set_meta("session_id", str(session.get("id", "")))
+	card.set_meta("session", session.duplicate())
 	card.apply(session)
 	card.chat_requested.connect(_open_chat)
 	card.checkout_requested.connect(_checkout_branch_prompt)
-	var more := _more_button()
-	if more:
-		list.add_child(card)
-		list.move_child(card, more.get_index())
-	else:
-		list.add_child(card)
+	list.add_child(card)
 
 
 func _find_card(session_id: String) -> Node:
@@ -303,15 +377,16 @@ func _has_notice() -> bool:
 
 
 func _finish_page(added: int) -> void:
+	if not is_inside_tree():
+		_refreshing = false
+		return
 	_refreshing = false
 	$HBoxContainer/Refresh.disabled = false
-	if not is_inside_tree():
-		return
 	var list := $ScrollContainer/VBoxContainer
 	var text := ""
-	if added == 0 and not _page_notice.is_empty():
+	if _page_notice.contains("失败") or (added == 0 and not _page_notice.is_empty()):
 		text = _page_notice
-	elif added == 0 and _card_count() == 0 and _next_cursor.is_empty():
+	elif added == 0:
 		text = "当前仓库没有未归档的云端会话。"
 	if not text.is_empty():
 		var label := Label.new()
@@ -319,13 +394,6 @@ func _finish_page(added: int) -> void:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		list.add_child(label)
-	if not _next_cursor.is_empty():
-		var button := Button.new()
-		button.text = "More"
-		button.set_meta("kanban_more", true)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(_load_more)
-		list.add_child(button)
 
 
 func _card_count() -> int:
@@ -334,13 +402,6 @@ func _card_count() -> int:
 		if child.has_signal("detail_settled"):
 			count += 1
 	return count
-
-
-func _more_button() -> Button:
-	for child in $ScrollContainer/VBoxContainer.get_children():
-		if child is Button and bool(child.get_meta("kanban_more", false)):
-			return child
-	return null
 
 
 func _clear_cards() -> void:
