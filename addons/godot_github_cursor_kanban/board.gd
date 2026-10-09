@@ -517,7 +517,7 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 		return {"ok": false, "text": ""}
 	var launched := OS.execute_with_pipe(program, args, false)
 	if typeof(launched) != TYPE_DICTIONARY or not launched.has("pid"):
-		return {"ok": false, "text": ""}
+		return {"ok": false, "text": "", "err": "拉不起 %s" % program}
 	var pid := int(launched["pid"])
 	var mutex: Mutex = job["mutex"]
 	mutex.lock()
@@ -526,10 +526,8 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 	var state := {"killed": false}
 	var killer := Thread.new()
 	killer.start(_watch_pid.bind(pid, job, 20000, state))
-	var stdout: FileAccess = launched.get("stdio")
-	var stderr: FileAccess = launched.get("stderr")
-	var text := stdout.get_as_text() if stdout else ""
-	var err_text := stderr.get_as_text() if stderr else ""
+	var text := _read_pipe(launched.get("stdio"), pid)
+	var err_text := _read_pipe(launched.get("stderr"), pid)
 	if killer.is_started():
 		killer.wait_to_finish()
 	if OS.is_process_running(pid):
@@ -538,8 +536,25 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 	mutex.lock()
 	(job["pids"] as Array).erase(pid)
 	mutex.unlock()
-	var ok := code == 0 and not bool(state["killed"]) and not _cancelled(job)
+	var body := text.strip_edges()
+	var ok := not bool(state["killed"]) and not _cancelled(job) and (code == 0 or body.begins_with("["))
 	return {"ok": ok, "text": text, "err": err_text.strip_edges()}
+
+
+static func _read_pipe(file: Variant, pid: int) -> String:
+	if not file is FileAccess:
+		return ""
+	var pipe := file as FileAccess
+	var chunks := PackedByteArray()
+	while true:
+		var part := pipe.get_buffer(4096)
+		if not part.is_empty():
+			chunks.append_array(part)
+			continue
+		if pipe.eof_reached() or not OS.is_process_running(pid):
+			break
+		OS.delay_msec(10)
+	return chunks.get_string_from_utf8()
 
 
 static func _watch_pid(pid: int, job: Dictionary, timeout_ms: int, state: Dictionary) -> void:
