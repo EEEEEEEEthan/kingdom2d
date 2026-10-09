@@ -2,9 +2,12 @@
 extends RefCounted
 
 const _HOST := "api.cursor.com"
-
-
 const _PAGE_SIZE := 20
+const _REPO_CACHE_PATH := "user://kanban_agent_repos.json"
+
+static var _repo_cache: Dictionary = {}
+static var _repo_cache_loaded := false
+static var _repo_cache_lock := Mutex.new()
 
 
 static func list_unarchived_sessions(token: String, repo_slug: String, cursor: String = "") -> Dictionary:
@@ -169,12 +172,83 @@ static func _repos_include(repos: Variant, repo_slug: String) -> bool:
 
 
 static func _same_repo(url: String, repo_slug: String) -> bool:
+	return _slug_from_url(url) == repo_slug.strip_edges().trim_prefix("/").to_lower()
+
+
+static func _slug_from_url(url: String) -> String:
 	var text := url.strip_edges().trim_suffix(".git")
 	var tail := text
 	if text.contains("github.com"):
 		tail = text.split("github.com")[-1].trim_prefix(":").trim_prefix("/")
-	tail = tail.strip_edges().trim_prefix("/")
-	return tail.to_lower() == repo_slug.strip_edges().trim_prefix("/").to_lower()
+	return tail.strip_edges().trim_prefix("/").to_lower()
+
+
+## 返回 1 显示、0 隐藏、-1 还没缓存。仓库在创建后不变，命中就不再请求详情。
+static func cached_repo_match(agent_id: String, repo_slug: String) -> int:
+	if agent_id.is_empty():
+		return -1
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	var known := _repo_cache.has(agent_id)
+	var slugs: Variant = _repo_cache.get(agent_id, [])
+	_repo_cache_lock.unlock()
+	if not known or typeof(slugs) != TYPE_ARRAY:
+		return -1
+	var wanted := repo_slug.strip_edges().trim_prefix("/").to_lower()
+	for slug in slugs:
+		if str(slug) == wanted:
+			return 1
+	return 0
+
+
+static func remember_repos(agent_id: String, detail: Dictionary) -> void:
+	if agent_id.is_empty() or detail.is_empty() or not detail.has("repos"):
+		return
+	var repos: Variant = detail.get("repos")
+	if typeof(repos) != TYPE_ARRAY:
+		return
+	var slugs: Array = []
+	for repo in repos:
+		if typeof(repo) != TYPE_DICTIONARY:
+			continue
+		var slug := _slug_from_url(str(repo.get("url", "")))
+		if slug.is_empty() or slugs.has(slug):
+			continue
+		slugs.append(slug)
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	_repo_cache[agent_id] = slugs
+	var snapshot: Dictionary = _repo_cache.duplicate(true)
+	_repo_cache_lock.unlock()
+	_write_repo_cache(snapshot)
+
+
+static func _load_repo_cache() -> void:
+	_repo_cache_lock.lock()
+	var loaded := _repo_cache_loaded
+	_repo_cache_lock.unlock()
+	if loaded:
+		return
+	var parsed: Dictionary = {}
+	if FileAccess.file_exists(_REPO_CACHE_PATH):
+		var file := FileAccess.open(_REPO_CACHE_PATH, FileAccess.READ)
+		if file:
+			var raw: Variant = JSON.parse_string(file.get_as_text())
+			if typeof(raw) == TYPE_DICTIONARY:
+				parsed = raw
+	_repo_cache_lock.lock()
+	if not _repo_cache_loaded:
+		_repo_cache = parsed
+		_repo_cache_loaded = true
+	_repo_cache_lock.unlock()
+
+
+static func _write_repo_cache(snapshot: Dictionary) -> void:
+	var file := FileAccess.open(_REPO_CACHE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("看板：写仓库缓存失败。")
+		return
+	file.store_string(JSON.stringify(snapshot))
 
 
 static func _session_from_list_item(item: Dictionary) -> Dictionary:

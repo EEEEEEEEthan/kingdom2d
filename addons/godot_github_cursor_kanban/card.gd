@@ -30,12 +30,21 @@ func begin_detail(token: String, repo_slug: String) -> void:
 	if token.is_empty() or agent_id.is_empty():
 		detail_settled.emit(true)
 		return
+	var cached := _Client.cached_repo_match(agent_id, repo_slug)
+	if cached == 1:
+		detail_settled.emit(true)
+		return
+	if cached == 0:
+		detail_settled.emit(false)
+		queue_free()
+		return
 	WorkerThreadPool.add_task(func() -> void:
 		var detail := _Client.request(
 			token,
 			HTTPClient.METHOD_GET,
 			"/v1/agents/%s" % agent_id.uri_encode()
 		)
+		_Client.remember_repos(agent_id, detail)
 		var patch := _Client.detail_patch(detail, repo_slug)
 		if is_instance_valid(self):
 			call_deferred("_finish_detail", patch)

@@ -54,6 +54,20 @@ func _init() -> void:
 		_fail("已归档详情应丢掉")
 	if not bool(_Client.detail_patch({}, slug).get("_error", false)):
 		_fail("空详情应记为错误")
+	_Client._repo_cache = {}
+	_Client._repo_cache_loaded = true
+	if _Client.cached_repo_match("bc-cache", slug) != -1:
+		_fail("未查询过的会话不应命中缓存")
+	_Client.remember_repos("bc-cache", {
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+	})
+	if _Client.cached_repo_match("bc-cache", slug) != 1:
+		_fail("缓存命中当前仓库应显示")
+	if _Client.cached_repo_match("bc-cache", "other/repo") != 0:
+		_fail("缓存命中别的仓库应隐藏")
+	_Client.remember_repos("bc-empty", {})
+	if _Client.cached_repo_match("bc-empty", slug) != -1:
+		_fail("查询失败不能写入缓存")
 	print("repo_match_test ok")
 	quit(0)
 
