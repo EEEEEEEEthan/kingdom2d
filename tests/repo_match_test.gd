@@ -68,6 +68,13 @@ func _init() -> void:
 	_Client.remember_repos("bc-empty", {})
 	if _Client.cached_repo_match("bc-empty", slug) != -1:
 		_fail("查询失败不能写入缓存")
+	if _Client.format_message_time("2026-10-10T19:20:05") != "2026-10-10 19:20:05":
+		_fail("无时区时间应格式化为 2026-10-10 19:20:05")
+	if not _Client.format_message_time("").is_empty():
+		_fail("空时间应留空")
+	var now := _Client.format_now()
+	if now.length() != 19 or now[10] != " ":
+		_fail("当前时间格式应为 YYYY-MM-DD HH:MM:SS")
 	if _Client.cached_archived("bc-cache") != 0:
 		_fail("未归档的详情应记下未归档")
 	_Client.remember_repos("bc-arch", {

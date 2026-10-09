@@ -3,6 +3,8 @@ extends Window
 
 const _BUBBLE := preload("res://addons/godot_github_cursor_kanban/chat_bubble.tscn")
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
+const _USER_COLOR := Color(0.75, 0.95, 0.72)
+const _TIME_CACHE_PATH := "user://kanban_message_times.json"
 
 var session_id := ""
 var _token := ""
@@ -69,7 +71,42 @@ func _show_messages(messages: Array) -> void:
 	for message in messages:
 		var bubble := _BUBBLE.instantiate()
 		var from_user := str(message.get("type", "")).contains("user")
-		bubble.layout_direction = Control.LAYOUT_DIRECTION_RTL if from_user else Control.LAYOUT_DIRECTION_LTR
-		bubble.get_node("%Time").text = "你" if from_user else "助手"
-		bubble.get_node("%Content").text = str(message.get("text", ""))
+		var stamp := str(message.get("time", ""))
+		if stamp.is_empty():
+			stamp = _remembered_time(message, list.get_child_count())
+		var time_label := bubble.get_node("%Time") as Label
+		time_label.text = stamp
+		time_label.add_theme_color_override("font_color", _USER_COLOR if from_user else Color.WHITE)
+		var content := bubble.get_node("%Content") as RichTextLabel
+		content.text = str(message.get("text", ""))
+		if from_user:
+			content.add_theme_color_override("default_color", _USER_COLOR)
 		list.add_child(bubble)
+
+
+func _remembered_time(message: Dictionary, index: int) -> String:
+	var key := "%s|%d|%s|%s" % [
+		session_id,
+		index,
+		str(message.get("type", "")),
+		str(message.get("text", "")).md5_text(),
+	]
+	var cache := _read_time_cache()
+	if cache.has(key):
+		return str(cache[key])
+	var stamp := _Client.format_now()
+	cache[key] = stamp
+	var file := FileAccess.open(_TIME_CACHE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(cache))
+	return stamp
+
+
+func _read_time_cache() -> Dictionary:
+	if not FileAccess.file_exists(_TIME_CACHE_PATH):
+		return {}
+	var file := FileAccess.open(_TIME_CACHE_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
