@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://kvsdcnxpbdk6"]
 
-[ext_resource type="Script" path="res://addons/godot_github_cursor_kanban/card.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://coc7vau0pum0l" path="res://addons/godot_github_cursor_kanban/card.gd" id="1_card"]
 
 [node name="Card" type="PanelContainer" unique_id=2093432049]
-script = ExtResource("1_card")
 offset_right = 168.0
 offset_bottom = 18.0
+script = ExtResource("1_card")
 
 [node name="VBoxContainer" type="HBoxContainer" parent="." unique_id=1969001910]
 layout_mode = 2
@@ -13,12 +13,13 @@ layout_mode = 2
 [node name="CardName" type="Label" parent="VBoxContainer" unique_id=1827342251]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 2
 theme_type_variation = &"HeaderSmall"
 text = "card_name"
 
 [node name="SessionInfo" type="HBoxContainer" parent="VBoxContainer" unique_id=1046074058]
 layout_mode = 2
-size_flags_horizontal = 10
+size_flags_horizontal = 8
 
 [node name="SessionStatus" type="TextureRect" parent="VBoxContainer/SessionInfo" unique_id=460378995]
 unique_name_in_owner = true
@@ -30,4 +31,5 @@ text = "chat"
 
 [node name="Checkout" type="Button" parent="VBoxContainer" unique_id=967422996]
 layout_mode = 2
+size_flags_horizontal = 8
 text = "checkout"
