@@ -90,12 +90,26 @@ static func _is_archived(item: Dictionary) -> bool:
 
 static func _session_from_agent(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
 	var agent_id := str(item.get("id", ""))
-	var run_id := str(item.get("latestRunId", ""))
+	var detail := _api_get(token, "/v1/agents/%s" % agent_id.uri_encode())
+	if detail.is_empty():
+		detail = item
+	var run_id := str(detail.get("latestRunId", item.get("latestRunId", "")))
 	var branch := ""
 	var pr_url := ""
 	var matches_repo := repo_slug.is_empty()
+	var repos: Variant = detail.get("repos", [])
+	if typeof(repos) == TYPE_ARRAY:
+		for repo in repos:
+			if typeof(repo) != TYPE_DICTIONARY:
+				continue
+			var repo_url := str(repo.get("url", ""))
+			if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
+				continue
+			matches_repo = true
+			if pr_url.is_empty():
+				pr_url = str(repo.get("prUrl", ""))
 	if not run_id.is_empty():
-		var run := _api_get(token, "/v1/agents/%s/runs/%s" % [agent_id, run_id])
+		var run := _api_get(token, "/v1/agents/%s/runs/%s" % [agent_id.uri_encode(), run_id.uri_encode()])
 		var git: Variant = run.get("git", {})
 		if typeof(git) == TYPE_DICTIONARY:
 			var branches: Variant = git.get("branches", [])
@@ -108,17 +122,21 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 						continue
 					matches_repo = true
 					branch = str(entry.get("branch", ""))
-					pr_url = str(entry.get("prUrl", ""))
+					if not str(entry.get("prUrl", "")).is_empty():
+						pr_url = str(entry.get("prUrl", ""))
 					break
+	var archived := _is_archived(detail) or _is_archived(item)
 	if not matches_repo:
-		return {}
-	var status := str(item.get("status", ""))
+		var saw_other_repo := typeof(repos) == TYPE_ARRAY and not repos.is_empty()
+		if not archived or saw_other_repo:
+			return {}
+	var status := str(detail.get("status", item.get("status", "")))
 	return {
 		"id": agent_id,
-		"name": str(item.get("name", "")),
-		"url": str(item.get("url", "")),
+		"name": str(detail.get("name", item.get("name", ""))),
+		"url": str(detail.get("url", item.get("url", ""))),
 		"working": status == "ACTIVE",
-		"archived": _is_archived(item),
+		"archived": archived,
 		"branch": branch,
 		"pr_url": pr_url,
 	}
@@ -199,6 +217,9 @@ static func _pr_owned_by_archived(pr: Dictionary, sessions: Array[Dictionary]) -
 		if not url.is_empty() and pr_url == url:
 			return true
 		if not branch.is_empty() and str(session.get("branch", "")) == branch:
+			return true
+		var name := str(session.get("name", "")).strip_edges()
+		if not name.is_empty() and name == str(pr.get("title", "")).strip_edges():
 			return true
 	return false
 
