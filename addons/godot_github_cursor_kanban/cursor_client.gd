@@ -187,18 +187,44 @@ static func _slug_from_url(url: String) -> String:
 static func cached_repo_match(agent_id: String, repo_slug: String) -> int:
 	if agent_id.is_empty():
 		return -1
-	_load_repo_cache()
-	_repo_cache_lock.lock()
-	var known := _repo_cache.has(agent_id)
-	var slugs: Variant = _repo_cache.get(agent_id, [])
-	_repo_cache_lock.unlock()
-	if not known or typeof(slugs) != TYPE_ARRAY:
+	var slugs: Variant = _cached_slugs(agent_id)
+	if slugs == null:
 		return -1
 	var wanted := repo_slug.strip_edges().trim_prefix("/").to_lower()
 	for slug in slugs:
 		if str(slug) == wanted:
 			return 1
 	return 0
+
+
+## 返回 1 已归档、0 未归档、-1 还没缓存。归档状态会变，不能拿这个结果跳过刷新。
+static func cached_archived(agent_id: String) -> int:
+	if agent_id.is_empty():
+		return -1
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	var entry: Variant = _repo_cache.get(agent_id, null)
+	_repo_cache_lock.unlock()
+	if typeof(entry) != TYPE_DICTIONARY or not entry.has("archived"):
+		return -1
+	return 1 if bool(entry.get("archived", false)) else 0
+
+
+static func _cached_slugs(agent_id: String) -> Variant:
+	if agent_id.is_empty():
+		return null
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	var known := _repo_cache.has(agent_id)
+	var entry: Variant = _repo_cache.get(agent_id, null)
+	_repo_cache_lock.unlock()
+	if not known:
+		return null
+	if typeof(entry) == TYPE_ARRAY:
+		return entry
+	if typeof(entry) == TYPE_DICTIONARY and typeof(entry.get("repos", null)) == TYPE_ARRAY:
+		return entry.get("repos")
+	return null
 
 
 static func remember_repos(agent_id: String, detail: Dictionary) -> void:
@@ -217,10 +243,12 @@ static func remember_repos(agent_id: String, detail: Dictionary) -> void:
 		slugs.append(slug)
 	_load_repo_cache()
 	_repo_cache_lock.lock()
-	_repo_cache[agent_id] = slugs
-	var snapshot: Dictionary = _repo_cache.duplicate(true)
+	_repo_cache[agent_id] = {
+		"repos": slugs,
+		"archived": str(detail.get("status", "")) == "ARCHIVED",
+	}
+	_write_repo_cache(_repo_cache)
 	_repo_cache_lock.unlock()
-	_write_repo_cache(snapshot)
 
 
 static func _load_repo_cache() -> void:
