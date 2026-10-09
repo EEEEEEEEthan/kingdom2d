@@ -286,9 +286,11 @@ func _find_section_item(item: TreeItem, section: String) -> TreeItem:
 
 func _token() -> String:
 	var settings := EditorInterface.get_editor_settings()
-	if not settings.has_setting(_SETTING_TOKEN):
-		return ""
-	return str(settings.get_setting(_SETTING_TOKEN))
+	if settings.has_setting(_SETTING_TOKEN):
+		var saved := str(settings.get_setting(_SETTING_TOKEN)).strip_edges()
+		if not saved.is_empty():
+			return saved
+	return OS.get_environment("CURSOR_TOKEN").strip_edges()
 
 
 static func _origin_slug(path: String) -> String:
