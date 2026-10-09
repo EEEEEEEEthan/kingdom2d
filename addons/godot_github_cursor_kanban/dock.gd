@@ -183,6 +183,8 @@ func _session_after_patch(session: Dictionary, patch: Dictionary) -> Dictionary:
 	merged["name"] = str(patch.get("name", session.get("name", "")))
 	merged["url"] = str(patch.get("url", session.get("url", "")))
 	merged["working"] = bool(patch.get("working", false))
+	merged["branch"] = str(patch.get("branch", session.get("branch", "")))
+	merged["pr_url"] = str(patch.get("pr_url", session.get("pr_url", "")))
 	return merged
 
 
@@ -246,6 +248,7 @@ func _add_card(session: Dictionary) -> void:
 	card.set_meta("session_id", str(session.get("id", "")))
 	card.apply(session)
 	card.chat_requested.connect(_open_chat)
+	card.checkout_requested.connect(_checkout_branch_prompt)
 	var more := _more_button()
 	if more:
 		list.add_child(card)
@@ -361,21 +364,28 @@ func _open_chat(session_id: String, title: String) -> void:
 
 
 func _checkout_master() -> void:
+	_checkout_branch_prompt("master")
+
+
+func _checkout_branch_prompt(branch: String) -> void:
+	if branch.is_empty():
+		push_warning("看板：这个会话没有远程分支。")
+		return
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "切换分支"
-	dialog.dialog_text = "放弃所有修改并切换到 master？"
+	dialog.dialog_text = "放弃所有修改并切换到 %s？" % branch
 	dialog.ok_button_text = "是"
 	dialog.cancel_button_text = "否"
-	dialog.confirmed.connect(_do_checkout_master)
+	dialog.confirmed.connect(_do_checkout.bind(branch))
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	EditorInterface.get_base_control().add_child(dialog)
 	dialog.popup_centered()
 
 
-func _do_checkout_master() -> void:
+func _do_checkout(branch: String) -> void:
 	var path := ProjectSettings.globalize_path("res://").trim_suffix("/")
-	if not _checkout_branch(path, "master"):
+	if not _checkout_branch(path, branch):
 		return
 	var restart := true
 	var settings := EditorInterface.get_editor_settings()

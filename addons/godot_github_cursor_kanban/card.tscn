@@ -29,6 +29,7 @@ text = "chat"
 
 [node name="Checkout" type="Button" parent="VBoxContainer" unique_id=1365200917]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 text = "Checkout"

@@ -192,10 +192,13 @@ static func detail_patch(detail: Dictionary, repo_slug: String) -> Dictionary:
 		return {}
 	if not _repos_include(detail.get("repos", []), repo_slug):
 		return {}
+	var git := _git_fields(detail)
 	return {
 		"name": str(detail.get("name", "")),
 		"url": str(detail.get("url", "")),
 		"working": str(detail.get("status", "")) == "ACTIVE",
+		"branch": git["branch"],
+		"pr_url": git["pr_url"],
 	}
 
 
@@ -325,15 +328,25 @@ static func _session_from_list_item(item: Dictionary) -> Dictionary:
 	var status := str(item.get("status", ""))
 	if status == "ARCHIVED":
 		return {}
+	var git := _git_fields(item)
 	return {
 		"id": agent_id,
 		"name": str(item.get("name", "")),
 		"url": str(item.get("url", "")),
 		"working": status == "ACTIVE",
 		"archived": false,
-		"branch": "",
-		"pr_url": "",
+		"branch": git["branch"],
+		"pr_url": git["pr_url"],
 	}
+
+
+static func _git_fields(item: Dictionary) -> Dictionary:
+	var target: Variant = item.get("target", {})
+	if typeof(target) != TYPE_DICTIONARY:
+		target = {}
+	var branch := str(target.get("branchName", target.get("branch_name", item.get("branch", ""))))
+	var pr_url := str(target.get("prUrl", target.get("pr_url", item.get("pr_url", item.get("prUrl", "")))))
+	return {"branch": branch.strip_edges(), "pr_url": pr_url.strip_edges()}
 
 
 static func _wait_status(client: HTTPClient, pending: Array) -> bool:

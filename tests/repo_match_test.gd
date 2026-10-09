@@ -45,6 +45,27 @@ func _init() -> void:
 	}, slug)
 	if kept.get("name", "") != "做地图" or kept.get("working", false) != true:
 		_fail("当前仓库的详情应留下")
+	if kept.get("pr_url", "x") != "" or kept.get("branch", "x") != "":
+		_fail("没有 PR 时分支和链接应为空")
+	var with_pr: Dictionary = _Client.detail_patch({
+		"name": "做地图",
+		"status": "FINISHED",
+		"repos": repos,
+		"target": {
+			"branchName": "cursor/map-0007",
+			"prUrl": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9",
+		},
+	}, slug)
+	if with_pr.get("branch", "") != "cursor/map-0007" or with_pr.get("pr_url", "") != "https://github.com/EEEEEEEEthan/kingdom2d/pull/9":
+		_fail("详情里的 PR 和远程分支应留下")
+	var listed: Dictionary = _Client._session_from_list_item({
+		"id": "bc-pr",
+		"name": "有 PR",
+		"status": "FINISHED",
+		"target": {"branchName": "cursor/map-0007", "prUrl": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+	})
+	if listed.get("pr_url", "") == "" or listed.get("branch", "") != "cursor/map-0007":
+		_fail("列表里的 PR 和远程分支应留下")
 	if not _Client.detail_patch({
 		"status": "IDLE",
 		"repos": [{"url": "https://github.com/other/repo"}],
