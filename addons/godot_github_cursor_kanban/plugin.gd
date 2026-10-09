@@ -62,7 +62,8 @@ func _load_cards_off_thread(token: String, root: String) -> void:
 	var slug := _Board.origin_slug(root)
 	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
 	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
-	var cards := _Board.merge_cards(sessions, prs)
+	var merged: Array[Dictionary] = _Board.list_merged_prs(slug)
+	var cards := _Board.merge_cards(sessions, prs, merged)
 	if is_instance_valid(self):
 		call_deferred("_apply_cards", cards)
 
