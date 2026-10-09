@@ -68,6 +68,53 @@ func _init() -> void:
 	_Client.remember_repos("bc-empty", {})
 	if _Client.cached_repo_match("bc-empty", slug) != -1:
 		_fail("查询失败不能写入缓存")
+	if _Client.cached_branch("bc-cache") != "":
+		_fail("还没有分支时检出目标应为空")
+	_Client.remember_branch("bc-cache", "cursor/kanban")
+	if _Client.cached_branch("bc-cache") != "cursor/kanban":
+		_fail("记下的分支要能读出来")
+	_Client._repo_cache["bc-old"] = [slug.to_lower()]
+	if _Client.cached_repo_match("bc-old", slug) != 1:
+		_fail("旧的仓库缓存还能对上")
+	if _Client.cached_branch("bc-old") != "":
+		_fail("旧缓存没有分支")
+	var run := {
+		"git": {
+			"branches": [
+				{"repoUrl": "github.com/other/repo", "branch": "cursor/other", "prUrl": "https://github.com/other/repo/pull/1"},
+				{"repoUrl": "github.com/EEEEEEEEthan/kingdom2d", "branch": "cursor/kanban", "prUrl": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+				{"repoUrl": "github.com/EEEEEEEEthan/kingdom2d", "branch": "cursor/wip"},
+			],
+		},
+	}
+	var branches: Array = _Client.branches_for_repo(run, slug)
+	if branches.size() != 2:
+		_fail("只留下当前仓库的分支")
+	var merged_only: Dictionary = _Client.checkout_target([
+		{"branch": "cursor/kanban", "pr_url": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+	], {"https://github.com/EEEEEEEEthan/kingdom2d/pull/9": true})
+	if not bool(merged_only.get("hide", false)):
+		_fail("只有已合并 PR 的会话要隐藏")
+	var still_open: Dictionary = _Client.checkout_target(branches, {
+		"https://github.com/EEEEEEEEthan/kingdom2d/pull/9": true,
+	})
+	if bool(still_open.get("hide", false)) or str(still_open.get("branch", "")) != "cursor/wip":
+		_fail("还有未推 PR 的分支时要留下，并检出那条分支")
+	var open_pr: Dictionary = _Client.checkout_target([
+		{"branch": "cursor/done", "pr_url": "https://github.com/EEEEEEEEthan/kingdom2d/pull/1"},
+		{"branch": "cursor/open", "pr_url": "https://github.com/EEEEEEEEthan/kingdom2d/pull/2"},
+	], {"https://github.com/EEEEEEEEthan/kingdom2d/pull/1": true})
+	if bool(open_pr.get("hide", false)) or str(open_pr.get("branch", "")) != "cursor/open":
+		_fail("未合并的 PR 要留下，检出对应分支")
+	if not _Client._pr_state_is_merged("{\"state\":\"MERGED\"}"):
+		_fail("MERGED 状态应视为已合并")
+	if _Client._pr_state_is_merged("{\"state\":\"OPEN\"}"):
+		_fail("OPEN 状态不能当成已合并")
+	var patched: Dictionary = _Client.apply_git({"name": "做地图"}, [
+		{"branch": "cursor/kanban", "pr_url": "https://github.com/EEEEEEEEthan/kingdom2d/pull/9"},
+	], {"https://github.com/EEEEEEEEthan/kingdom2d/pull/9": true})
+	if not bool(patched.get("hide_merged", false)):
+		_fail("已合并的详情补丁应标记隐藏")
 	print("repo_match_test ok")
 	quit(0)
 

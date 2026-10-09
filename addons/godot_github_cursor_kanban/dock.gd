@@ -116,6 +116,7 @@ func _apply_sessions(sessions: Array, notice: String, next_cursor: String, appen
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(session)
 		card.chat_requested.connect(_open_chat)
+		card.checkout_requested.connect(_confirm_checkout)
 		card.detail_settled.connect(_on_detail_settled)
 		list.add_child(card)
 		_detail_pending += 1
@@ -136,12 +137,11 @@ func _apply_sessions(sessions: Array, notice: String, next_cursor: String, appen
 		list.add_child(button)
 
 
-func _on_detail_settled(kept: bool) -> void:
+func _on_detail_settled(_kept: bool) -> void:
 	_detail_pending = maxi(_detail_pending - 1, 0)
 	if _detail_pending > 0 or not _next_cursor.is_empty():
 		return
-	var staying := _card_count() - (0 if kept else 1)
-	if staying > 0:
+	if _card_count() > 0:
 		return
 	var list := $ScrollContainer/VBoxContainer
 	var label := Label.new()
@@ -154,7 +154,7 @@ func _on_detail_settled(kept: bool) -> void:
 func _card_count() -> int:
 	var count := 0
 	for child in $ScrollContainer/VBoxContainer.get_children():
-		if child.has_signal("detail_settled"):
+		if child.has_signal("detail_settled") and not bool(child.get_meta("kanban_dropping", false)):
 			count += 1
 	return count
 
@@ -189,21 +189,27 @@ func _open_chat(session_id: String, title: String) -> void:
 
 
 func _checkout_master() -> void:
+	_confirm_checkout("master")
+
+
+func _confirm_checkout(branch: String) -> void:
+	if branch.is_empty():
+		return
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "切换分支"
-	dialog.dialog_text = "放弃所有修改并切换到 master？"
+	dialog.dialog_text = "放弃所有修改并切换到 %s？" % branch
 	dialog.ok_button_text = "是"
 	dialog.cancel_button_text = "否"
-	dialog.confirmed.connect(_do_checkout_master)
+	dialog.confirmed.connect(_checkout_and_restart.bind(branch))
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	EditorInterface.get_base_control().add_child(dialog)
 	dialog.popup_centered()
 
 
-func _do_checkout_master() -> void:
+func _checkout_and_restart(branch: String) -> void:
 	var path := ProjectSettings.globalize_path("res://").trim_suffix("/")
-	if not _checkout_branch(path, "master"):
+	if not _checkout_branch(path, branch):
 		return
 	var restart := true
 	var settings := EditorInterface.get_editor_settings()

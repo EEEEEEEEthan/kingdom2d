@@ -2,6 +2,7 @@
 extends PanelContainer
 
 signal chat_requested(session_id: String, title: String)
+signal checkout_requested(branch: String)
 signal detail_settled(kept: bool)
 
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
@@ -9,6 +10,7 @@ const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.
 var _dot_working: Texture2D
 var _dot_idle: Texture2D
 var _url := ""
+var _branch := ""
 
 
 func apply(session: Dictionary) -> void:
@@ -19,10 +21,16 @@ func apply(session: Dictionary) -> void:
 	%SessionStatus.custom_minimum_size = Vector2(12, 12)
 	%SessionStatus.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_url = str(session.get("url", _url))
+	if session.has("branch"):
+		_set_branch(str(session.get("branch", "")))
+	else:
+		_set_branch(_branch)
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
+	if not %Checkout.pressed.is_connected(_on_checkout_pressed):
+		%Checkout.pressed.connect(_on_checkout_pressed)
 
 
 func begin_detail(token: String, repo_slug: String) -> void:
@@ -31,13 +39,14 @@ func begin_detail(token: String, repo_slug: String) -> void:
 		detail_settled.emit(true)
 		return
 	var cached := _Client.cached_repo_match(agent_id, repo_slug)
-	if cached == 1:
-		detail_settled.emit(true)
-		return
 	if cached == 0:
+		set_meta("kanban_dropping", true)
 		detail_settled.emit(false)
 		queue_free()
 		return
+	var known_branch := _Client.cached_branch(agent_id)
+	if not known_branch.is_empty():
+		_set_branch(known_branch)
 	WorkerThreadPool.add_task(func() -> void:
 		var detail := _Client.request(
 			token,
@@ -46,6 +55,18 @@ func begin_detail(token: String, repo_slug: String) -> void:
 		)
 		_Client.remember_repos(agent_id, detail)
 		var patch := _Client.detail_patch(detail, repo_slug)
+		if not patch.is_empty() and not bool(patch.get("_error", false)):
+			var run_id := str(detail.get("latestRunId", ""))
+			if not run_id.is_empty():
+				var run := _Client.request(
+					token,
+					HTTPClient.METHOD_GET,
+					"/v1/agents/%s/runs/%s" % [agent_id.uri_encode(), run_id.uri_encode()]
+				)
+				if not run.is_empty():
+					patch = _Client.annotate_git(patch, run, repo_slug)
+					if not bool(patch.get("hide_merged", false)):
+						_Client.remember_branch(agent_id, str(patch.get("branch", "")))
 		if is_instance_valid(self):
 			call_deferred("_finish_detail", patch)
 	)
@@ -57,17 +78,33 @@ func _finish_detail(patch: Dictionary) -> void:
 	if bool(patch.get("_error", false)):
 		detail_settled.emit(true)
 		return
-	if patch.is_empty():
+	if patch.is_empty() or bool(patch.get("hide_merged", false)):
+		set_meta("kanban_dropping", true)
 		detail_settled.emit(false)
 		queue_free()
 		return
-	apply({
+	var session := {
 		"id": str(%Chat.get_meta("session_id", "")),
 		"name": str(patch.get("name", %CardName.text)),
 		"url": str(patch.get("url", _url)),
 		"working": bool(patch.get("working", false)),
-	})
+	}
+	if patch.has("branch"):
+		session["branch"] = str(patch.get("branch", ""))
+	apply(session)
 	detail_settled.emit(true)
+
+
+func _set_branch(branch: String) -> void:
+	_branch = branch
+	%Checkout.tooltip_text = _branch if not _branch.is_empty() else "还没有可检出的分支"
+
+
+func _on_checkout_pressed() -> void:
+	if _branch.is_empty():
+		push_warning("看板：还没有可检出的分支。")
+		return
+	checkout_requested.emit(_branch)
 
 
 func _on_chat_pressed() -> void:

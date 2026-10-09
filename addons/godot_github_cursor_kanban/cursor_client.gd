@@ -149,7 +149,7 @@ static func _method_name(method: int) -> String:
 static func detail_patch(detail: Dictionary, repo_slug: String) -> Dictionary:
 	if detail.is_empty():
 		return {"_error": true}
-	if str(detail.get("status", "")) == "ARCHIVED":
+	if str(detail.get("status", "")).to_upper() == "ARCHIVED":
 		return {}
 	if not _repos_include(detail.get("repos", []), repo_slug):
 		return {}
@@ -158,6 +158,111 @@ static func detail_patch(detail: Dictionary, repo_slug: String) -> Dictionary:
 		"url": str(detail.get("url", "")),
 		"working": str(detail.get("status", "")) == "ACTIVE",
 	}
+
+
+## 当前仓库推上去的分支。没有 PR 的分支也留下，检出要用。
+static func branches_for_repo(run: Dictionary, repo_slug: String) -> Array:
+	var found: Array = []
+	var git: Variant = run.get("git", {})
+	if typeof(git) != TYPE_DICTIONARY:
+		return found
+	var branches: Variant = git.get("branches", [])
+	if typeof(branches) != TYPE_ARRAY:
+		return found
+	for entry in branches:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var repo_url := str(entry.get("repoUrl", ""))
+		if not repo_url.is_empty() and not _same_repo(repo_url, repo_slug):
+			continue
+		var branch := str(entry.get("branch", ""))
+		var pr_url := _normalize_pr_url(str(entry.get("prUrl", "")))
+		if branch.is_empty() and pr_url.is_empty():
+			continue
+		found.append({"branch": branch, "pr_url": pr_url})
+	return found
+
+
+## 有 PR 且全部已合并才隐藏。没推 PR 的分支留下来，并作为检出目标。
+static func checkout_target(branches: Array, merged_by_url: Dictionary) -> Dictionary:
+	var branch := ""
+	var pr_url := ""
+	var bare := ""
+	var saw_pr := false
+	var saw_open := false
+	for entry in branches:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var url := _normalize_pr_url(str(entry.get("pr_url", "")))
+		var name := str(entry.get("branch", ""))
+		if url.is_empty():
+			if name.is_empty():
+				continue
+			saw_open = true
+			if bare.is_empty():
+				bare = name
+			continue
+		saw_pr = true
+		if bool(merged_by_url.get(url, false)):
+			continue
+		saw_open = true
+		if branch.is_empty():
+			branch = name
+			pr_url = url
+	if branch.is_empty():
+		branch = bare
+	return {
+		"hide": saw_pr and not saw_open,
+		"branch": branch,
+		"pr_url": pr_url,
+	}
+
+
+static func apply_git(patch: Dictionary, branches: Array, merged_by_url: Dictionary) -> Dictionary:
+	var target := checkout_target(branches, merged_by_url)
+	patch["hide_merged"] = bool(target.get("hide", false))
+	patch["branch"] = str(target.get("branch", ""))
+	patch["pr_url"] = str(target.get("pr_url", ""))
+	return patch
+
+
+static func annotate_git(patch: Dictionary, run: Dictionary, repo_slug: String) -> Dictionary:
+	var branches := branches_for_repo(run, repo_slug)
+	var merged := {}
+	for entry in branches:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var pr_url := str(entry.get("pr_url", ""))
+		if pr_url.is_empty():
+			continue
+		if pr_is_merged(pr_url):
+			merged[pr_url] = true
+	return apply_git(patch, branches, merged)
+
+
+static func pr_is_merged(pr_url: String) -> bool:
+	var url := _normalize_pr_url(pr_url)
+	if url.is_empty():
+		return false
+	var output: Array = []
+	var code := OS.execute("gh", ["pr", "view", url, "--json", "state"], output, true)
+	if code != 0 or output.is_empty():
+		return false
+	var text := ""
+	for line in output:
+		text += str(line)
+	return _pr_state_is_merged(text)
+
+
+static func _pr_state_is_merged(text: String) -> bool:
+	var parsed: Variant = JSON.parse_string(text.strip_edges())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	return str(parsed.get("state", "")) == "MERGED"
+
+
+static func _normalize_pr_url(pr_url: String) -> String:
+	return pr_url.strip_edges().trim_suffix("/")
 
 
 static func _repos_include(repos: Variant, repo_slug: String) -> bool:
@@ -183,22 +288,49 @@ static func _slug_from_url(url: String) -> String:
 	return tail.strip_edges().trim_prefix("/").to_lower()
 
 
-## 返回 1 显示、0 隐藏、-1 还没缓存。仓库在创建后不变，命中就不再请求详情。
+## 返回 1 显示、0 隐藏、-1 还没缓存。只表示仓库归属，归档和合并每次刷新仍要再查。
 static func cached_repo_match(agent_id: String, repo_slug: String) -> int:
 	if agent_id.is_empty():
 		return -1
-	_load_repo_cache()
-	_repo_cache_lock.lock()
-	var known := _repo_cache.has(agent_id)
-	var slugs: Variant = _repo_cache.get(agent_id, [])
-	_repo_cache_lock.unlock()
-	if not known or typeof(slugs) != TYPE_ARRAY:
+	var slugs: Variant = _cached_slugs(agent_id)
+	if slugs == null:
 		return -1
 	var wanted := repo_slug.strip_edges().trim_prefix("/").to_lower()
 	for slug in slugs:
 		if str(slug) == wanted:
 			return 1
 	return 0
+
+
+static func cached_branch(agent_id: String) -> String:
+	var entry := _cache_entry(agent_id)
+	if typeof(entry) != TYPE_DICTIONARY:
+		return ""
+	return str(entry.get("branch", ""))
+
+
+static func _cached_slugs(agent_id: String) -> Variant:
+	var entry := _cache_entry(agent_id)
+	if entry == null:
+		return null
+	if typeof(entry) == TYPE_ARRAY:
+		return entry
+	if typeof(entry) == TYPE_DICTIONARY and typeof(entry.get("repos", null)) == TYPE_ARRAY:
+		return entry.get("repos")
+	return null
+
+
+static func _cache_entry(agent_id: String) -> Variant:
+	if agent_id.is_empty():
+		return null
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	var known := _repo_cache.has(agent_id)
+	var entry: Variant = _repo_cache.get(agent_id, null)
+	_repo_cache_lock.unlock()
+	if not known:
+		return null
+	return entry
 
 
 static func remember_repos(agent_id: String, detail: Dictionary) -> void:
@@ -217,7 +349,32 @@ static func remember_repos(agent_id: String, detail: Dictionary) -> void:
 		slugs.append(slug)
 	_load_repo_cache()
 	_repo_cache_lock.lock()
-	_repo_cache[agent_id] = slugs
+	var previous: Variant = _repo_cache.get(agent_id, {})
+	var branch := ""
+	if typeof(previous) == TYPE_DICTIONARY:
+		branch = str(previous.get("branch", ""))
+	_repo_cache[agent_id] = {"repos": slugs, "branch": branch}
+	var snapshot: Dictionary = _repo_cache.duplicate(true)
+	_repo_cache_lock.unlock()
+	_write_repo_cache(snapshot)
+
+
+static func remember_branch(agent_id: String, branch: String) -> void:
+	if agent_id.is_empty():
+		return
+	_load_repo_cache()
+	_repo_cache_lock.lock()
+	var entry: Variant = _repo_cache.get(agent_id, null)
+	var record := {}
+	if typeof(entry) == TYPE_ARRAY:
+		record = {"repos": entry, "branch": branch}
+	elif typeof(entry) == TYPE_DICTIONARY:
+		record = entry.duplicate(true)
+		record["branch"] = branch
+	else:
+		_repo_cache_lock.unlock()
+		return
+	_repo_cache[agent_id] = record
 	var snapshot: Dictionary = _repo_cache.duplicate(true)
 	_repo_cache_lock.unlock()
 	_write_repo_cache(snapshot)
@@ -256,7 +413,7 @@ static func _session_from_list_item(item: Dictionary) -> Dictionary:
 	if agent_id.is_empty():
 		return {}
 	var status := str(item.get("status", ""))
-	if status == "ARCHIVED":
+	if status.to_upper() == "ARCHIVED":
 		return {}
 	return {
 		"id": agent_id,
