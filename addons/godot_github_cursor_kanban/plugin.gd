@@ -24,9 +24,6 @@ var _refreshing := false
 var _chat_windows := {}
 const _RUN_CONCURRENCY := 16
 
-var _thread: Thread
-var _job: Dictionary = {}
-
 var _agents_http: HTTPRequest
 var _run_pool: Array[HTTPRequest] = []
 var _run_busy: Dictionary = {}
@@ -41,8 +38,6 @@ var _fetch_page := 0
 var _run_gen: Dictionary = {}
 var _agent_cache: Dictionary = {}
 var _agents_done := false
-var _merged_ready := false
-var _merged_index := {"urls": {}}
 
 
 func _enter_tree() -> void:
@@ -104,10 +99,7 @@ func _refresh_cards() -> void:
 		token = str(settings.get_setting(_SETTING_TOKEN))
 	_fetch_gen += 1
 	_cancel_work()
-	_join_thread()
 	_agents_done = false
-	_merged_ready = false
-	_merged_index = {"urls": {}}
 	_fetch_slug = _Board.origin_slug(_Board.project_path())
 	_agent_cache = _Board.load_agent_cache()
 	_fetch_sessions = []
@@ -120,7 +112,6 @@ func _refresh_cards() -> void:
 	if token.is_empty():
 		push_warning("看板：未配置 Cursor token。")
 		_agents_done = true
-		_merged_ready = true
 	else:
 		_request_agents_page()
 	_maybe_idle()
@@ -289,44 +280,6 @@ func _reuse_cached(item: Dictionary) -> bool:
 func _finish_cards() -> void:
 	_agents_done = true
 	_paint_cards()
-	_start_merged_check()
-
-
-func _start_merged_check() -> void:
-	var needs_check := false
-	for session in _sessions_for_board():
-		if bool(session.get("archived", false)):
-			continue
-		if str(session.get("pr_url", "")).is_empty():
-			continue
-		needs_check = true
-		break
-	if not needs_check or _fetch_slug.is_empty():
-		_merged_ready = true
-		_maybe_idle()
-		return
-	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
-	_thread = Thread.new()
-	var err := _thread.start(_load_merged_off_thread.bind(_fetch_slug, _job, _fetch_gen))
-	if err != OK:
-		_merged_ready = true
-		push_warning("看板：查已合并 PR 的线程启动失败。")
-		_maybe_idle()
-
-
-func _load_merged_off_thread(slug: String, job: Dictionary, gen: int) -> void:
-	var index := _Board.merged_pr_index(slug, job)
-	if is_instance_valid(self):
-		call_deferred("_continue_merged", index, gen)
-
-
-func _continue_merged(index: Dictionary, gen: int) -> void:
-	if gen != _fetch_gen or not is_inside_tree():
-		return
-	_join_thread()
-	_merged_index = index
-	_merged_ready = true
-	_paint_cards()
 	_maybe_idle()
 
 
@@ -334,8 +287,8 @@ func _paint_cards() -> void:
 	if not is_inside_tree():
 		return
 	var sessions := _sessions_for_board()
-	_apply_cards(_Board.merge_cards(sessions, _merged_index if _merged_ready else {}))
-	_refreshing = not (_agents_done and _merged_ready)
+	_apply_cards(_Board.merge_cards(sessions))
+	_refreshing = not _agents_done
 	if _refreshing:
 		if is_instance_valid(_refresh_button):
 			_refresh_button.disabled = true
@@ -345,7 +298,7 @@ func _paint_cards() -> void:
 
 
 func _maybe_idle() -> void:
-	if not _agents_done or not _merged_ready:
+	if not _agents_done:
 		return
 	if is_inside_tree():
 		_Board.save_agent_cache(_agent_cache)
@@ -383,26 +336,11 @@ func _agents() -> Dictionary:
 
 
 func _cancel_work() -> void:
-	if not _job.is_empty() and _job.get("mutex") is Mutex:
-		var mutex: Mutex = _job["mutex"]
-		mutex.lock()
-		_job["cancel"] = true
-		var pids: Array = (_job["pids"] as Array).duplicate()
-		mutex.unlock()
-		for pid in pids:
-			if OS.is_process_running(int(pid)):
-				OS.kill(int(pid))
 	if _agents_http:
 		_agents_http.cancel_request()
 	for http in _run_pool:
 		http.cancel_request()
 	_run_busy.clear()
-
-
-func _join_thread() -> void:
-	if _thread != null and _thread.is_started():
-		_thread.wait_to_finish()
-	_thread = null
 
 
 func _set_refresh_idle() -> void:
@@ -500,7 +438,6 @@ func _exit_tree() -> void:
 	_fetch_gen += 1
 	_refreshing = false
 	_cancel_work()
-	_join_thread()
 	_uninstall_translations()
 	for session_id in _chat_windows.keys():
 		var window: Window = _chat_windows[session_id] as Window

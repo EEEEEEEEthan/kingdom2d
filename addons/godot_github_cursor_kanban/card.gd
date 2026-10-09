@@ -6,10 +6,14 @@ signal chat_requested(session_id: String, title: String)
 
 const _CHAT_ICON := "res://addons/godot_github_cursor_kanban/icons/chat.png"
 const _CHECKOUT_ICON := "res://addons/godot_github_cursor_kanban/icons/checkout.png"
+const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 
 var _dot_working: Texture2D
 var _dot_idle: Texture2D
 var _icons_ready := false
+var _pr_url := ""
+var _thread: Thread
+var _job: Dictionary = {}
 
 
 func apply(card: Dictionary) -> void:
@@ -32,6 +36,8 @@ func apply(card: Dictionary) -> void:
 	%Chat.set_meta("title", str(card.get("title", "")))
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
+	_pr_url = str(card.get("pr_url", "")).strip_edges().trim_suffix("/")
+	_check_pr()
 
 
 func _ensure_icons() -> void:
@@ -69,6 +75,59 @@ func _load_png(path: String) -> Texture2D:
 	if image.load_png_from_buffer(file.get_buffer(file.get_length())) != OK:
 		return null
 	return ImageTexture.create_from_image(image)
+
+
+func _check_pr() -> void:
+	_stop_pr_check()
+	if _pr_url.is_empty():
+		return
+	if _Board.pr_url_merged_cached(_pr_url):
+		queue_free()
+		return
+	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
+	_thread = Thread.new()
+	if _thread.start(_query_pr.bind(_pr_url, _job)) != OK:
+		_thread = null
+		push_warning("看板：查 PR 状态失败。")
+
+
+func _query_pr(url: String, job: Dictionary) -> void:
+	var merged := _Board.pr_is_merged(url, job)
+	if is_instance_valid(self):
+		call_deferred("_on_pr_state", url, merged)
+
+
+func _on_pr_state(url: String, merged: bool) -> void:
+	_join_pr_check()
+	if url != _pr_url or not is_inside_tree():
+		return
+	if not merged:
+		return
+	_Board.remember_merged_pr(url)
+	queue_free()
+
+
+func _exit_tree() -> void:
+	_stop_pr_check()
+
+
+func _stop_pr_check() -> void:
+	if not _job.is_empty() and _job.get("mutex") is Mutex:
+		var mutex: Mutex = _job["mutex"]
+		mutex.lock()
+		_job["cancel"] = true
+		var pids: Array = (_job["pids"] as Array).duplicate()
+		mutex.unlock()
+		for pid in pids:
+			if OS.is_process_running(int(pid)):
+				OS.kill(int(pid))
+	_join_pr_check()
+
+
+func _join_pr_check() -> void:
+	if _thread != null and _thread.is_started():
+		_thread.wait_to_finish()
+	_thread = null
 
 
 func _on_chat_pressed() -> void:

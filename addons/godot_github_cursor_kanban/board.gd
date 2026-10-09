@@ -3,6 +3,7 @@ extends RefCounted
 
 const _API := "https://api.cursor.com"
 const _CACHE_PATH := "user://kanban_agents.json"
+static var _cache_lock := Mutex.new()
 
 
 static func project_path() -> String:
@@ -86,6 +87,45 @@ static func _same_repo(repo_url: String, repo_slug: String) -> bool:
 
 
 static func load_agent_cache() -> Dictionary:
+	_cache_lock.lock()
+	var cache := _read_agent_cache()
+	_cache_lock.unlock()
+	return cache
+
+
+static func save_agent_cache(cache: Dictionary) -> void:
+	_cache_lock.lock()
+	var current := _read_agent_cache()
+	if current.has("merged_pr_urls"):
+		cache["merged_pr_urls"] = current["merged_pr_urls"]
+	_write_agent_cache(cache)
+	_cache_lock.unlock()
+
+
+static func pr_url_merged_cached(pr_url: String) -> bool:
+	var url := pr_url.strip_edges().trim_suffix("/")
+	if url.is_empty():
+		return false
+	var urls: Variant = load_agent_cache().get("merged_pr_urls", {})
+	return typeof(urls) == TYPE_DICTIONARY and bool(urls.get(url, false))
+
+
+static func remember_merged_pr(pr_url: String) -> void:
+	var url := pr_url.strip_edges().trim_suffix("/")
+	if url.is_empty():
+		return
+	_cache_lock.lock()
+	var cache := _read_agent_cache()
+	var urls: Dictionary = {}
+	if typeof(cache.get("merged_pr_urls", {})) == TYPE_DICTIONARY:
+		urls = cache["merged_pr_urls"]
+	urls[url] = true
+	cache["merged_pr_urls"] = urls
+	_write_agent_cache(cache)
+	_cache_lock.unlock()
+
+
+static func _read_agent_cache() -> Dictionary:
 	if not FileAccess.file_exists(_CACHE_PATH):
 		return {}
 	var raw := FileAccess.get_file_as_string(_CACHE_PATH).strip_edges()
@@ -99,7 +139,7 @@ static func load_agent_cache() -> Dictionary:
 	return parsed
 
 
-static func save_agent_cache(cache: Dictionary) -> void:
+static func _write_agent_cache(cache: Dictionary) -> void:
 	var file := FileAccess.open(_CACHE_PATH, FileAccess.WRITE)
 	if file == null:
 		return
@@ -142,51 +182,29 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 	return session_from_agent(item, run, repo_slug)
 
 
-static func merged_pr_index(repo_slug: String, job: Dictionary = {}) -> Dictionary:
-	# 只用来丢掉已合并的会话，不把 PR 本身做成卡片。
-	var index := {"urls": {}}
-	if repo_slug.is_empty():
-		return index
+static func pr_is_merged(pr_url: String, job: Dictionary = {}) -> bool:
+	var url := pr_url.strip_edges()
+	if url.is_empty():
+		return false
 	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "40",
-		"--json", "url",
+		"pr", "view", url, "--json", "state",
 	]), _ensure_job(job))
 	var text := str(result.get("text", "")).strip_edges()
-	if not bool(result.get("ok", false)) or not text.begins_with("["):
-		var detail := str(result.get("err", "")).strip_edges()
-		if detail.is_empty():
-			push_warning("看板：查已合并 PR 失败。")
-		else:
-			push_warning("看板：查已合并 PR 失败。 %s" % detail)
-		return index
-	var parsed: Variant = JSON.parse_string(text)
-	if typeof(parsed) != TYPE_ARRAY:
-		push_warning("看板：查已合并 PR 失败。")
-		return index
-	for item in parsed:
-		if typeof(item) != TYPE_DICTIONARY:
-			continue
-		var url := str(item.get("url", "")).trim_suffix("/")
-		if not url.is_empty():
-			index["urls"][url] = true
-	return index
-
-
-static func session_pr_merged(session: Dictionary, index: Dictionary) -> bool:
-	var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
-	if pr_url.is_empty():
+	if not bool(result.get("ok", false)) or not text.begins_with("{"):
 		return false
-	var urls: Dictionary = index.get("urls", {})
-	return bool(urls.get(pr_url, false))
+	var parsed: Variant = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	return str(parsed.get("state", "")) == "MERGED"
 
 
-static func merge_cards(sessions: Array[Dictionary], merged_index: Dictionary = {}) -> Array[Dictionary]:
+static func merge_cards(sessions: Array[Dictionary]) -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
 	var index_by_key := {}
 	for session in sessions:
 		if bool(session.get("archived", false)):
 			continue
-		if session_pr_merged(session, merged_index):
+		if pr_url_merged_cached(str(session.get("pr_url", ""))):
 			continue
 		var card := _make_card(session)
 		if _is_empty_card(card):
@@ -238,6 +256,7 @@ static func _is_empty_card(card: Dictionary) -> bool:
 static func _make_card(session: Dictionary) -> Dictionary:
 	var pr_url := str(session.get("pr_url", "")).strip_edges()
 	return {
+		# 卡片名始终用会话名。
 		"title": str(session.get("name", "")).strip_edges(),
 		"session_id": str(session.get("id", "")),
 		"session_url": str(session.get("url", "")),
