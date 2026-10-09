@@ -5,6 +5,7 @@ const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn"
 const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
+const _REFRESH_PATH := "res://addons/godot_github_cursor_kanban/icons/refresh.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
 # 英文蛇形键，显示名交给属性翻译域（中文默认，英文编辑器语言下为英文）。
@@ -25,15 +26,21 @@ func _enter_tree() -> void:
 
 	var content := _DOCK_SCENE.instantiate() as Control
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var toolbar := HBoxContainer.new()
+	toolbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(toolbar)
+	content.move_child(toolbar, 0)
 	var settings_button := content.get_node("Settings") as Button
+	content.remove_child(settings_button)
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
 	var refresh_button := Button.new()
-	refresh_button.text = tr("刷新")
+	refresh_button.icon = _refresh_button_icon()
+	refresh_button.tooltip_text = tr("刷新")
 	refresh_button.pressed.connect(_refresh_cards)
-	content.add_child(refresh_button)
-	content.move_child(refresh_button, 1)
+	toolbar.add_child(refresh_button)
+	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
@@ -182,6 +189,15 @@ func _ensure_setting(
 	})
 
 
+func _refresh_button_icon() -> Texture2D:
+	var base := EditorInterface.get_base_control()
+	if base:
+		for icon_name in ["Reload", "Loop", "RotateRight"]:
+			if base.has_theme_icon(icon_name, "EditorIcons"):
+				return base.get_theme_icon(icon_name, "EditorIcons")
+	return _load_png_texture(_REFRESH_PATH)
+
+
 func _settings_button_icon() -> Texture2D:
 	var base := EditorInterface.get_base_control()
 	if base:
@@ -193,7 +209,11 @@ func _settings_button_icon() -> Texture2D:
 
 
 func _load_gear_texture() -> Texture2D:
-	var file := FileAccess.open(_GEAR_PATH, FileAccess.READ)
+	return _load_png_texture(_GEAR_PATH)
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null
 	var image := Image.new()
