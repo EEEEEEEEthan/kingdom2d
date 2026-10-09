@@ -11,13 +11,12 @@ func apply(card: Dictionary) -> void:
 	%CardName.text = str(card.get("title", ""))
 	var has_session := not str(card.get("session_id", "")).is_empty()
 	$VBoxContainer/SessionInfo.visible = has_session
-	%PRInfo.visible = not str(card.get("pr_url", "")).is_empty()
 	if has_session:
 		# SessionStatus 表示这个聊天是否正在工作。
 		%SessionStatus.texture = _working_texture() if bool(card.get("working", false)) else _idle_texture()
 		%SessionStatus.tooltip_text = "工作中" if bool(card.get("working", false)) else "空闲"
 		%SessionStatus.custom_minimum_size = Vector2(12, 12)
-	var checkout := $VBoxContainer/PRInfo/Button as Button
+	var checkout := $VBoxContainer/Checkout as Button
 	checkout.disabled = str(card.get("branch", "")).is_empty()
 	if not checkout.pressed.is_connected(_on_checkout_pressed):
 		checkout.set_meta("branch", str(card.get("branch", "")))
@@ -27,7 +26,7 @@ func apply(card: Dictionary) -> void:
 
 
 func _on_checkout_pressed() -> void:
-	var checkout := $VBoxContainer/PRInfo/Button as Button
+	var checkout := $VBoxContainer/Checkout as Button
 	checkout_requested.emit(str(checkout.get_meta("branch", "")))
 
 

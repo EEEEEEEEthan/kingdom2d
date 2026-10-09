@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dt6ewtvlofg1t"]
+
+[sub_resource type="GDScript" id="GDScript_5lg36"]
+script/source = "@tool
+extends RichTextLabel
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+func _get_maximum_size() -> Vector2:
+	var s = owner.get_parent().size
+	return Vector2(s.x, -1)
+	
+"
+
+[node name="VBoxContainer" type="VBoxContainer" unique_id=1001148920]
+offset_right = 70.0
+offset_bottom = 110.0
+
+[node name="Time" type="Label" parent="." unique_id=441815721]
+layout_mode = 2
+text = "26 minutes ago"
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=851030185]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/margin_right = 16
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer" unique_id=1319974610]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PanelContainer" unique_id=146449895]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Content" type="RichTextLabel" parent="MarginContainer/PanelContainer/MarginContainer" unique_id=692498328]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 2
+text = "message"
+fit_content = true
+selection_enabled = true
+script = SubResource("GDScript_5lg36")
