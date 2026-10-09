@@ -4,25 +4,30 @@ extends EditorPlugin
 const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
 const _SECTION := "kanban"
-# 勾选框文案直接作为设置名，检查器会按原样显示。
-const _SETTING_RESTART := "kanban/切换分支后自动重启编辑器"
+const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
+# 英文蛇形键，显示名交给属性翻译域（中文默认，英文编辑器语言下为英文）。
+const _SETTING_RESTART := "kanban/restart_editor_after_branch_switch"
+const _SETTING_RESTART_LEGACY := "kanban/切换分支后自动重启编辑器"
 const _SETTING_TOKEN := "kanban/cursor_token"
+const _PROPERTY_DOMAIN := "godot.properties"
 
 var _dock: EditorDock
+var _translations: Array[Translation] = []
 
 
 func _enter_tree() -> void:
+	_install_translations()
 	_register_editor_settings()
 
 	var content := _DOCK_SCENE.instantiate() as Control
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var settings_button := content.get_node("Settings") as Button
 	settings_button.icon = _settings_button_icon()
-	settings_button.tooltip_text = "看板设置"
+	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
 
 	_dock = EditorDock.new()
-	_dock.title = "看板"
+	_dock.title = tr("看板")
 	# 独立 layout_key，不沿用上次停在错误槽位的布局记录。
 	_dock.layout_key = "godot_github_cursor_kanban"
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
@@ -31,16 +36,72 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	_uninstall_translations()
 	if _dock:
 		remove_dock(_dock)
 		_dock.free()
 		_dock = null
 
 
+func _install_translations() -> void:
+	_uninstall_translations()
+	var rows := _read_translation_rows()
+	if rows.is_empty():
+		return
+	# 主域给 tr()，属性域给编辑器设置分区和设置项标题。
+	var property_domain := TranslationServer.get_or_add_domain(_PROPERTY_DOMAIN)
+	for locale in ["zh", "zh_CN", "en"]:
+		var translation := Translation.new()
+		translation.locale = locale
+		for row in rows:
+			var message: String = row["zh"] if locale.begins_with("zh") else row["en"]
+			translation.add_message(row["key"], message)
+		TranslationServer.add_translation(translation)
+		property_domain.add_translation(translation)
+		_translations.append(translation)
+
+
+func _uninstall_translations() -> void:
+	if _translations.is_empty():
+		return
+	var property_domain := TranslationServer.get_or_add_domain(_PROPERTY_DOMAIN)
+	for translation in _translations:
+		TranslationServer.remove_translation(translation)
+		property_domain.remove_translation(translation)
+	_translations.clear()
+
+
+func _read_translation_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var file := FileAccess.open(_TRANSLATION_CSV, FileAccess.READ)
+	if file == null:
+		push_warning("看板：读不到翻译表。")
+		return rows
+	file.get_line()
+	while not file.eof_reached():
+		var line := file.get_line().strip_edges()
+		if line.is_empty():
+			continue
+		var parts := line.split(",", false)
+		if parts.size() < 3:
+			continue
+		rows.append({"key": parts[0], "en": parts[1], "zh": parts[2]})
+	return rows
+
+
 func _register_editor_settings() -> void:
 	var settings := EditorInterface.get_editor_settings()
+	_migrate_restart_setting(settings)
 	_ensure_setting(settings, _SETTING_RESTART, true, TYPE_BOOL, PROPERTY_HINT_NONE)
 	_ensure_setting(settings, _SETTING_TOKEN, "", TYPE_STRING, PROPERTY_HINT_PASSWORD)
+
+
+func _migrate_restart_setting(settings: EditorSettings) -> void:
+	if not settings.has_setting(_SETTING_RESTART_LEGACY):
+		return
+	if not settings.has_setting(_SETTING_RESTART):
+		settings.set_setting(_SETTING_RESTART, settings.get_setting(_SETTING_RESTART_LEGACY))
+	settings.erase(_SETTING_RESTART_LEGACY)
 
 
 func _ensure_setting(
@@ -86,7 +147,7 @@ func _open_kanban_editor_settings() -> void:
 	if EditorInterface.has_method("edit_settings"):
 		EditorInterface.call("edit_settings")
 	elif not _emit_editor_settings_menu():
-		push_warning("看板：打不开编辑器设置。")
+		push_warning(tr("看板：打不开编辑器设置。"))
 		return
 	_focus_kanban_section.call_deferred()
 
