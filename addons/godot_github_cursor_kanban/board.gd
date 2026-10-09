@@ -58,7 +58,8 @@ static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]
 		return sessions
 	var cursor := ""
 	for _page in 5:
-		var path := "/v1/agents?limit=100&includeArchived=false"
+		# 拉全量后在本地丢掉归档对话。查询串 "false" 会被接口当成真值。
+		var path := "/v1/agents?limit=100&includeArchived=true"
 		if not cursor.is_empty():
 			path += "&cursor=" + cursor.uri_encode()
 		var payload := _api_get(token, path)
@@ -77,6 +78,14 @@ static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]
 		if cursor.is_empty():
 			break
 	return sessions
+
+
+static func _is_archived(item: Dictionary) -> bool:
+	if bool(item.get("archived", false)) or bool(item.get("isArchived", false)):
+		return true
+	if not str(item.get("archivedAt", "")).is_empty():
+		return true
+	return str(item.get("status", "")).to_upper() == "ARCHIVED"
 
 
 static func _session_from_agent(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
@@ -108,6 +117,7 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 		"name": str(item.get("name", "")),
 		"url": str(item.get("url", "")),
 		"working": str(item.get("status", "")) == "ACTIVE",
+		"archived": _is_archived(item),
 		"branch": branch,
 		"pr_url": pr_url,
 	}
@@ -120,6 +130,8 @@ static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary]) -> 
 		var pr := _match_pr(session, prs)
 		if not pr.is_empty():
 			used[str(pr["url"])] = true
+		if bool(session.get("archived", false)):
+			continue
 		cards.append(_make_card(session, pr))
 	for pr in prs:
 		if used.has(str(pr["url"])):
