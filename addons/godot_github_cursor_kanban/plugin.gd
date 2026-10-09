@@ -5,6 +5,7 @@ const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn"
 const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
+const _MAIN_BRANCH_ICON := "res://addons/godot_github_cursor_kanban/icons/main_branch.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
 # 英文蛇形键，显示名交给属性翻译域（中文默认，英文编辑器语言下为英文）。
@@ -33,6 +34,12 @@ func _enter_tree() -> void:
 	refresh_button.pressed.connect(_refresh_cards)
 	content.add_child(refresh_button)
 	content.move_child(refresh_button, 1)
+	var main_button := Button.new()
+	main_button.icon = _load_png(_MAIN_BRANCH_ICON)
+	main_button.tooltip_text = tr("切回主分支")
+	main_button.pressed.connect(_confirm_reset_to_main)
+	content.add_child(main_button)
+	content.move_child(main_button, 2)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
@@ -67,9 +74,34 @@ func _refresh_cards() -> void:
 		_card_list.add_child(card)
 
 
+func _confirm_reset_to_main() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = tr("切回主分支")
+	dialog.dialog_text = tr("用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。")
+	dialog.confirmed.connect(_reset_to_main)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.confirmed.connect(dialog.queue_free)
+	var base := EditorInterface.get_base_control()
+	if base:
+		base.add_child(dialog)
+	else:
+		add_child(dialog)
+	dialog.popup_centered()
+
+
+func _reset_to_main() -> void:
+	if not _Board.reset_to_remote_default(_Board.project_path()):
+		return
+	_restart_after_branch_switch()
+
+
 func _on_checkout_requested(branch: String) -> void:
 	if not _Board.checkout_branch(_Board.project_path(), branch):
 		return
+	_restart_after_branch_switch()
+
+
+func _restart_after_branch_switch() -> void:
 	var settings := EditorInterface.get_editor_settings()
 	var restart := true
 	if settings.has_setting(_SETTING_RESTART):
@@ -178,7 +210,11 @@ func _settings_button_icon() -> Texture2D:
 
 
 func _load_gear_texture() -> Texture2D:
-	var file := FileAccess.open(_GEAR_PATH, FileAccess.READ)
+	return _load_png(_GEAR_PATH)
+
+
+func _load_png(path: String) -> Texture2D:
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null
 	var image := Image.new()

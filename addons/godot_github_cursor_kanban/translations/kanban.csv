@@ -5,3 +5,5 @@ keys,en,zh
 Kanban,Kanban,看板
 Restart Editor After Branch Switch,Restart Editor After Branch Switch,切换分支后自动重启编辑器
 Cursor Token,Cursor token,Cursor token
+切回主分支,Switch to default branch,切回主分支
+用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。,Overwrite the local checkout with the latest remote default branch? Uncommitted changes will be lost.,用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。

@@ -163,6 +163,34 @@ static func _make_card(session: Dictionary, pr: Dictionary) -> Dictionary:
 	}
 
 
+static func reset_to_remote_default(path: String) -> bool:
+	if OS.execute("git", ["-C", path, "fetch", "origin"], [], true) != 0:
+		push_warning("看板：拉取远程失败。")
+		return false
+	var branch := remote_default_branch(path)
+	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
+		push_warning("看板：找不到远程主分支。")
+		return false
+	var output: Array = []
+	var code := OS.execute("git", ["-C", path, "checkout", "-f", "-B", branch, "origin/" + branch], output, true)
+	if code != 0:
+		push_warning("看板：切回主分支失败。")
+		return false
+	return true
+
+
+static func remote_default_branch(path: String) -> String:
+	var output: Array = []
+	if OS.execute("git", ["-C", path, "rev-parse", "--abbrev-ref", "origin/HEAD"], output, true) == 0:
+		var name := "\n".join(PackedStringArray(output)).strip_edges()
+		if name.begins_with("origin/"):
+			return name.trim_prefix("origin/")
+	for candidate in ["main", "master"]:
+		if OS.execute("git", ["-C", path, "show-ref", "--verify", "--quiet", "refs/remotes/origin/" + candidate], [], true) == 0:
+			return candidate
+	return ""
+
+
 static func checkout_branch(path: String, branch: String) -> bool:
 	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
 		push_warning("看板：没有可检出的分支。")
