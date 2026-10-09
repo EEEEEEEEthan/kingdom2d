@@ -7,9 +7,13 @@ signal chat_requested(session_id: String, title: String)
 const _CHAT_ICON := "res://addons/godot_github_cursor_kanban/icons/chat.png"
 const _CHECKOUT_ICON := "res://addons/godot_github_cursor_kanban/icons/checkout.png"
 
-var _dot_working: Texture2D
-var _dot_idle: Texture2D
 var _icons_ready := false
+var _spinner: Texture2D
+var _spinning := false
+
+
+func _enter_tree() -> void:
+	set_process(false)
 
 
 func apply(card: Dictionary) -> void:
@@ -18,11 +22,7 @@ func apply(card: Dictionary) -> void:
 	var has_session := not str(card.get("session_id", "")).is_empty()
 	%Chat.visible = has_session
 	%SessionStatus.visible = has_session
-	if has_session:
-		# SessionStatus 表示这个聊天是否正在工作。
-		%SessionStatus.texture = _working_texture() if bool(card.get("working", false)) else _idle_texture()
-		%SessionStatus.tooltip_text = "工作中" if bool(card.get("working", false)) else "空闲"
-		%SessionStatus.custom_minimum_size = Vector2(12, 12)
+	_set_spinning(has_session and bool(card.get("working", false)))
 	var has_branch := not str(card.get("branch", "")).is_empty()
 	%Checkout.visible = has_branch
 	%Checkout.set_meta("branch", str(card.get("branch", "")))
@@ -81,23 +81,50 @@ func _on_checkout_pressed() -> void:
 	checkout_requested.emit(str(checkout.get_meta("branch", "")))
 
 
-func _working_texture() -> Texture2D:
-	if _dot_working == null:
-		_dot_working = _make_dot(Color(0.2, 0.75, 0.35))
-	return _dot_working
+func _set_spinning(working: bool) -> void:
+	var status := %SessionStatus as TextureRect
+	status.texture = _spinner_texture()
+	status.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	status.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	status.custom_minimum_size = Vector2(16, 16)
+	status.tooltip_text = "工作中" if working else "空闲"
+	# 不工作时留着占位，只把图标打成全透明。
+	status.modulate.a = 1.0 if working else 0.0
+	status.pivot_offset = status.custom_minimum_size * 0.5
+	if not working:
+		status.rotation = 0.0
+	_spinning = working
+	set_process(working)
 
 
-func _idle_texture() -> Texture2D:
-	if _dot_idle == null:
-		_dot_idle = _make_dot(Color(0.55, 0.55, 0.55))
-	return _dot_idle
+func _process(delta: float) -> void:
+	if not _spinning:
+		return
+	var status := %SessionStatus as TextureRect
+	status.pivot_offset = status.size * 0.5
+	status.rotation = wrapf(status.rotation + delta * TAU, 0.0, TAU)
 
 
-func _make_dot(color: Color) -> Texture2D:
-	var image := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+func _spinner_texture() -> Texture2D:
+	if _spinner == null:
+		_spinner = _theme_icon(["Reload", "Loop", "RotateRight"], "")
+		if _spinner == null:
+			_spinner = _make_spinner()
+	return _spinner
+
+
+func _make_spinner() -> Texture2D:
+	var image := Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	for y in 12:
-		for x in 12:
-			if Vector2(x - 5.5, y - 5.5).length() <= 5.0:
-				image.set_pixel(x, y, color)
+	var center := Vector2(7.5, 7.5)
+	for y in 16:
+		for x in 16:
+			var offset := Vector2(x, y) - center
+			var radius := offset.length()
+			if radius < 4.2 or radius > 6.6:
+				continue
+			var angle := fposmod(offset.angle(), TAU)
+			if angle > PI:
+				continue
+			image.set_pixel(x, y, Color(0.75, 0.75, 0.75, 1.0 - angle / PI))
 	return ImageTexture.create_from_image(image)
