@@ -17,24 +17,34 @@ static func list_unarchived_sessions(token: String, repo_slug: String) -> Dictio
 		var path := "/v1/agents?limit=100&includeArchived=false"
 		if not cursor.is_empty():
 			path += "&cursor=" + cursor.uri_encode()
+		var page_started := Time.get_ticks_msec()
 		var payload := request(token, HTTPClient.METHOD_GET, path)
 		if payload.is_empty():
+			print("看板筛选分页 %s %d ms" % [path, Time.get_ticks_msec() - page_started])
 			saw_error = true
 			break
 		var items: Variant = payload.get("items", [])
 		if typeof(items) != TYPE_ARRAY:
 			saw_error = true
+			print("看板筛选分页 %s %d ms" % [path, Time.get_ticks_msec() - page_started])
 			break
 		for item in items:
 			if typeof(item) != TYPE_DICTIONARY:
 				continue
+			var filter_started := Time.get_ticks_msec()
 			var session := _session_for_repo(token, item, repo_slug)
+			print("看板筛选 %s %d ms keep=%s" % [
+				str(item.get("id", "")),
+				Time.get_ticks_msec() - filter_started,
+				str(not session.is_empty() and not bool(session.get("_error", false))),
+			])
 			if bool(session.get("_error", false)):
 				saw_error = true
 				continue
 			if session.is_empty():
 				continue
 			sessions.append(session)
+		print("看板筛选分页 %s %d ms" % [path, Time.get_ticks_msec() - page_started])
 		var next := payload.get("nextCursor", "")
 		cursor = "" if next == null else str(next)
 		if cursor.is_empty() or cursor == "<null>":
@@ -78,6 +88,13 @@ static func send_message(token: String, agent_id: String, text: String) -> bool:
 
 
 static func request(token: String, method: int, path: String, body: String = "") -> Dictionary:
+	var started := Time.get_ticks_msec()
+	var parsed := _request(token, method, path, body)
+	print("看板请求 %s %s %d ms" % [_method_name(method), path, Time.get_ticks_msec() - started])
+	return parsed
+
+
+static func _request(token: String, method: int, path: String, body: String = "") -> Dictionary:
 	var client := HTTPClient.new()
 	var err := client.connect_to_host(_HOST, 443, TLSOptions.client())
 	if err != OK:
@@ -123,6 +140,16 @@ static func request(token: String, method: int, path: String, body: String = "")
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
+
+
+static func _method_name(method: int) -> String:
+	match method:
+		HTTPClient.METHOD_GET:
+			return "GET"
+		HTTPClient.METHOD_POST:
+			return "POST"
+		_:
+			return str(method)
 
 
 static func _session_for_repo(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
