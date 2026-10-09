@@ -160,6 +160,8 @@ func _persist_sessions() -> void:
 		return
 	var sessions: Array = []
 	for child in $ScrollContainer/VBoxContainer.get_children():
+		if not child.visible:
+			continue
 		var session: Variant = child.get_meta("session", null)
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
