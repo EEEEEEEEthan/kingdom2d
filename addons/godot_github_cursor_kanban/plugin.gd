@@ -3,9 +3,11 @@ extends EditorPlugin
 
 const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn")
 const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
+const _CHAT_WINDOW := preload("res://addons/godot_github_cursor_kanban/chat_window.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
 const _MAIN_BRANCH_ICON := "res://addons/godot_github_cursor_kanban/icons/main_branch.png"
+const _REFRESH_PATH := "res://addons/godot_github_cursor_kanban/icons/refresh.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
 # 英文蛇形键，显示名交给属性翻译域（中文默认，英文编辑器语言下为英文）。
@@ -17,6 +19,9 @@ const _PROPERTY_DOMAIN := "godot.properties"
 var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
+var _refresh_button: Button
+var _refreshing := false
+var _chat_windows := {}
 
 
 func _enter_tree() -> void:
@@ -25,21 +30,26 @@ func _enter_tree() -> void:
 
 	var content := _DOCK_SCENE.instantiate() as Control
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var toolbar := HBoxContainer.new()
+	toolbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(toolbar)
+	content.move_child(toolbar, 0)
 	var settings_button := content.get_node("Settings") as Button
+	content.remove_child(settings_button)
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
-	var refresh_button := Button.new()
-	refresh_button.text = tr("刷新")
-	refresh_button.pressed.connect(_refresh_cards)
-	content.add_child(refresh_button)
-	content.move_child(refresh_button, 1)
+	_refresh_button = Button.new()
+	_refresh_button.icon = _refresh_button_icon()
+	_refresh_button.tooltip_text = tr("刷新")
+	_refresh_button.pressed.connect(_refresh_cards)
+	toolbar.add_child(_refresh_button)
 	var main_button := Button.new()
-	main_button.icon = _load_png(_MAIN_BRANCH_ICON)
+	main_button.icon = _load_png_texture(_MAIN_BRANCH_ICON)
 	main_button.tooltip_text = tr("切回主分支")
 	main_button.pressed.connect(_confirm_reset_to_main)
-	content.add_child(main_button)
-	content.move_child(main_button, 2)
+	toolbar.add_child(main_button)
+	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
@@ -49,28 +59,48 @@ func _enter_tree() -> void:
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
 	add_dock(_dock)
-	_refresh_cards()
+	# 启动时只排队，不在主线程上拉会话和 PR。
+	call_deferred("_refresh_cards")
 
 
 func _refresh_cards() -> void:
-	if _card_list == null:
+	if _card_list == null or _refreshing:
 		return
-	for child in _card_list.get_children():
-		_card_list.remove_child(child)
-		child.free()
+	_refreshing = true
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = true
 	var settings := EditorInterface.get_editor_settings()
 	var token := ""
 	if settings.has_setting(_SETTING_TOKEN):
 		token = str(settings.get_setting(_SETTING_TOKEN))
-	var root := _Board.project_path()
+	WorkerThreadPool.add_task(_load_cards_off_thread.bind(token, _Board.project_path()))
+
+
+func _load_cards_off_thread(token: String, root: String) -> void:
 	var slug := _Board.origin_slug(root)
 	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
 	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
-	for card_data in _Board.merge_cards(sessions, prs):
+	var merged: Array[Dictionary] = _Board.list_merged_prs(slug)
+	var cards := _Board.merge_cards(sessions, prs, merged)
+	if is_instance_valid(self):
+		call_deferred("_apply_cards", cards)
+
+
+func _apply_cards(cards: Array) -> void:
+	_refreshing = false
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = false
+	if _card_list == null or not is_inside_tree():
+		return
+	for child in _card_list.get_children():
+		_card_list.remove_child(child)
+		child.free()
+	for card_data in cards:
 		var card := _CARD_SCENE.instantiate()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(card_data)
 		card.checkout_requested.connect(_on_checkout_requested)
+		card.chat_requested.connect(_on_chat_requested)
 		_card_list.add_child(card)
 
 
@@ -78,14 +108,12 @@ func _confirm_reset_to_main() -> void:
 	var dialog := ConfirmationDialog.new()
 	dialog.title = tr("切回主分支")
 	dialog.dialog_text = tr("用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。")
+	dialog.ok_button_text = tr("是")
+	dialog.cancel_button_text = tr("否")
 	dialog.confirmed.connect(_reset_to_main)
-	dialog.canceled.connect(dialog.queue_free)
 	dialog.confirmed.connect(dialog.queue_free)
-	var base := EditorInterface.get_base_control()
-	if base:
-		base.add_child(dialog)
-	else:
-		add_child(dialog)
+	dialog.canceled.connect(dialog.queue_free)
+	EditorInterface.get_base_control().add_child(dialog)
 	dialog.popup_centered()
 
 
@@ -95,7 +123,41 @@ func _reset_to_main() -> void:
 	_restart_after_branch_switch()
 
 
+func _on_chat_requested(session_id: String, title: String) -> void:
+	if session_id.is_empty():
+		return
+	var window: Window = _chat_windows.get(session_id) as Window
+	if window == null or not is_instance_valid(window):
+		window = _CHAT_WINDOW.instantiate()
+		EditorInterface.get_base_control().add_child(window)
+		_chat_windows[session_id] = window
+		window.tree_exited.connect(func() -> void:
+			if _chat_windows.get(session_id) == window:
+				_chat_windows.erase(session_id)
+		)
+	var settings := EditorInterface.get_editor_settings()
+	var token := ""
+	if settings.has_setting(_SETTING_TOKEN):
+		token = str(settings.get_setting(_SETTING_TOKEN))
+	window.open_session(token, session_id, title)
+
+
 func _on_checkout_requested(branch: String) -> void:
+	if branch.is_empty():
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = tr("切换分支")
+	dialog.dialog_text = tr("放弃所有修改并切换到 %s？") % branch
+	dialog.ok_button_text = tr("是")
+	dialog.cancel_button_text = tr("否")
+	dialog.confirmed.connect(_checkout_and_restart.bind(branch))
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	EditorInterface.get_base_control().add_child(dialog)
+	dialog.popup_centered()
+
+
+func _checkout_and_restart(branch: String) -> void:
 	if not _Board.checkout_branch(_Board.project_path(), branch):
 		return
 	_restart_after_branch_switch()
@@ -114,6 +176,11 @@ func _restart_after_branch_switch() -> void:
 
 func _exit_tree() -> void:
 	_uninstall_translations()
+	for session_id in _chat_windows.keys():
+		var window: Window = _chat_windows[session_id] as Window
+		if is_instance_valid(window):
+			window.queue_free()
+	_chat_windows.clear()
 	if _dock:
 		remove_dock(_dock)
 		_dock.free()
@@ -199,6 +266,15 @@ func _ensure_setting(
 	})
 
 
+func _refresh_button_icon() -> Texture2D:
+	var base := EditorInterface.get_base_control()
+	if base:
+		for icon_name in ["Reload", "Loop", "RotateRight"]:
+			if base.has_theme_icon(icon_name, "EditorIcons"):
+				return base.get_theme_icon(icon_name, "EditorIcons")
+	return _load_png_texture(_REFRESH_PATH)
+
+
 func _settings_button_icon() -> Texture2D:
 	var base := EditorInterface.get_base_control()
 	if base:
@@ -210,10 +286,10 @@ func _settings_button_icon() -> Texture2D:
 
 
 func _load_gear_texture() -> Texture2D:
-	return _load_png(_GEAR_PATH)
+	return _load_png_texture(_GEAR_PATH)
 
 
-func _load_png(path: String) -> Texture2D:
+func _load_png_texture(path: String) -> Texture2D:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null

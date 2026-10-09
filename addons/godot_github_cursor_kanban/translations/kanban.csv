@@ -1,9 +1,16 @@
 keys,en,zh
 看板,Kanban,看板
 看板设置,Kanban Settings,看板设置
+刷新,Refresh,刷新
+打开聊天,Open chat,打开聊天
+检出分支,Checkout branch,检出分支
 看板：打不开编辑器设置。,Kanban: Can't open Editor Settings.,看板：打不开编辑器设置。
 Kanban,Kanban,看板
 Restart Editor After Branch Switch,Restart Editor After Branch Switch,切换分支后自动重启编辑器
 Cursor Token,Cursor token,Cursor token
 切回主分支,Switch to default branch,切回主分支
 用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。,Overwrite the local checkout with the latest remote default branch? Uncommitted changes will be lost.,用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。
+切换分支,Switch Branch,切换分支
+放弃所有修改并切换到 %s？,Discard all changes and switch to %s?,放弃所有修改并切换到 %s？
+是,Yes,是
+否,No,否
