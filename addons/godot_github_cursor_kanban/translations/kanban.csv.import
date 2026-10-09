@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cn56hw6bsqjyp"
+
+[deps]
+
+files=["res://addons/godot_github_cursor_kanban/translations/kanban.en.translation", "res://addons/godot_github_cursor_kanban/translations/kanban.zh.translation"]
+
+source_file="res://addons/godot_github_cursor_kanban/translations/kanban.csv"
+dest_files=["res://addons/godot_github_cursor_kanban/translations/kanban.en.translation", "res://addons/godot_github_cursor_kanban/translations/kanban.zh.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

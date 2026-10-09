@@ -16,14 +16,13 @@ corner_detail = 5
 script/source = "@tool
 extends RichTextLabel
 
-
-func _get_maximum_size() -> Vector2:
+func _process(dt):
 	var s = owner.get_parent().size
-	return Vector2(s.x - 8 - 16, -1)
+	custom_maximum_size = Vector2(s.x - 8 - 16, -1)
 "
 
 [node name="ChatBubble" type="VBoxContainer" unique_id=1783960653]
-offset_right = 40.0
+offset_right = 59.0
 offset_bottom = 100.0
 theme_override_constants/separation = 2
 
