@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://kvsdcnxpbdk6"]
 
 [node name="Card" type="PanelContainer" unique_id=2093432049]
-offset_right = 91.0
-offset_bottom = 54.0
+offset_right = 168.0
+offset_bottom = 18.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=524889480]
+[node name="VBoxContainer" type="HBoxContainer" parent="." unique_id=1969001910]
 layout_mode = 2
 
 [node name="CardName" type="Label" parent="VBoxContainer" unique_id=1827342251]
@@ -15,23 +15,16 @@ text = "card_name"
 
 [node name="SessionInfo" type="HBoxContainer" parent="VBoxContainer" unique_id=1046074058]
 layout_mode = 2
+size_flags_horizontal = 10
 
 [node name="SessionStatus" type="TextureRect" parent="VBoxContainer/SessionInfo" unique_id=460378995]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/SessionInfo" unique_id=348509240]
+[node name="Chat" type="Button" parent="VBoxContainer/SessionInfo" unique_id=348509240]
 layout_mode = 2
 text = "chat"
 
-[node name="PRInfo" type="HBoxContainer" parent="VBoxContainer" unique_id=1142878568]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="PRStatus" type="TextureRect" parent="VBoxContainer/PRInfo" unique_id=154840503]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="Button" type="Button" parent="VBoxContainer/PRInfo" unique_id=967422996]
+[node name="Checkout" type="Button" parent="VBoxContainer" unique_id=967422996]
 layout_mode = 2
 text = "checkout"
