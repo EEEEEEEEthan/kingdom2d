@@ -10,14 +10,31 @@ const _SECTION := "kanban"
 
 var _refreshing := false
 var _chat_windows := {}
+var _mutex := Mutex.new()
+var _pending: Dictionary = {}
+var _pending_ready := false
 
 
 func _ready() -> void:
+	set_process(true)
 	$HBoxContainer/Refresh.pressed.connect(refresh)
 	$"HBoxContainer/Checkout Master".pressed.connect(_checkout_master)
 	%Settings.pressed.connect(_open_settings)
 	_clear_cards()
 	call_deferred("refresh")
+
+
+func _process(_delta: float) -> void:
+	var ready := false
+	var payload := {}
+	_mutex.lock()
+	if _pending_ready:
+		ready = true
+		_pending_ready = false
+		payload = _pending
+	_mutex.unlock()
+	if ready:
+		_apply_sessions(payload.get("sessions", []), str(payload.get("notice", "")))
 
 
 func _exit_tree() -> void:
@@ -37,13 +54,17 @@ func refresh() -> void:
 	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
 	WorkerThreadPool.add_task(func() -> void:
 		var slug := _origin_slug(root)
-		var sessions := _Client.list_unarchived_sessions(token, slug)
-		if is_instance_valid(self):
-			call_deferred("_apply_sessions", sessions)
+		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug)
+		if not is_instance_valid(self):
+			return
+		_mutex.lock()
+		_pending = payload
+		_pending_ready = true
+		_mutex.unlock()
 	)
 
 
-func _apply_sessions(sessions: Array) -> void:
+func _apply_sessions(sessions: Array, notice: String) -> void:
 	_refreshing = false
 	$HBoxContainer/Refresh.disabled = false
 	if not is_inside_tree():
@@ -60,6 +81,12 @@ func _apply_sessions(sessions: Array) -> void:
 		card.apply(session)
 		card.chat_requested.connect(_open_chat)
 		list.add_child(card)
+	if list.get_child_count() == 0 and not notice.is_empty():
+		var label := Label.new()
+		label.text = notice
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		list.add_child(label)
 
 
 func _clear_cards() -> void:

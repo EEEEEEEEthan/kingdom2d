@@ -4,35 +4,45 @@ extends RefCounted
 const _HOST := "api.cursor.com"
 
 
-static func list_unarchived_sessions(token: String, repo_slug: String) -> Array[Dictionary]:
+static func list_unarchived_sessions(token: String, repo_slug: String) -> Dictionary:
 	var sessions: Array[Dictionary] = []
 	if token.is_empty():
 		push_warning("看板：未配置 Cursor token。")
-		return sessions
+		return {"sessions": sessions, "notice": "未配置 Cursor Token，点右上角设置填写。"}
+	if repo_slug.is_empty():
+		return {"sessions": sessions, "notice": "读不到当前仓库的 origin。"}
 	var cursor := ""
+	var saw_error := false
 	for _page in 5:
 		var path := "/v1/agents?limit=100&includeArchived=false"
 		if not cursor.is_empty():
 			path += "&cursor=" + cursor.uri_encode()
 		var payload := request(token, HTTPClient.METHOD_GET, path)
 		if payload.is_empty():
+			saw_error = true
 			break
 		var items: Variant = payload.get("items", [])
 		if typeof(items) != TYPE_ARRAY:
+			saw_error = true
 			break
 		for item in items:
 			if typeof(item) != TYPE_DICTIONARY:
 				continue
-			var session := _session_from_agent(token, item, repo_slug)
+			var session := _session_for_repo(token, item, repo_slug)
+			if bool(session.get("_error", false)):
+				saw_error = true
+				continue
 			if session.is_empty():
 				continue
-			if bool(session.get("archived", false)):
-				continue
 			sessions.append(session)
-		cursor = str(payload.get("nextCursor", ""))
-		if cursor.is_empty():
+		var next := payload.get("nextCursor", "")
+		cursor = "" if next == null else str(next)
+		if cursor.is_empty() or cursor == "<null>":
 			break
-	return sessions
+	var notice := ""
+	if sessions.is_empty():
+		notice = "读取 Cursor 会话失败。" if saw_error else "当前仓库没有未归档的云端会话。"
+	return {"sessions": sessions, "notice": notice}
 
 
 static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
@@ -115,32 +125,49 @@ static func request(token: String, method: int, path: String, body: String = "")
 	return parsed
 
 
-static func _session_from_agent(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
+static func _session_for_repo(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
+	var session := _session_from_list_item(item)
+	if session.is_empty():
+		return {}
+	var detail := request(token, HTTPClient.METHOD_GET, "/v1/agents/%s" % str(session["id"]).uri_encode())
+	if detail.is_empty():
+		return {"_error": true}
+	if str(detail.get("status", "")) == "ARCHIVED":
+		return {}
+	if not _repos_include(detail.get("repos", []), repo_slug):
+		return {}
+	session["name"] = str(detail.get("name", session["name"]))
+	session["url"] = str(detail.get("url", session["url"]))
+	session["working"] = str(detail.get("status", item.get("status", ""))) == "ACTIVE"
+	return session
+
+
+static func _repos_include(repos: Variant, repo_slug: String) -> bool:
+	if typeof(repos) != TYPE_ARRAY:
+		return false
+	for repo in repos:
+		if typeof(repo) != TYPE_DICTIONARY:
+			continue
+		if _same_repo(str(repo.get("url", "")), repo_slug):
+			return true
+	return false
+
+
+static func _same_repo(url: String, repo_slug: String) -> bool:
+	var text := url.strip_edges().trim_suffix(".git")
+	var tail := text
+	if text.contains("github.com"):
+		tail = text.split("github.com")[-1].trim_prefix(":").trim_prefix("/")
+	tail = tail.strip_edges().trim_prefix("/")
+	return tail.to_lower() == repo_slug.strip_edges().trim_prefix("/").to_lower()
+
+
+static func _session_from_list_item(item: Dictionary) -> Dictionary:
+	var agent_id := str(item.get("id", ""))
+	if agent_id.is_empty():
+		return {}
 	var status := str(item.get("status", ""))
 	if status == "ARCHIVED":
-		return {}
-	var agent_id := str(item.get("id", ""))
-	var run_id := str(item.get("latestRunId", ""))
-	var branch := ""
-	var pr_url := ""
-	var matches_repo := repo_slug.is_empty()
-	if not run_id.is_empty():
-		var run := request(token, HTTPClient.METHOD_GET, "/v1/agents/%s/runs/%s" % [agent_id, run_id])
-		var git: Variant = run.get("git", {})
-		if typeof(git) == TYPE_DICTIONARY:
-			var branches: Variant = git.get("branches", [])
-			if typeof(branches) == TYPE_ARRAY:
-				for entry in branches:
-					if typeof(entry) != TYPE_DICTIONARY:
-						continue
-					var repo_url := str(entry.get("repoUrl", ""))
-					if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
-						continue
-					matches_repo = true
-					branch = str(entry.get("branch", ""))
-					pr_url = str(entry.get("prUrl", ""))
-					break
-	if not matches_repo:
 		return {}
 	return {
 		"id": agent_id,
@@ -148,8 +175,8 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 		"url": str(item.get("url", "")),
 		"working": status == "ACTIVE",
 		"archived": false,
-		"branch": branch,
-		"pr_url": pr_url,
+		"branch": "",
+		"pr_url": "",
 	}
 
 
