@@ -4,45 +4,57 @@ extends RefCounted
 const _HOST := "api.cursor.com"
 
 
-static func list_unarchived_sessions(token: String, repo_slug: String) -> Dictionary:
+const _PAGE_SIZE := 20
+
+
+static func list_unarchived_sessions(token: String, repo_slug: String, cursor: String = "") -> Dictionary:
 	var sessions: Array[Dictionary] = []
 	if token.is_empty():
 		push_warning("看板：未配置 Cursor token。")
-		return {"sessions": sessions, "notice": "未配置 Cursor Token，点右上角设置填写。"}
+		return {"sessions": sessions, "notice": "未配置 Cursor Token，点右上角设置填写。", "next_cursor": ""}
 	if repo_slug.is_empty():
-		return {"sessions": sessions, "notice": "读不到当前仓库的 origin。"}
-	var cursor := ""
+		return {"sessions": sessions, "notice": "读不到当前仓库的 origin。", "next_cursor": ""}
+	var path := "/v1/agents?limit=%d&includeArchived=false" % _PAGE_SIZE
+	if not cursor.is_empty():
+		path += "&cursor=" + cursor.uri_encode()
+	var page_started := Time.get_ticks_msec()
+	var payload := request(token, HTTPClient.METHOD_GET, path)
 	var saw_error := false
-	for _page in 5:
-		var path := "/v1/agents?limit=100&includeArchived=false"
-		if not cursor.is_empty():
-			path += "&cursor=" + cursor.uri_encode()
-		var payload := request(token, HTTPClient.METHOD_GET, path)
-		if payload.is_empty():
-			saw_error = true
-			break
+	var next_cursor := ""
+	if payload.is_empty():
+		saw_error = true
+	else:
 		var items: Variant = payload.get("items", [])
 		if typeof(items) != TYPE_ARRAY:
 			saw_error = true
-			break
-		for item in items:
-			if typeof(item) != TYPE_DICTIONARY:
-				continue
-			var session := _session_for_repo(token, item, repo_slug)
-			if bool(session.get("_error", false)):
-				saw_error = true
-				continue
-			if session.is_empty():
-				continue
-			sessions.append(session)
-		var next := payload.get("nextCursor", "")
-		cursor = "" if next == null else str(next)
-		if cursor.is_empty() or cursor == "<null>":
-			break
+		else:
+			for item in items:
+				if typeof(item) != TYPE_DICTIONARY:
+					continue
+				var filter_started := Time.get_ticks_msec()
+				var session := _session_for_repo(token, item, repo_slug)
+				print("看板筛选 %s %d ms keep=%s" % [
+					str(item.get("id", "")),
+					Time.get_ticks_msec() - filter_started,
+					str(not session.is_empty() and not bool(session.get("_error", false))),
+				])
+				if bool(session.get("_error", false)):
+					saw_error = true
+					continue
+				if session.is_empty():
+					continue
+				sessions.append(session)
+			var next := payload.get("nextCursor", "")
+			next_cursor = "" if next == null else str(next)
+			if next_cursor == "<null>":
+				next_cursor = ""
+	print("看板筛选分页 %s %d ms" % [path, Time.get_ticks_msec() - page_started])
 	var notice := ""
-	if sessions.is_empty():
+	if sessions.is_empty() and next_cursor.is_empty():
 		notice = "读取 Cursor 会话失败。" if saw_error else "当前仓库没有未归档的云端会话。"
-	return {"sessions": sessions, "notice": notice}
+	elif saw_error and sessions.is_empty():
+		notice = "读取 Cursor 会话失败。"
+	return {"sessions": sessions, "notice": notice, "next_cursor": next_cursor}
 
 
 static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
@@ -78,6 +90,13 @@ static func send_message(token: String, agent_id: String, text: String) -> bool:
 
 
 static func request(token: String, method: int, path: String, body: String = "") -> Dictionary:
+	var started := Time.get_ticks_msec()
+	var parsed := _request(token, method, path, body)
+	print("看板请求 %s %s %d ms" % [_method_name(method), path, Time.get_ticks_msec() - started])
+	return parsed
+
+
+static func _request(token: String, method: int, path: String, body: String = "") -> Dictionary:
 	var client := HTTPClient.new()
 	var err := client.connect_to_host(_HOST, 443, TLSOptions.client())
 	if err != OK:
@@ -123,6 +142,16 @@ static func request(token: String, method: int, path: String, body: String = "")
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
+
+
+static func _method_name(method: int) -> String:
+	match method:
+		HTTPClient.METHOD_GET:
+			return "GET"
+		HTTPClient.METHOD_POST:
+			return "POST"
+		_:
+			return str(method)
 
 
 static func _session_for_repo(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
