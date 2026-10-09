@@ -167,15 +167,19 @@ static func checkout_branch(path: String, branch: String) -> bool:
 	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
 		push_warning("看板：没有可检出的分支。")
 		return false
-	var args := PackedStringArray(["-C", path, "checkout", branch])
-	if OS.execute("git", ["-C", path, "show-ref", "--verify", "--quiet", "refs/heads/" + branch], [], true) != 0:
-		var fetched := OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true)
-		if fetched != 0:
-			push_warning("看板：拉取远程分支失败。")
-			return false
-		args = PackedStringArray(["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch])
+	if OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true) != 0:
+		push_warning("看板：拉取远程分支失败。")
+		return false
+	# 丢掉已跟踪文件上的本地修改，再切到远程最新提交。
+	if OS.execute("git", ["-C", path, "reset", "--hard"], [], true) != 0:
+		push_warning("看板：丢弃本地修改失败。")
+		return false
+	# -fd 只删未跟踪且未被 ignore 的文件和目录。
+	if OS.execute("git", ["-C", path, "clean", "-fd"], [], true) != 0:
+		push_warning("看板：清理未跟踪文件失败。")
+		return false
 	var output: Array = []
-	var code := OS.execute("git", args, output, true)
+	var code := OS.execute("git", ["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch], output, true)
 	if code != 0:
 		push_warning("看板：检出分支失败。")
 		return false
