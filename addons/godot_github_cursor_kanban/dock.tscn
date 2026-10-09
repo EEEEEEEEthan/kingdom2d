@@ -9,7 +9,7 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Button" type="Button" parent="." unique_id=324213873]
+[node name="Settings" type="Button" parent="." unique_id=324213873]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
