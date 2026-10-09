@@ -35,7 +35,7 @@ func refresh() -> void:
 
 
 func _send() -> void:
-	var text := %Input.text.strip_edges()
+	var text: String = (%Input as LineEdit).text.strip_edges()
 	if text.is_empty() or _busy:
 		return
 	_busy = true
