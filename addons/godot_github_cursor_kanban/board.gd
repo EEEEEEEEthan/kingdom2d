@@ -218,6 +218,7 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		push_warning("看板：Cursor API 返回 %d。" % client.get_response_code())
 		return {}
 	var body := PackedByteArray()
+	ticks = 0
 	while client.get_status() == HTTPClient.STATUS_BODY:
 		client.poll()
 		var chunk := client.read_response_body_chunk()
@@ -225,6 +226,10 @@ static func _api_get(token: String, path: String) -> Dictionary:
 			OS.delay_msec(10)
 		else:
 			body.append_array(chunk)
+		ticks += 1
+		if ticks > 500:
+			push_warning("看板：读取 Cursor API 超时。")
+			return {}
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}

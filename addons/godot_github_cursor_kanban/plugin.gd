@@ -16,6 +16,7 @@ const _PROPERTY_DOMAIN := "godot.properties"
 var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
+var _refreshing := false
 
 
 func _enter_tree() -> void:
@@ -42,24 +43,38 @@ func _enter_tree() -> void:
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
 	add_dock(_dock)
-	_refresh_cards()
+	# 启动时只排队，不在主线程上拉会话和 PR。
+	call_deferred("_refresh_cards")
 
 
 func _refresh_cards() -> void:
-	if _card_list == null:
+	if _card_list == null or _refreshing:
 		return
-	for child in _card_list.get_children():
-		_card_list.remove_child(child)
-		child.free()
+	_refreshing = true
 	var settings := EditorInterface.get_editor_settings()
 	var token := ""
 	if settings.has_setting(_SETTING_TOKEN):
 		token = str(settings.get_setting(_SETTING_TOKEN))
-	var root := _Board.project_path()
+	WorkerThreadPool.add_task(_load_cards_off_thread.bind(token, _Board.project_path()))
+
+
+func _load_cards_off_thread(token: String, root: String) -> void:
 	var slug := _Board.origin_slug(root)
 	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
 	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
-	for card_data in _Board.merge_cards(sessions, prs):
+	var cards := _Board.merge_cards(sessions, prs)
+	if is_instance_valid(self):
+		call_deferred("_apply_cards", cards)
+
+
+func _apply_cards(cards: Array) -> void:
+	_refreshing = false
+	if _card_list == null or not is_inside_tree():
+		return
+	for child in _card_list.get_children():
+		_card_list.remove_child(child)
+		child.free()
+	for card_data in cards:
 		var card := _CARD_SCENE.instantiate()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(card_data)
