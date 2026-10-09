@@ -1,0 +1,4 @@
+keys,en,zh
+kanban,Kanban,看板
+kanban/restart_editor_after_branch_switch,Restart editor after switching branch,切换分支后需要重启
+kanban/cursor_token,Cursor Token,Cursor Token
