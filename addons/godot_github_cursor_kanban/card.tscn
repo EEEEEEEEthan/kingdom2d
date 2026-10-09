@@ -24,10 +24,12 @@ text = "card_name"
 [node name="Chat" type="Button" parent="VBoxContainer" unique_id=348509240]
 unique_name_in_owner = true
 layout_mode = 2
-text = "chat"
+flat = true
+text = ""
 
 [node name="Checkout" type="Button" parent="VBoxContainer" unique_id=967422996]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
-text = "checkout"
+flat = true
+text = ""
