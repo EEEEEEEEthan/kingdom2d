@@ -3,6 +3,7 @@ extends EditorPlugin
 
 const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn")
 const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
+const _CHAT_WINDOW := preload("res://addons/godot_github_cursor_kanban/chat_window.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
 const _REFRESH_PATH := "res://addons/godot_github_cursor_kanban/icons/refresh.png"
@@ -18,6 +19,7 @@ var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
 var _refreshing := false
+var _chat_windows := {}
 
 
 func _enter_tree() -> void:
@@ -87,7 +89,27 @@ func _apply_cards(cards: Array) -> void:
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(card_data)
 		card.checkout_requested.connect(_on_checkout_requested)
+		card.chat_requested.connect(_on_chat_requested)
 		_card_list.add_child(card)
+
+
+func _on_chat_requested(session_id: String, title: String) -> void:
+	if session_id.is_empty():
+		return
+	var window: Window = _chat_windows.get(session_id) as Window
+	if window == null or not is_instance_valid(window):
+		window = _CHAT_WINDOW.instantiate()
+		EditorInterface.get_base_control().add_child(window)
+		_chat_windows[session_id] = window
+		window.tree_exited.connect(func() -> void:
+			if _chat_windows.get(session_id) == window:
+				_chat_windows.erase(session_id)
+		)
+	var settings := EditorInterface.get_editor_settings()
+	var token := ""
+	if settings.has_setting(_SETTING_TOKEN):
+		token = str(settings.get_setting(_SETTING_TOKEN))
+	window.open_session(token, session_id, title)
 
 
 func _on_checkout_requested(branch: String) -> void:
@@ -105,6 +127,11 @@ func _on_checkout_requested(branch: String) -> void:
 
 func _exit_tree() -> void:
 	_uninstall_translations()
+	for session_id in _chat_windows.keys():
+		var window: Window = _chat_windows[session_id] as Window
+		if is_instance_valid(window):
+			window.queue_free()
+	_chat_windows.clear()
 	if _dock:
 		remove_dock(_dock)
 		_dock.free()

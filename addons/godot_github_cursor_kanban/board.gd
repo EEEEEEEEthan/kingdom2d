@@ -276,6 +276,26 @@ static func _make_card(session: Dictionary, pr: Dictionary) -> Dictionary:
 	}
 
 
+static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
+	var messages: Array[Dictionary] = []
+	if token.is_empty() or agent_id.is_empty():
+		push_warning("看板：没有可刷新的对话。")
+		return messages
+	var payload := _api_get(token, "/v0/agents/%s/conversation" % agent_id.uri_encode())
+	var items: Variant = payload.get("messages", [])
+	if typeof(items) != TYPE_ARRAY:
+		return messages
+	for item in items:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		messages.append({
+			"id": str(item.get("id", "")),
+			"type": str(item.get("type", "")),
+			"text": str(item.get("text", "")),
+		})
+	return messages
+
+
 static func checkout_branch(path: String, branch: String) -> bool:
 	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
 		push_warning("看板：没有可检出的分支。")
