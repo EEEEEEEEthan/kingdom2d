@@ -51,42 +51,69 @@ static func list_open_prs(repo_slug: String) -> Array[Dictionary]:
 	return prs
 
 
-static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]:
+static func list_sessions(token: String, repo_slug: String, log: Array[String] = []) -> Array[Dictionary]:
 	var sessions: Array[Dictionary] = []
+	_log(log, "开始拉会话，仓库=%s，token=%s" % [repo_slug, "空" if token.is_empty() else "已配置"])
 	if token.is_empty():
-		push_warning("看板：未配置 Cursor token，只列出 PR。")
+		_log(log, "未配置 Cursor token，只列出 PR。")
 		return sessions
+	var seen := 0
+	var skipped_run := 0
+	var skipped_repo := 0
+	var logged_drops := 0
 	var cursor := ""
-	for _page in 5:
+	for page in 5:
 		var path := "/v1/agents?limit=100&includeArchived=false"
 		if not cursor.is_empty():
 			path += "&cursor=" + cursor.uri_encode()
-		var payload := _api_get(token, path)
+		var payload := _api_get(token, path, log)
 		if payload.is_empty():
+			_log(log, "第 %d 页会话列表失败或为空。" % (page + 1))
 			break
 		var items: Variant = payload.get("items", [])
 		if typeof(items) != TYPE_ARRAY:
+			_log(log, "第 %d 页没有 items，键=%s" % [page + 1, ",".join(payload.keys())])
 			break
+		_log(log, "第 %d 页 %d 条。" % [page + 1, items.size()])
 		for item in items:
 			if typeof(item) != TYPE_DICTIONARY:
 				continue
-			var session := _session_from_agent(token, item, repo_slug)
-			if not session.is_empty():
-				sessions.append(session)
+			seen += 1
+			var session := _session_from_agent(token, item, repo_slug, log if logged_drops < 40 else [])
+			if session.is_empty() and logged_drops < 40:
+				logged_drops += 1
+			if session.is_empty():
+				if str(item.get("latestRunId", "")).is_empty():
+					skipped_run += 1
+				else:
+					skipped_repo += 1
+				continue
+			sessions.append(session)
+			_log(log, "命中 %s id=%s 分支=%s pr=%s 状态=%s" % [
+				str(session.get("name", "")),
+				str(session.get("id", "")),
+				str(session.get("branch", "")),
+				str(session.get("pr_url", "")),
+				str(item.get("status", "")),
+			])
 		cursor = str(payload.get("nextCursor", ""))
 		if cursor.is_empty():
 			break
+	_log(log, "会话扫描 %d，命中 %d，无 run %d，仓库不匹配 %d。" % [seen, sessions.size(), skipped_run, skipped_repo])
+	if logged_drops >= 40 and skipped_run + skipped_repo > logged_drops:
+		_log(log, "丢弃明细只打印了前 %d 条。" % logged_drops)
 	return sessions
 
 
-static func _session_from_agent(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
+static func _session_from_agent(token: String, item: Dictionary, repo_slug: String, log: Array[String] = []) -> Dictionary:
 	var agent_id := str(item.get("id", ""))
 	var run_id := str(item.get("latestRunId", ""))
 	var branch := ""
 	var pr_url := ""
+	var run := {}
 	var matches_repo := repo_slug.is_empty()
 	if not run_id.is_empty():
-		var run := _api_get(token, "/v1/agents/%s/runs/%s" % [agent_id, run_id])
+		run = _api_get(token, "/v1/agents/%s/runs/%s" % [agent_id, run_id], log)
 		var git: Variant = run.get("git", {})
 		if typeof(git) == TYPE_DICTIONARY:
 			var branches: Variant = git.get("branches", [])
@@ -102,6 +129,13 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 					pr_url = str(entry.get("prUrl", ""))
 					break
 	if not matches_repo:
+		var repo_urls := _run_repo_urls(run if not run_id.is_empty() else {})
+		_log(log, "丢弃 %s id=%s run=%s 仓库=%s" % [
+			str(item.get("name", "")),
+			agent_id,
+			"无" if run_id.is_empty() else run_id,
+			"无" if repo_urls.is_empty() else ", ".join(repo_urls),
+		])
 		return {}
 	var status := str(item.get("status", ""))
 	return {
@@ -319,11 +353,30 @@ static func checkout_branch(path: String, branch: String) -> bool:
 	return true
 
 
-static func _api_get(token: String, path: String) -> Dictionary:
+static func _log(log: Array[String], line: String) -> void:
+	log.append(line)
+
+
+static func _run_repo_urls(run: Dictionary) -> PackedStringArray:
+	var urls := PackedStringArray()
+	var git: Variant = run.get("git", {})
+	if typeof(git) != TYPE_DICTIONARY:
+		return urls
+	var branches: Variant = git.get("branches", [])
+	if typeof(branches) != TYPE_ARRAY:
+		return urls
+	for entry in branches:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		urls.append(str(entry.get("repoUrl", "")))
+	return urls
+
+
+static func _api_get(token: String, path: String, log: Array[String] = []) -> Dictionary:
 	var client := HTTPClient.new()
 	var err := client.connect_to_host("api.cursor.com", 443, TLSOptions.client())
 	if err != OK:
-		push_warning("看板：连不上 Cursor API。")
+		_log(log, "连不上 Cursor API %s，错误 %d。" % [path, err])
 		return {}
 	var ticks := 0
 	while client.get_status() in [HTTPClient.STATUS_CONNECTING, HTTPClient.STATUS_RESOLVING]:
@@ -331,10 +384,10 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		OS.delay_msec(10)
 		ticks += 1
 		if ticks > 500:
-			push_warning("看板：连接 Cursor API 超时。")
+			_log(log, "连接 Cursor API 超时 %s。" % path)
 			return {}
 	if client.get_status() != HTTPClient.STATUS_CONNECTED:
-		push_warning("看板：连接 Cursor API 失败。")
+		_log(log, "连接 Cursor API 失败 %s，状态 %d。" % [path, client.get_status()])
 		return {}
 	var headers := PackedStringArray([
 		"Authorization: Basic " + Marshalls.utf8_to_base64(token + ":"),
@@ -342,7 +395,7 @@ static func _api_get(token: String, path: String) -> Dictionary:
 	])
 	err = client.request(HTTPClient.METHOD_GET, path, headers)
 	if err != OK:
-		push_warning("看板：请求 Cursor API 失败。")
+		_log(log, "请求 Cursor API 失败 %s，错误 %d。" % [path, err])
 		return {}
 	ticks = 0
 	while client.get_status() == HTTPClient.STATUS_REQUESTING:
@@ -350,9 +403,10 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		OS.delay_msec(10)
 		ticks += 1
 		if ticks > 500:
+			_log(log, "等待 Cursor API 超时 %s，状态 %d。" % [path, client.get_status()])
 			return {}
 	if client.get_response_code() != 200:
-		push_warning("看板：Cursor API 返回 %d。" % client.get_response_code())
+		_log(log, "Cursor API 返回 %d %s。" % [client.get_response_code(), path])
 		return {}
 	var body := PackedByteArray()
 	ticks = 0
@@ -365,9 +419,10 @@ static func _api_get(token: String, path: String) -> Dictionary:
 			body.append_array(chunk)
 		ticks += 1
 		if ticks > 500:
-			push_warning("看板：读取 Cursor API 超时。")
+			_log(log, "读取 Cursor API 超时 %s。" % path)
 			return {}
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_DICTIONARY:
+		_log(log, "Cursor API 不是 JSON 对象 %s。" % path)
 		return {}
 	return parsed

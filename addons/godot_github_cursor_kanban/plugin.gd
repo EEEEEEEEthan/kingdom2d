@@ -71,16 +71,27 @@ func _refresh_cards() -> void:
 
 
 func _load_cards_off_thread(token: String, root: String) -> void:
+	var log: Array[String] = []
 	var slug := _Board.origin_slug(root)
-	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
+	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug, log)
 	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
 	var merged: Array[Dictionary] = _Board.list_merged_prs(slug)
 	var cards := _Board.merge_cards(sessions, prs, merged)
+	log.append("未合并 PR %d，已合并 PR %d，卡片 %d。" % [prs.size(), merged.size(), cards.size()])
+	for card_data in cards:
+		var session_id := str(card_data.get("session_id", ""))
+		log.append("卡片「%s」聊天=%s 分支=%s" % [
+			str(card_data.get("title", "")),
+			"无" if session_id.is_empty() else session_id,
+			str(card_data.get("branch", "")),
+		])
 	if is_instance_valid(self):
-		call_deferred("_apply_cards", cards)
+		call_deferred("_apply_cards", cards, log)
 
 
-func _apply_cards(cards: Array) -> void:
+func _apply_cards(cards: Array, log: Array = []) -> void:
+	for line in log:
+		print("看板：%s" % str(line))
 	_refreshing = false
 	if is_instance_valid(_refresh_button):
 		_refresh_button.disabled = false
