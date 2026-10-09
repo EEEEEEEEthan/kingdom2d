@@ -16,11 +16,17 @@ static func origin_slug(path: String, job: Dictionary = {}) -> String:
 
 
 static func _slug_from_remote(remote: String) -> String:
-	var text := remote.trim_suffix(".git")
+	var text := remote.strip_edges().trim_suffix(".git").trim_suffix("/")
 	if text.contains("github.com"):
 		var tail := text.split("github.com")[-1].trim_prefix(":").trim_prefix("/")
-		return tail.strip_edges()
+		return tail.strip_edges().trim_suffix("/")
 	return text
+
+
+static func _same_repo(repo_url: String, repo_slug: String) -> bool:
+	var left := _slug_from_remote(repo_url).to_lower()
+	var right := _slug_from_remote(repo_slug).to_lower()
+	return not left.is_empty() and left == right
 
 
 static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
@@ -370,22 +376,26 @@ static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: Str
 	var agent_id := str(item.get("id", ""))
 	var branch := ""
 	var pr_url := ""
-	var matches_repo := repo_slug.is_empty()
+	# 认不出当前仓库时不收对话，避免把账号下其他仓库的会话铺进看板。
+	if repo_slug.is_empty():
+		return {}
 	var git: Variant = run.get("git", {})
-	if typeof(git) == TYPE_DICTIONARY:
-		var branches: Variant = git.get("branches", [])
-		if typeof(branches) == TYPE_ARRAY:
-			for entry in branches:
-				if typeof(entry) != TYPE_DICTIONARY:
-					continue
-				var repo_url := str(entry.get("repoUrl", ""))
-				if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
-					continue
-				matches_repo = true
-				branch = str(entry.get("branch", ""))
-				pr_url = str(entry.get("prUrl", ""))
-				break
-	if not matches_repo:
+	if typeof(git) != TYPE_DICTIONARY:
+		return {}
+	var branches: Variant = git.get("branches", [])
+	if typeof(branches) != TYPE_ARRAY:
+		return {}
+	var matched := false
+	for entry in branches:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		if not _same_repo(str(entry.get("repoUrl", "")), repo_slug):
+			continue
+		matched = true
+		branch = str(entry.get("branch", ""))
+		pr_url = str(entry.get("prUrl", ""))
+		break
+	if not matched:
 		return {}
 	var status := str(item.get("status", ""))
 	return {
