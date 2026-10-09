@@ -38,16 +38,18 @@ func _ensure_icons() -> void:
 	if _icons_ready:
 		return
 	_icons_ready = true
-	_set_symbol(%Chat, ["Chat"], _CHAT_ICON, tr("打开聊天"))
+	# 图标只赋给 Button.icon，按钮本身保持编辑器按钮样式。
+	_set_symbol(%Chat, [], _CHAT_ICON, tr("打开聊天"))
 	_set_symbol(%Checkout, ["VcsBranches", "VcsBranch"], _CHECKOUT_ICON, tr("检出分支"))
 
 
 func _set_symbol(button: Button, theme_names: Array, fallback_path: String, tip: String) -> void:
 	button.text = ""
-	button.flat = true
+	button.flat = false
+	button.expand_icon = false
 	button.icon = _theme_icon(theme_names, fallback_path)
 	button.tooltip_text = tip
-	button.custom_minimum_size = Vector2(24, 24)
+	button.custom_minimum_size = Vector2(28, 28)
 
 
 func _theme_icon(names: Array, fallback_path: String) -> Texture2D:
