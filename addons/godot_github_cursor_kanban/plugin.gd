@@ -24,7 +24,11 @@ var _refreshing := false
 var _chat_windows := {}
 var _thread: Thread
 var _job: Dictionary = {}
-var _http: HTTPRequest
+const _RUN_CONCURRENCY := 8
+
+var _agents_http: HTTPRequest
+var _run_pool: Array[HTTPRequest] = []
+var _run_busy: Dictionary = {}
 var _fetch_gen := 0
 var _fetch_token := ""
 var _fetch_slug := ""
@@ -34,8 +38,7 @@ var _fetch_sessions: Array[Dictionary] = []
 var _fetch_runs: Array[Dictionary] = []
 var _fetch_cursor := ""
 var _fetch_page := 0
-var _http_kind := ""
-var _run_item: Dictionary = {}
+var _run_gen: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -65,9 +68,9 @@ func _enter_tree() -> void:
 	toolbar.add_child(main_button)
 	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
-	_http = HTTPRequest.new()
-	_http.timeout = 8.0
-	_http.request_completed.connect(_on_http)
+	_agents_http = _make_http(_on_agents_http, false)
+	for _i in _RUN_CONCURRENCY:
+		_run_pool.append(_make_http(_on_run_http, true))
 
 	_dock = EditorDock.new()
 	_dock.title = tr("看板")
@@ -75,7 +78,9 @@ func _enter_tree() -> void:
 	_dock.layout_key = "godot_github_cursor_kanban"
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
-	_dock.add_child(_http)
+	_dock.add_child(_agents_http)
+	for http in _run_pool:
+		_dock.add_child(http)
 	add_dock(_dock)
 	# 启动时只排队，不在主线程上拉会话和 PR。
 	call_deferred("_refresh_cards")
@@ -106,10 +111,9 @@ func _refresh_cards() -> void:
 
 func _load_prs_off_thread(token: String, root: String, job: Dictionary, gen: int) -> void:
 	var slug := _Board.origin_slug(root, job)
-	var prs: Array = _Board.list_open_prs(slug, job)
-	var merged: Array = _Board.list_merged_prs(slug, job)
+	var bundle: Dictionary = _Board.list_board_prs(slug, job)
 	if is_instance_valid(self):
-		call_deferred("_continue_refresh", token, slug, prs, merged, gen)
+		call_deferred("_continue_refresh", token, slug, bundle.get("open", []), bundle.get("merged", []), gen)
 
 
 func _continue_refresh(token: String, slug: String, prs: Array, merged: Array, gen: int) -> void:
@@ -132,47 +136,74 @@ func _continue_refresh(token: String, slug: String, prs: Array, merged: Array, g
 
 
 func _request_agents_page() -> void:
-	_http_kind = "agents"
-	var err := _http.request(_Board.api_url(_Board.agents_path(_fetch_cursor)), _Board.api_headers(_fetch_token))
+	var err := _agents_http.request(_Board.api_url(_Board.agents_path(_fetch_cursor)), _Board.api_headers(_fetch_token))
 	if err != OK:
 		push_warning("看板：请求 Cursor API 失败。")
 		_finish_cards()
 
 
-func _request_next_run() -> void:
-	if _fetch_runs.is_empty():
-		_finish_cards()
-		return
-	var entry: Dictionary = _fetch_runs.pop_front()
-	_run_item = entry.get("item", {})
-	_http_kind = "run"
-	var path := "/v1/agents/%s/runs/%s" % [str(_run_item.get("id", "")), str(entry.get("run_id", ""))]
-	var err := _http.request(_Board.api_url(path), _Board.api_headers(_fetch_token))
-	if err != OK:
-		push_warning("看板：请求 Cursor API 失败。")
-		_finish_cards()
-
-
-func _on_http(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+func _on_agents_http(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if not _refreshing or not is_inside_tree():
 		return
-	if result == HTTPRequest.RESULT_CANCELED:
+	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		_warn_http(result, response_code)
+		_finish_cards()
+		return
+	_consume_agents_page(_Board.parse_object(body))
+
+
+func _pump_runs() -> void:
+	if not _refreshing:
+		return
+	for http in _run_pool:
+		var id := http.get_instance_id()
+		if _run_busy.has(id):
+			continue
+		if _fetch_runs.is_empty():
+			break
+		var entry: Dictionary = _fetch_runs.pop_front()
+		var item: Dictionary = entry.get("item", {})
+		var path := "/v1/agents/%s/runs/%s" % [str(item.get("id", "")), str(entry.get("run_id", ""))]
+		_run_busy[id] = item
+		_run_gen[id] = _fetch_gen
+		if http.request(_Board.api_url(path), _Board.api_headers(_fetch_token)) != OK:
+			_run_busy.erase(id)
+			push_warning("看板：请求 Cursor API 失败。")
+	if _run_busy.is_empty() and _fetch_runs.is_empty():
+		_finish_cards()
+
+
+func _on_run_http(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
+	var id := http.get_instance_id()
+	var item: Dictionary = _run_busy.get(id, {})
+	var gen := int(_run_gen.get(id, -1))
+	_run_busy.erase(id)
+	if gen != _fetch_gen or not _refreshing or not is_inside_tree():
 		return
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		if result != HTTPRequest.RESULT_SUCCESS:
-			push_warning("看板：连接 Cursor API 失败。")
-		else:
-			push_warning("看板：Cursor API 返回 %d。" % response_code)
-		if _http_kind == "run":
-			_request_next_run()
-		else:
-			_finish_cards()
-		return
-	var payload := _Board.parse_object(body)
-	if _http_kind == "agents":
-		_consume_agents_page(payload)
+		_warn_http(result, response_code)
 	else:
-		_consume_run(payload)
+		var session := _Board.session_from_agent(item, _Board.parse_object(body), _fetch_slug)
+		if not session.is_empty():
+			_fetch_sessions.append(session)
+	_pump_runs()
+
+
+func _make_http(callback: Callable, bind_self: bool) -> HTTPRequest:
+	var http := HTTPRequest.new()
+	http.timeout = 8.0
+	if bind_self:
+		http.request_completed.connect(callback.bind(http))
+	else:
+		http.request_completed.connect(callback)
+	return http
+
+
+func _warn_http(result: int, response_code: int) -> void:
+	if result != HTTPRequest.RESULT_SUCCESS:
+		push_warning("看板：连接 Cursor API 失败。")
+	else:
+		push_warning("看板：Cursor API 返回 %d。" % response_code)
 
 
 func _consume_agents_page(payload: Dictionary) -> void:
@@ -193,16 +224,9 @@ func _consume_agents_page(payload: Dictionary) -> void:
 	_fetch_page += 1
 	_fetch_cursor = str(payload.get("nextCursor", ""))
 	if _fetch_cursor.is_empty() or _fetch_page >= 5:
-		_request_next_run()
+		_pump_runs()
 	else:
 		_request_agents_page()
-
-
-func _consume_run(payload: Dictionary) -> void:
-	var session := _Board.session_from_agent(_run_item, payload, _fetch_slug)
-	if not session.is_empty():
-		_fetch_sessions.append(session)
-	_request_next_run()
 
 
 func _finish_cards() -> void:
@@ -230,8 +254,11 @@ func _cancel_work() -> void:
 		for pid in pids:
 			if OS.is_process_running(int(pid)):
 				OS.kill(int(pid))
-	if _http:
-		_http.cancel_request()
+	if _agents_http:
+		_agents_http.cancel_request()
+	for http in _run_pool:
+		http.cancel_request()
+	_run_busy.clear()
 
 
 func _join_thread() -> void:
