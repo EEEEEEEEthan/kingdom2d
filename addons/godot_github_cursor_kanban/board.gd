@@ -106,20 +106,10 @@ static func save_agent_cache(cache: Dictionary) -> void:
 	file.store_string(JSON.stringify(cache))
 
 
-static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
-	if repo_slug.is_empty():
-		return []
-	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "open",
-		"--json", "number,title,headRefName,url",
-	]), _ensure_job(job))
-	return _prs_from_gh(result, "看板：拉取未合并 PR 失败。")
-
-
 static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]:
 	var sessions: Array[Dictionary] = []
 	if token.is_empty():
-		push_warning("看板：未配置 Cursor token，只列出 PR。")
+		push_warning("看板：未配置 Cursor token。")
 		return sessions
 	var cursor := ""
 	for _page in 5:
@@ -152,108 +142,57 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 	return session_from_agent(item, run, repo_slug)
 
 
-static func list_board_prs(repo_slug: String, job: Dictionary = {}) -> Dictionary:
-	var open_box: Array = [[]]
-	var merged_box: Array = [[]]
+static func merged_pr_index(repo_slug: String, job: Dictionary = {}) -> Dictionary:
+	# 只用来丢掉已合并的会话，不把 PR 本身做成卡片。
+	var index := {"urls": {}}
 	if repo_slug.is_empty():
-		return {"open": open_box[0], "merged": merged_box[0]}
-	var open_thread := Thread.new()
-	var merged_thread := Thread.new()
-	open_thread.start(_fill_prs.bind("open", repo_slug, job, open_box))
-	merged_thread.start(_fill_prs.bind("merged", repo_slug, job, merged_box))
-	open_thread.wait_to_finish()
-	merged_thread.wait_to_finish()
-	return {"open": open_box[0], "merged": merged_box[0]}
-
-
-static func _fill_prs(kind: String, repo_slug: String, job: Dictionary, box: Array) -> void:
-	if kind == "merged":
-		box[0] = list_merged_prs(repo_slug, job)
-	else:
-		box[0] = list_open_prs(repo_slug, job)
-
-
-static func _prs_from_gh(result: Dictionary, fail_text: String) -> Array[Dictionary]:
-	var prs: Array[Dictionary] = []
+		return index
+	var result := _run("gh", PackedStringArray([
+		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "40",
+		"--json", "url",
+	]), _ensure_job(job))
 	var text := str(result.get("text", "")).strip_edges()
 	if not bool(result.get("ok", false)) or not text.begins_with("["):
 		var detail := str(result.get("err", "")).strip_edges()
 		if detail.is_empty():
-			push_warning(fail_text)
+			push_warning("看板：查已合并 PR 失败。")
 		else:
-			push_warning("%s %s" % [fail_text, detail])
-		return prs
+			push_warning("看板：查已合并 PR 失败。 %s" % detail)
+		return index
 	var parsed: Variant = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_ARRAY:
-		push_warning(fail_text)
-		return prs
+		push_warning("看板：查已合并 PR 失败。")
+		return index
 	for item in parsed:
 		if typeof(item) != TYPE_DICTIONARY:
 			continue
-		prs.append({
-			"number": int(item.get("number", 0)),
-			"title": str(item.get("title", "")),
-			"branch": str(item.get("headRefName", "")),
-			"url": str(item.get("url", "")),
-		})
-	return prs
+		var url := str(item.get("url", "")).trim_suffix("/")
+		if not url.is_empty():
+			index["urls"][url] = true
+	return index
 
 
-static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
-	if repo_slug.is_empty():
-		return []
-	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "40",
-		"--json", "number,title,headRefName,url",
-	]), _ensure_job(job))
-	return _prs_from_gh(result, "看板：拉取已合并 PR 失败。")
+static func session_pr_merged(session: Dictionary, index: Dictionary) -> bool:
+	var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
+	if pr_url.is_empty():
+		return false
+	var urls: Dictionary = index.get("urls", {})
+	return bool(urls.get(pr_url, false))
 
 
-static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary], merged_prs: Array[Dictionary] = []) -> Array[Dictionary]:
+static func merge_cards(sessions: Array[Dictionary], merged_index: Dictionary = {}) -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
 	var index_by_key := {}
 	for session in sessions:
 		if bool(session.get("archived", false)):
 			continue
-		if _session_pr_merged(session, merged_prs):
+		if session_pr_merged(session, merged_index):
 			continue
-		var pr := _match_pr(session, prs)
-		var card := _make_card(session, pr)
-		if _is_empty_card(card):
-			continue
-		_upsert_card(cards, index_by_key, card)
-	for pr in prs:
-		if _pr_in_list(pr, merged_prs):
-			continue
-		var card := _make_card({}, pr)
+		var card := _make_card(session)
 		if _is_empty_card(card):
 			continue
 		_upsert_card(cards, index_by_key, card)
 	return cards
-
-
-static func _session_pr_merged(session: Dictionary, merged_prs: Array[Dictionary]) -> bool:
-	var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
-	var branch := str(session.get("branch", ""))
-	if pr_url.is_empty() and branch.is_empty():
-		return false
-	for pr in merged_prs:
-		if not pr_url.is_empty() and str(pr.get("url", "")).trim_suffix("/") == pr_url:
-			return true
-		if not branch.is_empty() and str(pr.get("branch", "")) == branch:
-			return true
-	return false
-
-
-static func _pr_in_list(pr: Dictionary, prs: Array[Dictionary]) -> bool:
-	var number := int(pr.get("number", 0))
-	var url := str(pr.get("url", "")).trim_suffix("/")
-	for item in prs:
-		if number > 0 and int(item.get("number", 0)) == number:
-			return true
-		if not url.is_empty() and str(item.get("url", "")).trim_suffix("/") == url:
-			return true
-	return false
 
 
 static func _upsert_card(cards: Array[Dictionary], index_by_key: Dictionary, card: Dictionary) -> void:
@@ -269,33 +208,22 @@ static func _upsert_card(cards: Array[Dictionary], index_by_key: Dictionary, car
 
 
 static func _dedup_key(card: Dictionary) -> String:
-	var number := int(card.get("pr_number", 0))
-	if number > 0:
-		return "pr:%d" % number
-	var branch := str(card.get("branch", ""))
-	if not branch.is_empty():
-		return "branch:" + branch
 	var session_id := str(card.get("session_id", ""))
 	if not session_id.is_empty():
 		return "session:" + session_id
+	var branch := str(card.get("branch", ""))
+	if not branch.is_empty():
+		return "branch:" + branch
 	return ""
 
 
 static func _prefer_card(left: Dictionary, right: Dictionary) -> Dictionary:
 	var card := left.duplicate()
 	var other := right
-	if str(card.get("session_id", "")).is_empty() and not str(other.get("session_id", "")).is_empty():
-		card["session_id"] = other["session_id"]
-		card["session_url"] = other["session_url"]
-		card["working"] = other["working"]
-	elif bool(other.get("working", false)) and not bool(card.get("working", false)):
-		card["session_id"] = other.get("session_id", card.get("session_id", ""))
-		card["session_url"] = other.get("session_url", card.get("session_url", ""))
+	if bool(other.get("working", false)) and not bool(card.get("working", false)):
 		card["working"] = true
-	if int(card.get("pr_number", 0)) == 0 and int(other.get("pr_number", 0)) > 0:
-		card["pr_number"] = other["pr_number"]
-		card["pr_url"] = other["pr_url"]
-		card["title"] = other["title"]
+	if str(card.get("pr_url", "")).is_empty():
+		card["pr_url"] = other.get("pr_url", "")
 	if str(card.get("branch", "")).is_empty():
 		card["branch"] = other.get("branch", "")
 	if str(card.get("title", "")).is_empty():
@@ -304,42 +232,27 @@ static func _prefer_card(left: Dictionary, right: Dictionary) -> Dictionary:
 
 
 static func _is_empty_card(card: Dictionary) -> bool:
-	return str(card.get("session_id", "")).is_empty() and int(card.get("pr_number", 0)) == 0 and str(card.get("pr_url", "")).is_empty()
+	return str(card.get("session_id", "")).is_empty()
 
 
-static func _match_pr(session: Dictionary, prs: Array[Dictionary]) -> Dictionary:
-	var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
-	var branch := str(session.get("branch", ""))
-	for pr in prs:
-		if not pr_url.is_empty() and str(pr["url"]).trim_suffix("/") == pr_url:
-			return pr
-	for pr in prs:
-		if not branch.is_empty() and str(pr["branch"]) == branch:
-			return pr
-	return {}
-
-
-static func _make_card(session: Dictionary, pr: Dictionary) -> Dictionary:
-	var branch := ""
-	if not pr.is_empty():
-		branch = str(pr.get("branch", ""))
-	elif not session.is_empty():
-		branch = str(session.get("branch", ""))
-	# 有 PR 就用 PR 名，没有 PR 才用聊天名。
-	var title := ""
-	if not pr.is_empty():
-		title = str(pr.get("title", "")).strip_edges()
-	else:
-		title = str(session.get("name", "")).strip_edges()
+static func _make_card(session: Dictionary) -> Dictionary:
+	var pr_url := str(session.get("pr_url", "")).strip_edges()
 	return {
-		"title": title,
+		"title": str(session.get("name", "")).strip_edges(),
 		"session_id": str(session.get("id", "")),
 		"session_url": str(session.get("url", "")),
 		"working": bool(session.get("working", false)),
-		"pr_url": str(pr.get("url", "")),
-		"pr_number": int(pr.get("number", 0)),
-		"branch": branch,
+		"pr_url": pr_url,
+		"pr_number": _pr_number_from_url(pr_url),
+		"branch": str(session.get("branch", "")),
 	}
+
+
+static func _pr_number_from_url(pr_url: String) -> int:
+	var parts := pr_url.trim_suffix("/").split("/")
+	if parts.size() < 2 or parts[-2] != "pull":
+		return 0
+	return int(parts[-1])
 
 
 static func reset_to_remote_default(path: String) -> bool:

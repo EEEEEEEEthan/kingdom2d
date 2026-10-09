@@ -22,9 +22,10 @@ var _card_list: VBoxContainer
 var _refresh_button: Button
 var _refreshing := false
 var _chat_windows := {}
+const _RUN_CONCURRENCY := 16
+
 var _thread: Thread
 var _job: Dictionary = {}
-const _RUN_CONCURRENCY := 16
 
 var _agents_http: HTTPRequest
 var _run_pool: Array[HTTPRequest] = []
@@ -32,8 +33,6 @@ var _run_busy: Dictionary = {}
 var _fetch_gen := 0
 var _fetch_token := ""
 var _fetch_slug := ""
-var _fetch_prs: Array[Dictionary] = []
-var _fetch_merged: Array[Dictionary] = []
 var _fetch_sessions: Array[Dictionary] = []
 var _fetch_agents: Array[Dictionary] = []
 var _fetch_runs: Array[Dictionary] = []
@@ -41,8 +40,9 @@ var _fetch_cursor := ""
 var _fetch_page := 0
 var _run_gen: Dictionary = {}
 var _agent_cache: Dictionary = {}
-var _prs_done := false
 var _agents_done := false
+var _merged_ready := false
+var _merged_index := {"urls": {}}
 
 
 func _enter_tree() -> void:
@@ -105,13 +105,11 @@ func _refresh_cards() -> void:
 	_fetch_gen += 1
 	_cancel_work()
 	_join_thread()
-	_prs_done = false
 	_agents_done = false
-	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
+	_merged_ready = false
+	_merged_index = {"urls": {}}
 	_fetch_slug = _Board.origin_slug(_Board.project_path())
 	_agent_cache = _Board.load_agent_cache()
-	_fetch_prs = _dict_array(_agent_cache.get("open_prs", []))
-	_fetch_merged = _dict_array(_agent_cache.get("merged_prs", []))
 	_fetch_sessions = []
 	_fetch_agents = []
 	_fetch_runs = []
@@ -119,38 +117,12 @@ func _refresh_cards() -> void:
 	_fetch_page = 0
 	_fetch_token = token
 	_paint_cards()
-	_thread = Thread.new()
-	var err := _thread.start(_load_prs_off_thread.bind(_Board.project_path(), _job, _fetch_gen))
-	if err != OK:
-		_prs_done = true
-		push_warning("看板：刷新线程启动失败。")
 	if token.is_empty():
-		push_warning("看板：未配置 Cursor token，只列出 PR。")
+		push_warning("看板：未配置 Cursor token。")
 		_agents_done = true
+		_merged_ready = true
 	else:
 		_request_agents_page()
-	_maybe_idle()
-
-
-func _load_prs_off_thread(root: String, job: Dictionary, gen: int) -> void:
-	var slug := _Board.origin_slug(root, job)
-	var bundle: Dictionary = _Board.list_board_prs(slug, job)
-	if is_instance_valid(self):
-		call_deferred("_continue_prs", slug, bundle.get("open", []), bundle.get("merged", []), gen)
-
-
-func _continue_prs(slug: String, prs: Array, merged: Array, gen: int) -> void:
-	if gen != _fetch_gen or not is_inside_tree():
-		return
-	_join_thread()
-	if not slug.is_empty():
-		_fetch_slug = slug
-	_fetch_prs = _dict_array(prs)
-	_fetch_merged = _dict_array(merged)
-	_agent_cache["open_prs"] = _fetch_prs
-	_agent_cache["merged_prs"] = _fetch_merged
-	_prs_done = true
-	_paint_cards()
 	_maybe_idle()
 
 
@@ -317,6 +289,44 @@ func _reuse_cached(item: Dictionary) -> bool:
 func _finish_cards() -> void:
 	_agents_done = true
 	_paint_cards()
+	_start_merged_check()
+
+
+func _start_merged_check() -> void:
+	var needs_check := false
+	for session in _sessions_for_board():
+		if bool(session.get("archived", false)):
+			continue
+		if str(session.get("pr_url", "")).is_empty():
+			continue
+		needs_check = true
+		break
+	if not needs_check or _fetch_slug.is_empty():
+		_merged_ready = true
+		_maybe_idle()
+		return
+	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
+	_thread = Thread.new()
+	var err := _thread.start(_load_merged_off_thread.bind(_fetch_slug, _job, _fetch_gen))
+	if err != OK:
+		_merged_ready = true
+		push_warning("看板：查已合并 PR 的线程启动失败。")
+		_maybe_idle()
+
+
+func _load_merged_off_thread(slug: String, job: Dictionary, gen: int) -> void:
+	var index := _Board.merged_pr_index(slug, job)
+	if is_instance_valid(self):
+		call_deferred("_continue_merged", index, gen)
+
+
+func _continue_merged(index: Dictionary, gen: int) -> void:
+	if gen != _fetch_gen or not is_inside_tree():
+		return
+	_join_thread()
+	_merged_index = index
+	_merged_ready = true
+	_paint_cards()
 	_maybe_idle()
 
 
@@ -324,8 +334,8 @@ func _paint_cards() -> void:
 	if not is_inside_tree():
 		return
 	var sessions := _sessions_for_board()
-	_apply_cards(_Board.merge_cards(sessions, _fetch_prs, _fetch_merged))
-	_refreshing = not (_prs_done and _agents_done)
+	_apply_cards(_Board.merge_cards(sessions, _merged_index if _merged_ready else {}))
+	_refreshing = not (_agents_done and _merged_ready)
 	if _refreshing:
 		if is_instance_valid(_refresh_button):
 			_refresh_button.disabled = true
@@ -335,7 +345,7 @@ func _paint_cards() -> void:
 
 
 func _maybe_idle() -> void:
-	if not _prs_done or not _agents_done:
+	if not _agents_done or not _merged_ready:
 		return
 	if is_inside_tree():
 		_Board.save_agent_cache(_agent_cache)
@@ -370,14 +380,6 @@ func _agents() -> Dictionary:
 	if typeof(_agent_cache.get("agents", {})) != TYPE_DICTIONARY:
 		_agent_cache["agents"] = {}
 	return _agent_cache["agents"]
-
-
-func _dict_array(items: Array) -> Array[Dictionary]:
-	var typed: Array[Dictionary] = []
-	for item in items:
-		if typeof(item) == TYPE_DICTIONARY:
-			typed.append(item)
-	return typed
 
 
 func _cancel_work() -> void:
