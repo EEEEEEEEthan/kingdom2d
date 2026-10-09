@@ -2,6 +2,7 @@
 extends PanelContainer
 
 signal chat_requested(session_id: String, title: String)
+signal checkout_requested(branch: String)
 signal detail_settled(kept: bool)
 
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
@@ -21,8 +22,14 @@ func apply(session: Dictionary) -> void:
 	_url = str(session.get("url", _url))
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
+	var branch := str(session.get("branch", ""))
+	var pr_url := str(session.get("pr_url", ""))
+	%Checkout.visible = not pr_url.is_empty()
+	%Checkout.set_meta("branch", branch)
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
+	if not %Checkout.pressed.is_connected(_on_checkout_pressed):
+		%Checkout.pressed.connect(_on_checkout_pressed)
 
 
 func begin_detail(token: String, repo_slug: String) -> void:
@@ -66,12 +73,18 @@ func _finish_detail(patch: Dictionary) -> void:
 		"name": str(patch.get("name", %CardName.text)),
 		"url": str(patch.get("url", _url)),
 		"working": bool(patch.get("working", false)),
+		"branch": str(patch.get("branch", %Checkout.get_meta("branch", ""))),
+		"pr_url": str(patch.get("pr_url", "")),
 	})
 	detail_settled.emit(true)
 
 
 func _on_chat_pressed() -> void:
 	chat_requested.emit(str(%Chat.get_meta("session_id", "")), str(%Chat.get_meta("title", "")))
+
+
+func _on_checkout_pressed() -> void:
+	checkout_requested.emit(str(%Checkout.get_meta("branch", "")))
 
 
 func _working_texture() -> Texture2D:
