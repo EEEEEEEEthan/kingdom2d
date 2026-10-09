@@ -7,18 +7,17 @@ signal detail_settled(kept: bool)
 
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
 
-var _dot_working: Texture2D
-var _dot_idle: Texture2D
+const _SPINNER_SIZE := 14
+const _SPIN_TURNS_PER_SEC := 1.1
+
+var _spinner: Texture2D
+var _spinning := false
 var _url := ""
 
 
 func apply(session: Dictionary) -> void:
 	%CardName.text = str(session.get("name", ""))
-	var working := bool(session.get("working", false))
-	%SessionStatus.texture = _working_texture() if working else _idle_texture()
-	%SessionStatus.tooltip_text = "工作中" if working else "空闲"
-	%SessionStatus.custom_minimum_size = Vector2(12, 12)
-	%SessionStatus.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_set_working(bool(session.get("working", false)))
 	_url = str(session.get("url", _url))
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
@@ -87,23 +86,48 @@ func _on_checkout_pressed() -> void:
 	checkout_requested.emit(str(%Checkout.get_meta("branch", "")))
 
 
-func _working_texture() -> Texture2D:
-	if _dot_working == null:
-		_dot_working = _make_dot(Color(0.2, 0.75, 0.35))
-	return _dot_working
+func _enter_tree() -> void:
+	set_process(_spinning)
 
 
-func _idle_texture() -> Texture2D:
-	if _dot_idle == null:
-		_dot_idle = _make_dot(Color(0.55, 0.55, 0.55))
-	return _dot_idle
+func _process(delta: float) -> void:
+	var status := %SessionStatus
+	status.pivot_offset = status.size * 0.5
+	status.rotation = fposmod(status.rotation + delta * TAU * _SPIN_TURNS_PER_SEC, TAU)
 
 
-func _make_dot(color: Color) -> Texture2D:
-	var image := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+func _set_working(working: bool) -> void:
+	_spinning = working
+	var status := %SessionStatus
+	status.visible = working
+	status.tooltip_text = "工作中" if working else ""
+	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	status.custom_minimum_size = Vector2(_SPINNER_SIZE, _SPINNER_SIZE)
+	status.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if working:
+		status.texture = _spinner_texture()
+	else:
+		status.rotation = 0.0
+	set_process(working and is_inside_tree())
+
+
+func _spinner_texture() -> Texture2D:
+	if _spinner != null:
+		return _spinner
+	var n := _SPINNER_SIZE
+	var image := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	for y in 12:
-		for x in 12:
-			if Vector2(x - 5.5, y - 5.5).length() <= 5.0:
-				image.set_pixel(x, y, color)
-	return ImageTexture.create_from_image(image)
+	var center := Vector2(n - 1, n - 1) * 0.5
+	for y in n:
+		for x in n:
+			var offset := Vector2(x, y) - center
+			var radius := offset.length()
+			if radius < 3.4 or radius > 5.6:
+				continue
+			var along := fposmod(atan2(offset.y, offset.x) + PI, TAU) / TAU
+			if along > 0.78:
+				continue
+			image.set_pixel(x, y, Color(0.9, 0.9, 0.9, lerpf(0.15, 1.0, along / 0.78)))
+	_spinner = ImageTexture.create_from_image(image)
+	return _spinner
