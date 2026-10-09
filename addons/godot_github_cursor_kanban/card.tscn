@@ -10,6 +10,10 @@ script = ExtResource("1_card")
 [node name="VBoxContainer" type="HBoxContainer" parent="." unique_id=1969001910]
 layout_mode = 2
 
+[node name="SessionStatus" type="TextureRect" parent="VBoxContainer" unique_id=460378995]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="CardName" type="Label" parent="VBoxContainer" unique_id=1827342251]
 unique_name_in_owner = true
 layout_mode = 2
@@ -17,19 +21,13 @@ size_flags_horizontal = 2
 theme_type_variation = &"HeaderSmall"
 text = "card_name"
 
-[node name="SessionInfo" type="HBoxContainer" parent="VBoxContainer" unique_id=1046074058]
-layout_mode = 2
-size_flags_horizontal = 8
-
-[node name="SessionStatus" type="TextureRect" parent="VBoxContainer/SessionInfo" unique_id=460378995]
+[node name="Chat" type="Button" parent="VBoxContainer" unique_id=348509240]
 unique_name_in_owner = true
-layout_mode = 2
-
-[node name="Chat" type="Button" parent="VBoxContainer/SessionInfo" unique_id=348509240]
 layout_mode = 2
 text = "chat"
 
 [node name="Checkout" type="Button" parent="VBoxContainer" unique_id=967422996]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 text = "checkout"
