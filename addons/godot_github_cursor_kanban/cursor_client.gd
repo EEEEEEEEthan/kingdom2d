@@ -111,6 +111,38 @@ static func _clock_from_unix(unix: int) -> String:
 	return Time.get_datetime_string_from_datetime_dict(Time.get_datetime_dict_from_unix_time(unix), true)
 
 
+static func create_agent(token: String, text: String, repository: String, ref: String) -> Dictionary:
+	if token.is_empty() or text.strip_edges().is_empty() or repository.is_empty():
+		return {}
+	var payload := request(
+		token,
+		HTTPClient.METHOD_POST,
+		"/v0/agents",
+		JSON.stringify(create_agent_body(text, repository, ref))
+	)
+	return agent_from_create(payload)
+
+
+static func create_agent_body(text: String, repository: String, ref: String) -> Dictionary:
+	var source := {"repository": repository}
+	if not ref.strip_edges().is_empty():
+		source["ref"] = ref.strip_edges()
+	return {
+		"prompt": {"text": text},
+		"source": source,
+	}
+
+
+static func agent_from_create(payload: Dictionary) -> Dictionary:
+	var agent_id := str(payload.get("id", "")).strip_edges()
+	if agent_id.is_empty() or agent_id == "<null>":
+		return {}
+	return {
+		"id": agent_id,
+		"name": str(payload.get("name", "")),
+	}
+
+
 static func send_message(token: String, agent_id: String, text: String) -> bool:
 	if token.is_empty() or agent_id.is_empty() or text.strip_edges().is_empty():
 		return false

@@ -1,6 +1,8 @@
 @tool
 extends Window
 
+signal session_created(session_id: String)
+
 const _BUBBLE := preload("res://addons/godot_github_cursor_kanban/chat_bubble.tscn")
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
 const _USER_COLOR := Color(0.75, 0.95, 0.72)
@@ -8,6 +10,8 @@ const _TIME_CACHE_PATH := "user://kanban_message_times.json"
 
 var session_id := ""
 var _token := ""
+var _repository := ""
+var _ref := ""
 var _busy := false
 
 
@@ -17,6 +21,19 @@ func _ready() -> void:
 		_send()
 	)
 	$VBoxContainer/VBoxContainer/Button.pressed.connect(_send)
+
+
+func open_new(token: String, repository: String, ref: String) -> void:
+	_token = token
+	session_id = ""
+	_repository = repository
+	_ref = ref
+	self.title = "新对话"
+	if not visible:
+		popup_centered(Vector2i(600, 800))
+	else:
+		grab_focus()
+	%Input.grab_focus()
 
 
 func open_session(token: String, id: String, title: String) -> void:
@@ -45,11 +62,34 @@ func _send() -> void:
 	%Input.editable = false
 	var token := _token
 	var agent_id := session_id
+	var repository := _repository
+	var ref := _ref
 	WorkerThreadPool.add_task(func() -> void:
+		if agent_id.is_empty():
+			var created := _Client.create_agent(token, text, repository, ref)
+			if is_instance_valid(self):
+				call_deferred("_on_created", created)
+			return
 		var ok := _Client.send_message(token, agent_id, text)
 		if is_instance_valid(self):
 			call_deferred("_on_sent", ok)
 	)
+
+
+func _on_created(created: Dictionary) -> void:
+	_busy = false
+	$VBoxContainer/VBoxContainer/Button.disabled = false
+	%Input.editable = true
+	var agent_id := str(created.get("id", ""))
+	if agent_id.is_empty():
+		push_warning("看板：新建会话失败。")
+		return
+	session_id = agent_id
+	var name := str(created.get("name", ""))
+	self.title = name if not name.is_empty() else "新对话"
+	%Input.text = ""
+	session_created.emit(session_id)
+	refresh()
 
 
 func _on_sent(ok: bool) -> void:

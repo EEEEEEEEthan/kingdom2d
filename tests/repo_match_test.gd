@@ -150,6 +150,20 @@ func _init() -> void:
 		_fail("旧的仓库缓存还能对上")
 	if _Client.cached_archived("bc-old") != -1:
 		_fail("旧缓存没有归档状态")
+	var body := _Client.create_agent_body("做一张新地图", "https://github.com/EEEEEEEEthan/kingdom2d", "master")
+	if body.get("prompt", {}).get("text", "") != "做一张新地图":
+		_fail("新建会话应带上第一条消息")
+	if body.get("source", {}).get("repository", "") != "https://github.com/EEEEEEEEthan/kingdom2d":
+		_fail("新建会话应指向当前仓库")
+	if body.get("source", {}).get("ref", "") != "master":
+		_fail("新建会话应带上当前分支")
+	if _Client.create_agent_body("x", "https://github.com/a/b", "").get("source", {}).has("ref"):
+		_fail("没有分支时不传 ref")
+	var created := _Client.agent_from_create({"id": "bc-new", "name": "新地图"})
+	if created.get("id", "") != "bc-new" or created.get("name", "") != "新地图":
+		_fail("应读出新建会话的 id 和名字")
+	if not _Client.agent_from_create({"ok": true}).is_empty():
+		_fail("没有 id 不算新建成功")
 	_Client._list_cache = {}
 	_Client._list_cache_loaded = true
 	_Client.save_session_list("Owner/Repo", [{

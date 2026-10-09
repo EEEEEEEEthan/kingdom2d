@@ -18,6 +18,7 @@ var _page_notice := ""
 var _page_slots: Array = []
 var _archive_checks: Array = []
 var _chat_windows := {}
+var _new_chat_seq := 0
 var _mutex := Mutex.new()
 var _pending: Dictionary = {}
 var _pending_ready := false
@@ -27,6 +28,7 @@ func _ready() -> void:
 	set_process(true)
 	$HBoxContainer/Refresh.pressed.connect(_refresh_from_start)
 	$"HBoxContainer/Checkout Master".pressed.connect(_checkout_master)
+	$"HBoxContainer/New Chat".pressed.connect(_open_new_chat)
 	%Settings.pressed.connect(_open_settings)
 	_clear_cards()
 	call_deferred("_refresh_from_start")
@@ -424,6 +426,46 @@ func _open_chat(session_id: String, title: String) -> void:
 	window.open_session(_token(), session_id, title)
 
 
+func _open_new_chat() -> void:
+	if _token().is_empty():
+		push_warning("看板：未配置 Cursor token。")
+		return
+	var path := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	var slug := _origin_slug(path)
+	if slug.is_empty():
+		push_warning("看板：读不到当前仓库的 origin。")
+		return
+	var ref := _current_branch(path)
+	if ref.is_empty():
+		ref = "master"
+	_new_chat_seq += 1
+	var key := "new:%d" % _new_chat_seq
+	var window: Window = _CHAT.instantiate()
+	EditorInterface.get_base_control().add_child(window)
+	_chat_windows[key] = window
+	window.tree_exited.connect(func() -> void:
+		if _chat_windows.get(key) == window:
+			_chat_windows.erase(key)
+	)
+	window.session_created.connect(_on_new_session_created.bind(key))
+	window.open_new(_token(), "https://github.com/" + slug, ref)
+
+
+func _on_new_session_created(session_id: String, key: String) -> void:
+	var window: Window = _chat_windows.get(key) as Window
+	if window != null and is_instance_valid(window):
+		_chat_windows.erase(key)
+		_chat_windows[session_id] = window
+		if not window.tree_exited.is_connected(_forget_chat.bind(session_id, window)):
+			window.tree_exited.connect(_forget_chat.bind(session_id, window))
+	_refresh_from_start()
+
+
+func _forget_chat(session_id: String, window: Window) -> void:
+	if _chat_windows.get(session_id) == window:
+		_chat_windows.erase(session_id)
+
+
 func _checkout_master() -> void:
 	_checkout_branch_prompt("master")
 
@@ -566,6 +608,17 @@ func _token() -> String:
 	if not settings.has_setting(_SETTING_TOKEN):
 		return ""
 	return str(settings.get_setting(_SETTING_TOKEN))
+
+
+static func _current_branch(path: String) -> String:
+	var output: Array = []
+	var code := OS.execute("git", ["-C", path, "rev-parse", "--abbrev-ref", "HEAD"], output, true)
+	if code != 0 or output.is_empty():
+		return ""
+	var branch := str(output[0]).strip_edges()
+	if branch.is_empty() or branch == "HEAD":
+		return ""
+	return branch
 
 
 static func _origin_slug(path: String) -> String:
