@@ -2,6 +2,7 @@
 extends RefCounted
 
 const _API := "https://api.cursor.com"
+const _CACHE_PATH := "user://kanban_agents.json"
 
 
 static func project_path() -> String:
@@ -9,24 +10,95 @@ static func project_path() -> String:
 
 
 static func origin_slug(path: String, job: Dictionary = {}) -> String:
+	var from_file := _slug_from_git_config(path)
+	if not from_file.is_empty():
+		return from_file
 	var result := _run("git", PackedStringArray(["-C", path, "remote", "get-url", "origin"]), _ensure_job(job))
 	if not bool(result["ok"]):
 		return ""
-	return _slug_from_remote(str(result["text"]).strip_edges())
+	return _repo_key(str(result["text"]))
 
 
-static func _slug_from_remote(remote: String) -> String:
+static func _slug_from_git_config(start: String) -> String:
+	var dir := start
+	for _i in 8:
+		var config_path := _git_config_path(dir)
+		if not config_path.is_empty() and FileAccess.file_exists(config_path):
+			var slug := _origin_from_config(FileAccess.get_file_as_string(config_path))
+			if not slug.is_empty():
+				return slug
+		var parent := dir.get_base_dir()
+		if parent == dir or parent.is_empty():
+			break
+		dir = parent
+	return ""
+
+
+static func _git_config_path(dir: String) -> String:
+	var git_path := dir.path_join(".git")
+	if DirAccess.dir_exists_absolute(git_path):
+		return git_path.path_join("config")
+	if not FileAccess.file_exists(git_path):
+		return ""
+	var text := FileAccess.get_file_as_string(git_path).strip_edges()
+	if not text.begins_with("gitdir:"):
+		return ""
+	var gitdir := text.trim_prefix("gitdir:").strip_edges()
+	if not gitdir.is_absolute_path():
+		gitdir = dir.path_join(gitdir)
+	return gitdir.path_join("config")
+
+
+static func _origin_from_config(text: String) -> String:
+	var in_origin := false
+	for raw in text.split("\n"):
+		var line := raw.strip_edges()
+		if line.begins_with("[") and line.ends_with("]"):
+			in_origin = line == '[remote "origin"]'
+			continue
+		if in_origin and line.begins_with("url"):
+			return _repo_key(line.substr(line.find("=") + 1))
+	return ""
+
+
+static func _repo_key(remote: String) -> String:
 	var text := remote.strip_edges().trim_suffix(".git").trim_suffix("/")
-	if text.contains("github.com"):
-		var tail := text.split("github.com")[-1].trim_prefix(":").trim_prefix("/")
-		return tail.strip_edges().trim_suffix("/")
-	return text
+	text = text.replace("git@github.com:", "github.com/")
+	if text.contains("://"):
+		text = text.split("://")[-1]
+	if text.contains("@"):
+		text = text.split("@")[-1]
+	var parts: PackedStringArray = []
+	for part in text.split("/"):
+		if not part.is_empty():
+			parts.append(part)
+	if parts.size() >= 3 and (parts[0].contains(".") or parts[0] == "github.com"):
+		parts = parts.slice(1)
+	if parts.size() >= 2:
+		return (parts[0] + "/" + parts[1]).to_lower()
+	return "/".join(parts).to_lower()
 
 
 static func _same_repo(repo_url: String, repo_slug: String) -> bool:
-	var left := _slug_from_remote(repo_url).to_lower()
-	var right := _slug_from_remote(repo_slug).to_lower()
+	var left := _repo_key(repo_url)
+	var right := _repo_key(repo_slug)
 	return not left.is_empty() and left == right
+
+
+static func load_agent_cache() -> Dictionary:
+	if not FileAccess.file_exists(_CACHE_PATH):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_CACHE_PATH))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {}
+	return parsed
+
+
+static func save_agent_cache(cache: Dictionary) -> void:
+	var file := FileAccess.open(_CACHE_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(cache))
 
 
 static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
@@ -372,34 +444,53 @@ static func messages_from_payload(payload: Dictionary) -> Array[Dictionary]:
 	return messages
 
 
-static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: String) -> Dictionary:
-	var agent_id := str(item.get("id", ""))
-	var branch := ""
-	var pr_url := ""
-	# 认不出当前仓库时不收对话，避免把账号下其他仓库的会话铺进看板。
-	if repo_slug.is_empty():
-		return {}
-	var git: Variant = run.get("git", {})
-	if typeof(git) != TYPE_DICTIONARY:
-		return {}
-	var branches: Variant = git.get("branches", [])
-	if typeof(branches) != TYPE_ARRAY:
-		return {}
-	var matched := false
-	for entry in branches:
+static func agent_repo_key(item: Dictionary) -> String:
+	var repos: Variant = item.get("repos", [])
+	if typeof(repos) != TYPE_ARRAY:
+		return ""
+	for entry in repos:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
-		if not _same_repo(str(entry.get("repoUrl", "")), repo_slug):
-			continue
-		matched = true
-		branch = str(entry.get("branch", ""))
-		pr_url = str(entry.get("prUrl", ""))
-		break
+		var key := _repo_key(str(entry.get("url", "")))
+		if not key.is_empty():
+			return key
+	return ""
+
+
+static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: String) -> Dictionary:
+	var branch := ""
+	var pr_url := ""
+	if repo_slug.is_empty():
+		return {}
+	var matched := _same_repo(agent_repo_key(item), repo_slug)
+	var git: Variant = run.get("git", {})
+	if typeof(git) == TYPE_DICTIONARY:
+		var branches: Variant = git.get("branches", [])
+		if typeof(branches) == TYPE_ARRAY:
+			for entry in branches:
+				if typeof(entry) != TYPE_DICTIONARY:
+					continue
+				if not _same_repo(str(entry.get("repoUrl", "")), repo_slug):
+					continue
+				matched = true
+				branch = str(entry.get("branch", ""))
+				pr_url = str(entry.get("prUrl", ""))
+				break
 	if not matched:
 		return {}
+	return _session_dict(item, branch, pr_url)
+
+
+static func session_from_cache(item: Dictionary, cached: Dictionary, repo_slug: String) -> Dictionary:
+	if not _same_repo(str(cached.get("repo", "")), repo_slug):
+		return {}
+	return _session_dict(item, str(cached.get("branch", "")), str(cached.get("pr_url", "")))
+
+
+static func _session_dict(item: Dictionary, branch: String, pr_url: String) -> Dictionary:
 	var status := str(item.get("status", ""))
 	return {
-		"id": agent_id,
+		"id": str(item.get("id", "")),
 		"name": str(item.get("name", "")),
 		"url": str(item.get("url", "")),
 		"working": status == "ACTIVE",

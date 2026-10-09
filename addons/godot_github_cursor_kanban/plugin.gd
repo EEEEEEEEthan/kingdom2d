@@ -35,10 +35,12 @@ var _fetch_slug := ""
 var _fetch_prs: Array[Dictionary] = []
 var _fetch_merged: Array[Dictionary] = []
 var _fetch_sessions: Array[Dictionary] = []
+var _fetch_agents: Array[Dictionary] = []
 var _fetch_runs: Array[Dictionary] = []
 var _fetch_cursor := ""
 var _fetch_page := 0
 var _run_gen: Dictionary = {}
+var _agent_cache: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -125,9 +127,11 @@ func _continue_refresh(token: String, slug: String, prs: Array, merged: Array, g
 	_fetch_prs = _dict_array(prs)
 	_fetch_merged = _dict_array(merged)
 	_fetch_sessions = []
+	_fetch_agents = []
 	_fetch_runs = []
 	_fetch_cursor = ""
 	_fetch_page = 0
+	_agent_cache = _Board.load_agent_cache()
 	if token.is_empty():
 		push_warning("看板：未配置 Cursor token，只列出 PR。")
 		_finish_cards()
@@ -152,41 +156,91 @@ func _on_agents_http(result: int, response_code: int, _headers: PackedStringArra
 	_consume_agents_page(_Board.parse_object(body))
 
 
-func _pump_runs() -> void:
+func _pump_details() -> void:
 	if not _refreshing:
 		return
 	for http in _run_pool:
 		var id := http.get_instance_id()
 		if _run_busy.has(id):
 			continue
-		if _fetch_runs.is_empty():
+		var kind := ""
+		var item := {}
+		var run_id := ""
+		if not _fetch_agents.is_empty():
+			item = _fetch_agents.pop_front()
+			kind = "agent"
+		elif not _fetch_runs.is_empty():
+			var entry: Dictionary = _fetch_runs.pop_front()
+			item = entry.get("item", {})
+			run_id = str(entry.get("run_id", ""))
+			kind = "run"
+		else:
 			break
-		var entry: Dictionary = _fetch_runs.pop_front()
-		var item: Dictionary = entry.get("item", {})
-		var path := "/v1/agents/%s/runs/%s" % [str(item.get("id", "")), str(entry.get("run_id", ""))]
-		_run_busy[id] = item
+		var path := "/v1/agents/%s" % str(item.get("id", "")).uri_encode()
+		if kind == "run":
+			path = "/v1/agents/%s/runs/%s" % [str(item.get("id", "")), run_id]
+		_run_busy[id] = {"item": item, "kind": kind, "run_id": run_id}
 		_run_gen[id] = _fetch_gen
 		if http.request(_Board.api_url(path), _Board.api_headers(_fetch_token)) != OK:
 			_run_busy.erase(id)
 			push_warning("看板：请求 Cursor API 失败。")
-	if _run_busy.is_empty() and _fetch_runs.is_empty():
+	if _run_busy.is_empty() and _fetch_agents.is_empty() and _fetch_runs.is_empty():
 		_finish_cards()
 
 
 func _on_run_http(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
 	var id := http.get_instance_id()
-	var item: Dictionary = _run_busy.get(id, {})
+	var job: Dictionary = _run_busy.get(id, {})
+	var item: Dictionary = job.get("item", {})
 	var gen := int(_run_gen.get(id, -1))
 	_run_busy.erase(id)
 	if gen != _fetch_gen or not _refreshing or not is_inside_tree():
 		return
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		_warn_http(result, response_code)
+		if str(job.get("kind", "")) == "run":
+			_keep_session(item, {})
+	elif str(job.get("kind", "")) == "agent":
+		_on_agent_body(item, _Board.parse_object(body))
 	else:
-		var session := _Board.session_from_agent(item, _Board.parse_object(body), _fetch_slug)
-		if not session.is_empty():
-			_fetch_sessions.append(session)
-	_pump_runs()
+		_keep_session(item, _Board.parse_object(body))
+	_pump_details()
+
+
+func _on_agent_body(list_item: Dictionary, agent: Dictionary) -> void:
+	var merged := list_item.duplicate()
+	merged["repos"] = agent.get("repos", [])
+	var repo := str(_Board.agent_repo_key(merged))
+	var run_id := str(list_item.get("latestRunId", ""))
+	if repo.is_empty() or not _Board._same_repo(repo, _fetch_slug):
+		if not repo.is_empty():
+			_remember_agent(list_item, repo, "", "")
+		return
+	if run_id.is_empty():
+		_keep_session(merged, {})
+		return
+	_fetch_runs.append({"item": merged, "run_id": run_id})
+
+
+func _keep_session(item: Dictionary, run: Dictionary) -> void:
+	var session := _Board.session_from_agent(item, run, _fetch_slug)
+	if session.is_empty():
+		return
+	_fetch_sessions.append(session)
+	_remember_agent(item, _Board.agent_repo_key(item), str(session.get("branch", "")), str(session.get("pr_url", "")))
+
+
+func _remember_agent(item: Dictionary, repo: String, branch: String, pr_url: String) -> void:
+	var agent_id := str(item.get("id", ""))
+	if agent_id.is_empty() or repo.is_empty():
+		return
+	_agent_cache[agent_id] = {
+		"run_id": str(item.get("latestRunId", "")),
+		"updated_at": str(item.get("updatedAt", "")),
+		"repo": repo,
+		"branch": branch,
+		"pr_url": pr_url,
+	}
 
 
 func _make_http(callback: Callable, bind_self: bool) -> HTTPRequest:
@@ -211,28 +265,44 @@ func _consume_agents_page(payload: Dictionary) -> void:
 	if typeof(items) != TYPE_ARRAY:
 		_finish_cards()
 		return
+	var page_stable := true
 	for item in items:
 		if typeof(item) != TYPE_DICTIONARY:
 			continue
-		var run_id := str(item.get("latestRunId", ""))
-		if run_id.is_empty():
-			var session := _Board.session_from_agent(item, {}, _fetch_slug)
-			if not session.is_empty():
-				_fetch_sessions.append(session)
-		else:
-			_fetch_runs.append({"item": item, "run_id": run_id})
+		if _reuse_cached(item):
+			continue
+		page_stable = false
+		_fetch_agents.append(item)
 	_fetch_page += 1
 	_fetch_cursor = str(payload.get("nextCursor", ""))
-	if _fetch_cursor.is_empty() or _fetch_page >= 5:
-		_pump_runs()
+	# 整页都命中缓存时，更旧的页也不会变，不再继续翻。
+	if _fetch_cursor.is_empty() or _fetch_page >= 5 or (page_stable and not items.is_empty()):
+		_pump_details()
 	else:
 		_request_agents_page()
+
+
+func _reuse_cached(item: Dictionary) -> bool:
+	var cached: Dictionary = _agent_cache.get(str(item.get("id", "")), {})
+	if cached.is_empty():
+		return false
+	if str(cached.get("run_id", "")) != str(item.get("latestRunId", "")):
+		return false
+	if str(cached.get("updated_at", "")) != str(item.get("updatedAt", "")):
+		return false
+	if str(cached.get("repo", "")).is_empty():
+		return false
+	var session := _Board.session_from_cache(item, cached, _fetch_slug)
+	if not session.is_empty():
+		_fetch_sessions.append(session)
+	return true
 
 
 func _finish_cards() -> void:
 	if not is_inside_tree():
 		_refreshing = false
 		return
+	_Board.save_agent_cache(_agent_cache)
 	_apply_cards(_Board.merge_cards(_fetch_sessions, _fetch_prs, _fetch_merged))
 
 
