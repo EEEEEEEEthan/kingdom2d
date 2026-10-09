@@ -13,3 +13,15 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=2106684938]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=185698938]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Card" parent="ScrollContainer/VBoxContainer" unique_id=2093432049 instance_placeholder="res://addons/godot_github_cursor_kanban/card.tscn"]
+unique_name_in_owner = true
+layout_mode = 2
