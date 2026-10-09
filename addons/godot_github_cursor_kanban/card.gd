@@ -2,9 +2,13 @@
 extends PanelContainer
 
 signal chat_requested(session_id: String, title: String)
+signal detail_settled(kept: bool)
+
+const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
 
 var _dot_working: Texture2D
 var _dot_idle: Texture2D
+var _url := ""
 
 
 func apply(session: Dictionary) -> void:
@@ -14,10 +18,47 @@ func apply(session: Dictionary) -> void:
 	%SessionStatus.tooltip_text = "工作中" if working else "空闲"
 	%SessionStatus.custom_minimum_size = Vector2(12, 12)
 	%SessionStatus.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_url = str(session.get("url", _url))
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
+
+
+func begin_detail(token: String, repo_slug: String) -> void:
+	var agent_id := str(%Chat.get_meta("session_id", ""))
+	if token.is_empty() or agent_id.is_empty():
+		detail_settled.emit(true)
+		return
+	WorkerThreadPool.add_task(func() -> void:
+		var detail := _Client.request(
+			token,
+			HTTPClient.METHOD_GET,
+			"/v1/agents/%s" % agent_id.uri_encode()
+		)
+		var patch := _Client.detail_patch(detail, repo_slug)
+		if is_instance_valid(self):
+			call_deferred("_finish_detail", patch)
+	)
+
+
+func _finish_detail(patch: Dictionary) -> void:
+	if not is_inside_tree():
+		return
+	if bool(patch.get("_error", false)):
+		detail_settled.emit(true)
+		return
+	if patch.is_empty():
+		detail_settled.emit(false)
+		queue_free()
+		return
+	apply({
+		"id": str(%Chat.get_meta("session_id", "")),
+		"name": str(patch.get("name", %CardName.text)),
+		"url": str(patch.get("url", _url)),
+		"working": bool(patch.get("working", false)),
+	})
+	detail_settled.emit(true)
 
 
 func _on_chat_pressed() -> void:
