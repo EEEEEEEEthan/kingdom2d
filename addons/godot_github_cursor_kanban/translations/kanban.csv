@@ -2,6 +2,8 @@ keys,en,zh
 看板,Kanban,看板
 看板设置,Kanban Settings,看板设置
 刷新,Refresh,刷新
+打开聊天,Open chat,打开聊天
+检出分支,Checkout branch,检出分支
 看板：打不开编辑器设置。,Kanban: Can't open Editor Settings.,看板：打不开编辑器设置。
 Kanban,Kanban,看板
 Restart Editor After Branch Switch,Restart Editor After Branch Switch,切换分支后自动重启编辑器

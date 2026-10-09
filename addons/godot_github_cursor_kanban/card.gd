@@ -4,11 +4,16 @@ extends PanelContainer
 signal checkout_requested(branch: String)
 signal chat_requested(session_id: String, title: String)
 
+const _CHAT_ICON := "res://addons/godot_github_cursor_kanban/icons/chat.png"
+const _CHECKOUT_ICON := "res://addons/godot_github_cursor_kanban/icons/checkout.png"
+
 var _dot_working: Texture2D
 var _dot_idle: Texture2D
+var _icons_ready := false
 
 
 func apply(card: Dictionary) -> void:
+	_ensure_icons()
 	%CardName.text = str(card.get("title", ""))
 	var has_session := not str(card.get("session_id", "")).is_empty()
 	%Chat.visible = has_session
@@ -27,6 +32,43 @@ func apply(card: Dictionary) -> void:
 	%Chat.set_meta("title", str(card.get("title", "")))
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
+
+
+func _ensure_icons() -> void:
+	if _icons_ready:
+		return
+	_icons_ready = true
+	# 图标只赋给 Button.icon，按钮本身保持编辑器按钮样式。
+	_set_symbol(%Chat, [], _CHAT_ICON, tr("打开聊天"))
+	_set_symbol(%Checkout, ["VcsBranches", "VcsBranch"], _CHECKOUT_ICON, tr("检出分支"))
+
+
+func _set_symbol(button: Button, theme_names: Array, fallback_path: String, tip: String) -> void:
+	button.text = ""
+	button.flat = false
+	button.expand_icon = false
+	button.icon = _theme_icon(theme_names, fallback_path)
+	button.tooltip_text = tip
+	button.custom_minimum_size = Vector2(28, 28)
+
+
+func _theme_icon(names: Array, fallback_path: String) -> Texture2D:
+	var base := EditorInterface.get_base_control()
+	if base:
+		for icon_name in names:
+			if base.has_theme_icon(icon_name, "EditorIcons"):
+				return base.get_theme_icon(icon_name, "EditorIcons")
+	return _load_png(fallback_path)
+
+
+func _load_png(path: String) -> Texture2D:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var image := Image.new()
+	if image.load_png_from_buffer(file.get_buffer(file.get_length())) != OK:
+		return null
+	return ImageTexture.create_from_image(image)
 
 
 func _on_chat_pressed() -> void:
