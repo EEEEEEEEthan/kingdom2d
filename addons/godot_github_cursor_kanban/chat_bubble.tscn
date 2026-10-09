@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://dt6ewtvlofg1t"]
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_content"]
+
 [node name="ChatBubble" type="VBoxContainer" unique_id=1783960653]
 offset_right = 59.0
 offset_bottom = 100.0
@@ -17,5 +19,8 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_content")
 text = "Content"
 fit_content = true
+selection_enabled = true

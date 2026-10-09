@@ -64,8 +64,47 @@ static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
 			"id": str(item.get("id", "")),
 			"type": str(item.get("type", "")),
 			"text": str(item.get("text", "")),
+			"time": format_message_time(_raw_message_time(item)),
 		})
 	return messages
+
+
+static func format_now() -> String:
+	return Time.get_datetime_string_from_datetime_dict(Time.get_datetime_dict_from_system(), true)
+
+
+static func format_message_time(raw: String) -> String:
+	var text := raw.strip_edges()
+	if text.is_empty():
+		return ""
+	if text.is_valid_int():
+		return _clock_from_unix(int(text))
+	var unix := int(Time.get_unix_time_from_datetime_string(text))
+	if unix <= 0:
+		return ""
+	if text.ends_with("Z") or text.contains("+") or _has_negative_offset(text):
+		unix += int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	return _clock_from_unix(unix)
+
+
+static func _raw_message_time(item: Dictionary) -> String:
+	for key in ["createdAt", "created_at", "timestamp", "time"]:
+		var raw := item.get(key, "")
+		if raw == null:
+			continue
+		var text := str(raw).strip_edges()
+		if not text.is_empty() and text != "<null>":
+			return text
+	return ""
+
+
+static func _has_negative_offset(text: String) -> bool:
+	var tail := text.split("T")[-1]
+	return tail.contains("-")
+
+
+static func _clock_from_unix(unix: int) -> String:
+	return Time.get_datetime_string_from_datetime_dict(Time.get_datetime_dict_from_unix_time(unix), true)
 
 
 static func send_message(token: String, agent_id: String, text: String) -> bool:
