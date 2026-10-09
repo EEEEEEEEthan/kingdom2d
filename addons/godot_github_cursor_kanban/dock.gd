@@ -9,6 +9,7 @@ const _SETTING_RESTART := "kanban/restart_editor_after_branch_switch"
 const _SECTION := "kanban"
 
 var _refreshing := false
+var _next_cursor := ""
 var _chat_windows := {}
 var _mutex := Mutex.new()
 var _pending: Dictionary = {}
@@ -17,11 +18,11 @@ var _pending_ready := false
 
 func _ready() -> void:
 	set_process(true)
-	$HBoxContainer/Refresh.pressed.connect(refresh)
+	$HBoxContainer/Refresh.pressed.connect(_refresh_from_start)
 	$"HBoxContainer/Checkout Master".pressed.connect(_checkout_master)
 	%Settings.pressed.connect(_open_settings)
 	_clear_cards()
-	call_deferred("refresh")
+	call_deferred("_refresh_from_start")
 
 
 func _process(_delta: float) -> void:
@@ -34,7 +35,12 @@ func _process(_delta: float) -> void:
 		payload = _pending
 	_mutex.unlock()
 	if ready:
-		_apply_sessions(payload.get("sessions", []), str(payload.get("notice", "")))
+		_apply_sessions(
+			payload.get("sessions", []),
+			str(payload.get("notice", "")),
+			str(payload.get("next_cursor", "")),
+			bool(payload.get("append", false))
+		)
 
 
 func _exit_tree() -> void:
@@ -45,16 +51,30 @@ func _exit_tree() -> void:
 	_chat_windows.clear()
 
 
-func refresh() -> void:
+func _refresh_from_start() -> void:
+	_load_page("", false)
+
+
+func _load_more() -> void:
+	if _next_cursor.is_empty():
+		return
+	_load_page(_next_cursor, true)
+
+
+func _load_page(cursor: String, append: bool) -> void:
 	if _refreshing:
 		return
 	_refreshing = true
 	$HBoxContainer/Refresh.disabled = true
+	var more := _more_button()
+	if more:
+		more.disabled = true
 	var token := _token()
 	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
 	WorkerThreadPool.add_task(func() -> void:
 		var slug := _origin_slug(root)
-		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug)
+		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug, cursor)
+		payload["append"] = append
 		if not is_instance_valid(self):
 			return
 		_mutex.lock()
@@ -64,13 +84,21 @@ func refresh() -> void:
 	)
 
 
-func _apply_sessions(sessions: Array, notice: String) -> void:
+func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool) -> void:
 	_refreshing = false
 	$HBoxContainer/Refresh.disabled = false
 	if not is_inside_tree():
 		return
-	_clear_cards()
+	_next_cursor = next_cursor
 	var list := $ScrollContainer/VBoxContainer
+	if not append:
+		_clear_cards()
+	else:
+		var more := _more_button()
+		if more:
+			list.remove_child(more)
+			more.free()
+	var added := 0
 	for session in sessions:
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
@@ -81,12 +109,27 @@ func _apply_sessions(sessions: Array, notice: String) -> void:
 		card.apply(session)
 		card.chat_requested.connect(_open_chat)
 		list.add_child(card)
-	if list.get_child_count() == 0 and not notice.is_empty():
+		added += 1
+	if added == 0 and not notice.is_empty():
 		var label := Label.new()
 		label.text = notice
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		list.add_child(label)
+	if not _next_cursor.is_empty():
+		var button := Button.new()
+		button.text = "More"
+		button.set_meta("kanban_more", true)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_load_more)
+		list.add_child(button)
+
+
+func _more_button() -> Button:
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if child is Button and bool(child.get_meta("kanban_more", false)):
+			return child
+	return null
 
 
 func _clear_cards() -> void:
