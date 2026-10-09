@@ -9,10 +9,23 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Settings" type="Button" parent="." unique_id=324213873]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=155030421]
 layout_mode = 2
-size_flags_horizontal = 0
+
+[node name="Refresh" type="Button" parent="HBoxContainer" unique_id=1039442145]
+layout_mode = 2
+text = "Refresh"
+
+[node name="Checkout Master" type="Button" parent="HBoxContainer" unique_id=1263167470]
+layout_mode = 2
+text = "Checkout Master"
+
+[node name="Settings" type="Button" parent="HBoxContainer" unique_id=324213873]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 10
 size_flags_vertical = 0
+text = "Settings"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=2106684938]
 layout_mode = 2
