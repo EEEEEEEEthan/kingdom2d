@@ -112,32 +112,157 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 					break
 	if not matches_repo:
 		return {}
+	var status := str(item.get("status", ""))
 	return {
 		"id": agent_id,
 		"name": str(item.get("name", "")),
 		"url": str(item.get("url", "")),
-		"working": str(item.get("status", "")) == "ACTIVE",
+		"working": status == "ACTIVE",
 		"archived": _is_archived(item),
 		"branch": branch,
 		"pr_url": pr_url,
 	}
 
 
-static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary]) -> Array[Dictionary]:
+static func list_merged_prs(repo_slug: String) -> Array[Dictionary]:
+	var prs: Array[Dictionary] = []
+	if repo_slug.is_empty():
+		return prs
+	var output: Array = []
+	var code := OS.execute("gh", [
+		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
+		"--json", "number,title,headRefName,url",
+	], output, true)
+	if code != 0:
+		push_warning("看板：拉取已合并 PR 失败。")
+		return prs
+	var parsed: Variant = JSON.parse_string("".join(output))
+	if typeof(parsed) != TYPE_ARRAY:
+		return prs
+	for item in parsed:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		prs.append({
+			"number": int(item.get("number", 0)),
+			"title": str(item.get("title", "")),
+			"branch": str(item.get("headRefName", "")),
+			"url": str(item.get("url", "")),
+		})
+	return prs
+
+
+static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary], merged_prs: Array[Dictionary] = []) -> Array[Dictionary]:
 	var cards: Array[Dictionary] = []
-	var used := {}
+	var index_by_key := {}
 	for session in sessions:
-		var pr := _match_pr(session, prs)
-		if not pr.is_empty():
-			used[str(pr["url"])] = true
 		if bool(session.get("archived", false)):
 			continue
-		cards.append(_make_card(session, pr))
-	for pr in prs:
-		if used.has(str(pr["url"])):
+		if _session_pr_merged(session, merged_prs):
 			continue
-		cards.append(_make_card({}, pr))
+		var pr := _match_pr(session, prs)
+		var card := _make_card(session, pr)
+		if _is_empty_card(card):
+			continue
+		_upsert_card(cards, index_by_key, card)
+	for pr in prs:
+		if _pr_in_list(pr, merged_prs):
+			continue
+		if _pr_owned_by_archived(pr, sessions):
+			continue
+		var card := _make_card({}, pr)
+		if _is_empty_card(card):
+			continue
+		_upsert_card(cards, index_by_key, card)
 	return cards
+
+
+static func _session_pr_merged(session: Dictionary, merged_prs: Array[Dictionary]) -> bool:
+	var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
+	var branch := str(session.get("branch", ""))
+	if pr_url.is_empty() and branch.is_empty():
+		return false
+	for pr in merged_prs:
+		if not pr_url.is_empty() and str(pr.get("url", "")).trim_suffix("/") == pr_url:
+			return true
+		if not branch.is_empty() and str(pr.get("branch", "")) == branch:
+			return true
+	return false
+
+
+static func _pr_owned_by_archived(pr: Dictionary, sessions: Array[Dictionary]) -> bool:
+	var url := str(pr.get("url", "")).trim_suffix("/")
+	var branch := str(pr.get("branch", ""))
+	for session in sessions:
+		if not bool(session.get("archived", false)):
+			continue
+		var pr_url := str(session.get("pr_url", "")).trim_suffix("/")
+		if not url.is_empty() and pr_url == url:
+			return true
+		if not branch.is_empty() and str(session.get("branch", "")) == branch:
+			return true
+	return false
+
+
+static func _pr_in_list(pr: Dictionary, prs: Array[Dictionary]) -> bool:
+	var number := int(pr.get("number", 0))
+	var url := str(pr.get("url", "")).trim_suffix("/")
+	for item in prs:
+		if number > 0 and int(item.get("number", 0)) == number:
+			return true
+		if not url.is_empty() and str(item.get("url", "")).trim_suffix("/") == url:
+			return true
+	return false
+
+
+static func _upsert_card(cards: Array[Dictionary], index_by_key: Dictionary, card: Dictionary) -> void:
+	var key := _dedup_key(card)
+	if key.is_empty():
+		return
+	if index_by_key.has(key):
+		var existing: int = index_by_key[key]
+		cards[existing] = _prefer_card(cards[existing], card)
+		return
+	index_by_key[key] = cards.size()
+	cards.append(card)
+
+
+static func _dedup_key(card: Dictionary) -> String:
+	var number := int(card.get("pr_number", 0))
+	if number > 0:
+		return "pr:%d" % number
+	var branch := str(card.get("branch", ""))
+	if not branch.is_empty():
+		return "branch:" + branch
+	var session_id := str(card.get("session_id", ""))
+	if not session_id.is_empty():
+		return "session:" + session_id
+	return ""
+
+
+static func _prefer_card(left: Dictionary, right: Dictionary) -> Dictionary:
+	var card := left.duplicate()
+	var other := right
+	if str(card.get("session_id", "")).is_empty() and not str(other.get("session_id", "")).is_empty():
+		card["session_id"] = other["session_id"]
+		card["session_url"] = other["session_url"]
+		card["working"] = other["working"]
+	elif bool(other.get("working", false)) and not bool(card.get("working", false)):
+		card["session_id"] = other.get("session_id", card.get("session_id", ""))
+		card["session_url"] = other.get("session_url", card.get("session_url", ""))
+		card["working"] = true
+	if int(card.get("pr_number", 0)) == 0 and int(other.get("pr_number", 0)) > 0:
+		card["pr_number"] = other["pr_number"]
+		card["pr_url"] = other["pr_url"]
+		card["title"] = other["title"]
+	if str(card.get("branch", "")).is_empty():
+		card["branch"] = other.get("branch", "")
+	if str(card.get("title", "")).is_empty():
+		card["title"] = other.get("title", "")
+	return card
+
+
+static func _is_empty_card(card: Dictionary) -> bool:
+	return str(card.get("session_id", "")).is_empty() and int(card.get("pr_number", 0)) == 0 and str(card.get("pr_url", "")).is_empty()
 
 
 static func _match_pr(session: Dictionary, prs: Array[Dictionary]) -> Dictionary:
@@ -175,19 +300,43 @@ static func _make_card(session: Dictionary, pr: Dictionary) -> Dictionary:
 	}
 
 
+static func list_messages(token: String, agent_id: String) -> Array[Dictionary]:
+	var messages: Array[Dictionary] = []
+	if token.is_empty() or agent_id.is_empty():
+		push_warning("看板：没有可刷新的对话。")
+		return messages
+	var payload := _api_get(token, "/v0/agents/%s/conversation" % agent_id.uri_encode())
+	var items: Variant = payload.get("messages", [])
+	if typeof(items) != TYPE_ARRAY:
+		return messages
+	for item in items:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		messages.append({
+			"id": str(item.get("id", "")),
+			"type": str(item.get("type", "")),
+			"text": str(item.get("text", "")),
+		})
+	return messages
+
+
 static func checkout_branch(path: String, branch: String) -> bool:
 	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
 		push_warning("看板：没有可检出的分支。")
 		return false
-	var args := PackedStringArray(["-C", path, "checkout", branch])
-	if OS.execute("git", ["-C", path, "show-ref", "--verify", "--quiet", "refs/heads/" + branch], [], true) != 0:
-		var fetched := OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true)
-		if fetched != 0:
-			push_warning("看板：拉取远程分支失败。")
-			return false
-		args = PackedStringArray(["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch])
+	if OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true) != 0:
+		push_warning("看板：拉取远程分支失败。")
+		return false
+	# 丢掉已跟踪文件上的本地修改，再切到远程最新提交。
+	if OS.execute("git", ["-C", path, "reset", "--hard"], [], true) != 0:
+		push_warning("看板：丢弃本地修改失败。")
+		return false
+	# -fd 只删未跟踪且未被 ignore 的文件和目录。
+	if OS.execute("git", ["-C", path, "clean", "-fd"], [], true) != 0:
+		push_warning("看板：清理未跟踪文件失败。")
+		return false
 	var output: Array = []
-	var code := OS.execute("git", args, output, true)
+	var code := OS.execute("git", ["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch], output, true)
 	if code != 0:
 		push_warning("看板：检出分支失败。")
 		return false
@@ -230,6 +379,7 @@ static func _api_get(token: String, path: String) -> Dictionary:
 		push_warning("看板：Cursor API 返回 %d。" % client.get_response_code())
 		return {}
 	var body := PackedByteArray()
+	ticks = 0
 	while client.get_status() == HTTPClient.STATUS_BODY:
 		client.poll()
 		var chunk := client.read_response_body_chunk()
@@ -237,6 +387,10 @@ static func _api_get(token: String, path: String) -> Dictionary:
 			OS.delay_msec(10)
 		else:
 			body.append_array(chunk)
+		ticks += 1
+		if ticks > 500:
+			push_warning("看板：读取 Cursor API 超时。")
+			return {}
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
