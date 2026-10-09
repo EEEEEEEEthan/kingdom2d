@@ -2,6 +2,7 @@
 extends RefCounted
 
 const _API := "https://api.cursor.com"
+const _CACHE_PATH := "user://kanban_agents.json"
 
 
 static func project_path() -> String:
@@ -9,45 +10,110 @@ static func project_path() -> String:
 
 
 static func origin_slug(path: String, job: Dictionary = {}) -> String:
+	var from_file := _slug_from_git_config(path)
+	if not from_file.is_empty():
+		return from_file
 	var result := _run("git", PackedStringArray(["-C", path, "remote", "get-url", "origin"]), _ensure_job(job))
 	if not bool(result["ok"]):
 		return ""
-	return _slug_from_remote(str(result["text"]).strip_edges())
+	return _repo_key(str(result["text"]))
 
 
-static func _slug_from_remote(remote: String) -> String:
-	var text := remote.trim_suffix(".git")
-	if text.contains("github.com"):
-		var tail := text.split("github.com")[-1].trim_prefix(":").trim_prefix("/")
-		return tail.strip_edges()
-	return text
+static func _slug_from_git_config(start: String) -> String:
+	var dir := start
+	for _i in 8:
+		var config_path := _git_config_path(dir)
+		if not config_path.is_empty() and FileAccess.file_exists(config_path):
+			var slug := _origin_from_config(FileAccess.get_file_as_string(config_path))
+			if not slug.is_empty():
+				return slug
+		var parent := dir.get_base_dir()
+		if parent == dir or parent.is_empty():
+			break
+		dir = parent
+	return ""
+
+
+static func _git_config_path(dir: String) -> String:
+	var git_path := dir.path_join(".git")
+	if DirAccess.dir_exists_absolute(git_path):
+		return git_path.path_join("config")
+	if not FileAccess.file_exists(git_path):
+		return ""
+	var text := FileAccess.get_file_as_string(git_path).strip_edges()
+	if not text.begins_with("gitdir:"):
+		return ""
+	var gitdir := text.trim_prefix("gitdir:").strip_edges()
+	if not gitdir.is_absolute_path():
+		gitdir = dir.path_join(gitdir)
+	return gitdir.path_join("config")
+
+
+static func _origin_from_config(text: String) -> String:
+	var in_origin := false
+	for raw in text.split("\n"):
+		var line := raw.strip_edges()
+		if line.begins_with("[") and line.ends_with("]"):
+			in_origin = line == '[remote "origin"]'
+			continue
+		if in_origin and line.begins_with("url"):
+			return _repo_key(line.substr(line.find("=") + 1))
+	return ""
+
+
+static func _repo_key(remote: String) -> String:
+	var text := remote.strip_edges().trim_suffix(".git").trim_suffix("/")
+	text = text.replace("git@github.com:", "github.com/")
+	if text.contains("://"):
+		text = text.split("://")[-1]
+	if text.contains("@"):
+		text = text.split("@")[-1]
+	var parts: PackedStringArray = []
+	for part in text.split("/"):
+		if not part.is_empty():
+			parts.append(part)
+	if parts.size() >= 3 and (parts[0].contains(".") or parts[0] == "github.com"):
+		parts = parts.slice(1)
+	if parts.size() >= 2:
+		return (parts[0] + "/" + parts[1]).to_lower()
+	return "/".join(parts).to_lower()
+
+
+static func _same_repo(repo_url: String, repo_slug: String) -> bool:
+	var left := _repo_key(repo_url)
+	var right := _repo_key(repo_slug)
+	return not left.is_empty() and left == right
+
+
+static func load_agent_cache() -> Dictionary:
+	if not FileAccess.file_exists(_CACHE_PATH):
+		return {}
+	var raw := FileAccess.get_file_as_string(_CACHE_PATH).strip_edges()
+	if not raw.begins_with("{"):
+		return {}
+	var parsed: Variant = JSON.parse_string(raw)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {"agents": {}}
+	if not parsed.has("agents"):
+		return {"agents": parsed}
+	return parsed
+
+
+static func save_agent_cache(cache: Dictionary) -> void:
+	var file := FileAccess.open(_CACHE_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(cache))
 
 
 static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
-	var prs: Array[Dictionary] = []
 	if repo_slug.is_empty():
-		return prs
+		return []
 	var result := _run("gh", PackedStringArray([
 		"pr", "list", "--repo", repo_slug, "--state", "open",
 		"--json", "number,title,headRefName,url",
 	]), _ensure_job(job))
-	if not bool(result["ok"]):
-		push_warning("看板：拉取未合并 PR 失败。")
-		return prs
-	var parsed: Variant = JSON.parse_string(str(result["text"]))
-	if typeof(parsed) != TYPE_ARRAY:
-		push_warning("看板：拉取未合并 PR 失败。")
-		return prs
-	for item in parsed:
-		if typeof(item) != TYPE_DICTIONARY:
-			continue
-		prs.append({
-			"number": int(item.get("number", 0)),
-			"title": str(item.get("title", "")),
-			"branch": str(item.get("headRefName", "")),
-			"url": str(item.get("url", "")),
-		})
-	return prs
+	return _prs_from_gh(result, "看板：拉取未合并 PR 失败。")
 
 
 static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]:
@@ -107,20 +173,19 @@ static func _fill_prs(kind: String, repo_slug: String, job: Dictionary, box: Arr
 		box[0] = list_open_prs(repo_slug, job)
 
 
-static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
+static func _prs_from_gh(result: Dictionary, fail_text: String) -> Array[Dictionary]:
 	var prs: Array[Dictionary] = []
-	if repo_slug.is_empty():
+	var text := str(result.get("text", "")).strip_edges()
+	if not bool(result.get("ok", false)) or not text.begins_with("["):
+		var detail := str(result.get("err", "")).strip_edges()
+		if detail.is_empty():
+			push_warning(fail_text)
+		else:
+			push_warning("%s %s" % [fail_text, detail])
 		return prs
-	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
-		"--json", "number,title,headRefName,url",
-	]), _ensure_job(job))
-	if not bool(result["ok"]):
-		push_warning("看板：拉取已合并 PR 失败。")
-		return prs
-	var parsed: Variant = JSON.parse_string(str(result["text"]))
+	var parsed: Variant = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_ARRAY:
-		push_warning("看板：拉取已合并 PR 失败。")
+		push_warning(fail_text)
 		return prs
 	for item in parsed:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -132,6 +197,16 @@ static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Di
 			"url": str(item.get("url", "")),
 		})
 	return prs
+
+
+static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
+	if repo_slug.is_empty():
+		return []
+	var result := _run("gh", PackedStringArray([
+		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "40",
+		"--json", "number,title,headRefName,url",
+	]), _ensure_job(job))
+	return _prs_from_gh(result, "看板：拉取已合并 PR 失败。")
 
 
 static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary], merged_prs: Array[Dictionary] = []) -> Array[Dictionary]:
@@ -337,7 +412,7 @@ static func api_headers(token: String) -> PackedStringArray:
 
 
 static func agents_path(cursor: String) -> String:
-	var path := "/v1/agents?limit=100&includeArchived=false"
+	var path := "/v1/agents?limit=40&includeArchived=false"
 	if not cursor.is_empty():
 		path += "&cursor=" + cursor.uri_encode()
 	return path
@@ -366,11 +441,25 @@ static func messages_from_payload(payload: Dictionary) -> Array[Dictionary]:
 	return messages
 
 
+static func agent_repo_key(item: Dictionary) -> String:
+	var repos: Variant = item.get("repos", [])
+	if typeof(repos) != TYPE_ARRAY:
+		return ""
+	for entry in repos:
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var key := _repo_key(str(entry.get("url", "")))
+		if not key.is_empty():
+			return key
+	return ""
+
+
 static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: String) -> Dictionary:
-	var agent_id := str(item.get("id", ""))
 	var branch := ""
 	var pr_url := ""
-	var matches_repo := repo_slug.is_empty()
+	if repo_slug.is_empty():
+		return {}
+	var matched := _same_repo(agent_repo_key(item), repo_slug)
 	var git: Variant = run.get("git", {})
 	if typeof(git) == TYPE_DICTIONARY:
 		var branches: Variant = git.get("branches", [])
@@ -378,18 +467,27 @@ static func session_from_agent(item: Dictionary, run: Dictionary, repo_slug: Str
 			for entry in branches:
 				if typeof(entry) != TYPE_DICTIONARY:
 					continue
-				var repo_url := str(entry.get("repoUrl", ""))
-				if not repo_slug.is_empty() and not repo_url.contains(repo_slug):
+				if not _same_repo(str(entry.get("repoUrl", "")), repo_slug):
 					continue
-				matches_repo = true
+				matched = true
 				branch = str(entry.get("branch", ""))
 				pr_url = str(entry.get("prUrl", ""))
 				break
-	if not matches_repo:
+	if not matched:
 		return {}
+	return _session_dict(item, branch, pr_url)
+
+
+static func session_from_cache(item: Dictionary, cached: Dictionary, repo_slug: String) -> Dictionary:
+	if not _same_repo(str(cached.get("repo", "")), repo_slug):
+		return {}
+	return _session_dict(item, str(cached.get("branch", "")), str(cached.get("pr_url", "")))
+
+
+static func _session_dict(item: Dictionary, branch: String, pr_url: String) -> Dictionary:
 	var status := str(item.get("status", ""))
 	return {
-		"id": agent_id,
+		"id": str(item.get("id", "")),
 		"name": str(item.get("name", "")),
 		"url": str(item.get("url", "")),
 		"working": status == "ACTIVE",
@@ -421,7 +519,7 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 		return {"ok": false, "text": ""}
 	var launched := OS.execute_with_pipe(program, args, false)
 	if typeof(launched) != TYPE_DICTIONARY or not launched.has("pid"):
-		return {"ok": false, "text": ""}
+		return {"ok": false, "text": "", "err": "拉不起 %s" % program}
 	var pid := int(launched["pid"])
 	var mutex: Mutex = job["mutex"]
 	mutex.lock()
@@ -430,17 +528,35 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 	var state := {"killed": false}
 	var killer := Thread.new()
 	killer.start(_watch_pid.bind(pid, job, 20000, state))
-	var stdout: FileAccess = launched.get("stdio")
-	var text := stdout.get_as_text() if stdout else ""
+	var text := _read_pipe(launched.get("stdio"), pid)
+	var err_text := _read_pipe(launched.get("stderr"), pid)
 	if killer.is_started():
 		killer.wait_to_finish()
 	if OS.is_process_running(pid):
 		OS.kill(pid)
+	var code := OS.get_process_exit_code(pid)
 	mutex.lock()
 	(job["pids"] as Array).erase(pid)
 	mutex.unlock()
-	var ok := not bool(state["killed"]) and not _cancelled(job)
-	return {"ok": ok, "text": text}
+	var body := text.strip_edges()
+	var ok := not bool(state["killed"]) and not _cancelled(job) and (code == 0 or body.begins_with("["))
+	return {"ok": ok, "text": text, "err": err_text.strip_edges()}
+
+
+static func _read_pipe(file: Variant, pid: int) -> String:
+	if not file is FileAccess:
+		return ""
+	var pipe := file as FileAccess
+	var chunks := PackedByteArray()
+	while true:
+		var part := pipe.get_buffer(4096)
+		if not part.is_empty():
+			chunks.append_array(part)
+			continue
+		if pipe.eof_reached() or not OS.is_process_running(pid):
+			break
+		OS.delay_msec(10)
+	return chunks.get_string_from_utf8()
 
 
 static func _watch_pid(pid: int, job: Dictionary, timeout_ms: int, state: Dictionary) -> void:
