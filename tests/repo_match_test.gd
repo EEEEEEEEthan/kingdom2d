@@ -37,6 +37,23 @@ func _init() -> void:
 		_fail("当前仓库的会话应留下")
 	if _Client._repos_include([{"url": "https://github.com/other/repo"}], slug):
 		_fail("别的仓库不显示")
+	var kept: Dictionary = _Client.detail_patch({
+		"name": "做地图",
+		"url": "https://cursor.com/agents/bc-1",
+		"status": "ACTIVE",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+	}, slug)
+	if kept.get("name", "") != "做地图" or kept.get("working", false) != true:
+		_fail("当前仓库的详情应留下")
+	if not _Client.detail_patch({
+		"status": "IDLE",
+		"repos": [{"url": "https://github.com/other/repo"}],
+	}, slug).is_empty():
+		_fail("别的仓库的详情应丢掉")
+	if not _Client.detail_patch({"status": "ARCHIVED", "repos": repos}, slug).is_empty():
+		_fail("已归档详情应丢掉")
+	if not bool(_Client.detail_patch({}, slug).get("_error", false)):
+		_fail("空详情应记为错误")
 	print("repo_match_test ok")
 	quit(0)
 

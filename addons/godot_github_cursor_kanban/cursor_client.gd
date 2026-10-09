@@ -17,7 +17,6 @@ static func list_unarchived_sessions(token: String, repo_slug: String, cursor: S
 	var path := "/v1/agents?limit=%d&includeArchived=false" % _PAGE_SIZE
 	if not cursor.is_empty():
 		path += "&cursor=" + cursor.uri_encode()
-	var page_started := Time.get_ticks_msec()
 	var payload := request(token, HTTPClient.METHOD_GET, path)
 	var saw_error := false
 	var next_cursor := ""
@@ -31,16 +30,7 @@ static func list_unarchived_sessions(token: String, repo_slug: String, cursor: S
 			for item in items:
 				if typeof(item) != TYPE_DICTIONARY:
 					continue
-				var filter_started := Time.get_ticks_msec()
-				var session := _session_for_repo(token, item, repo_slug)
-				print("看板筛选 %s %d ms keep=%s" % [
-					str(item.get("id", "")),
-					Time.get_ticks_msec() - filter_started,
-					str(not session.is_empty() and not bool(session.get("_error", false))),
-				])
-				if bool(session.get("_error", false)):
-					saw_error = true
-					continue
+				var session := _session_from_list_item(item)
 				if session.is_empty():
 					continue
 				sessions.append(session)
@@ -48,7 +38,6 @@ static func list_unarchived_sessions(token: String, repo_slug: String, cursor: S
 			next_cursor = "" if next == null else str(next)
 			if next_cursor == "<null>":
 				next_cursor = ""
-	print("看板筛选分页 %s %d ms" % [path, Time.get_ticks_msec() - page_started])
 	var notice := ""
 	if sessions.is_empty() and next_cursor.is_empty():
 		notice = "读取 Cursor 会话失败。" if saw_error else "当前仓库没有未归档的云端会话。"
@@ -154,21 +143,18 @@ static func _method_name(method: int) -> String:
 			return str(method)
 
 
-static func _session_for_repo(token: String, item: Dictionary, repo_slug: String) -> Dictionary:
-	var session := _session_from_list_item(item)
-	if session.is_empty():
-		return {}
-	var detail := request(token, HTTPClient.METHOD_GET, "/v1/agents/%s" % str(session["id"]).uri_encode())
+static func detail_patch(detail: Dictionary, repo_slug: String) -> Dictionary:
 	if detail.is_empty():
 		return {"_error": true}
 	if str(detail.get("status", "")) == "ARCHIVED":
 		return {}
 	if not _repos_include(detail.get("repos", []), repo_slug):
 		return {}
-	session["name"] = str(detail.get("name", session["name"]))
-	session["url"] = str(detail.get("url", session["url"]))
-	session["working"] = str(detail.get("status", item.get("status", ""))) == "ACTIVE"
-	return session
+	return {
+		"name": str(detail.get("name", "")),
+		"url": str(detail.get("url", "")),
+		"working": str(detail.get("status", "")) == "ACTIVE",
+	}
 
 
 static func _repos_include(repos: Variant, repo_slug: String) -> bool:

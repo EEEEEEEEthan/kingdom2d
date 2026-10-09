@@ -10,6 +10,8 @@ const _SECTION := "kanban"
 
 var _refreshing := false
 var _next_cursor := ""
+var _detail_pending := 0
+var _repo_slug := ""
 var _chat_windows := {}
 var _mutex := Mutex.new()
 var _pending: Dictionary = {}
@@ -39,7 +41,8 @@ func _process(_delta: float) -> void:
 			payload.get("sessions", []),
 			str(payload.get("notice", "")),
 			str(payload.get("next_cursor", "")),
-			bool(payload.get("append", false))
+			bool(payload.get("append", false)),
+			str(payload.get("repo_slug", ""))
 		)
 
 
@@ -74,6 +77,7 @@ func _load_page(cursor: String, append: bool) -> void:
 	WorkerThreadPool.add_task(func() -> void:
 		var slug := _origin_slug(root)
 		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug, cursor)
+		payload["repo_slug"] = slug
 		payload["append"] = append
 		if not is_instance_valid(self):
 			return
@@ -84,20 +88,24 @@ func _load_page(cursor: String, append: bool) -> void:
 	)
 
 
-func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool) -> void:
+func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool, repo_slug: String) -> void:
 	_refreshing = false
 	$HBoxContainer/Refresh.disabled = false
 	if not is_inside_tree():
 		return
 	_next_cursor = next_cursor
+	if not repo_slug.is_empty():
+		_repo_slug = repo_slug
 	var list := $ScrollContainer/VBoxContainer
 	if not append:
 		_clear_cards()
+		_detail_pending = 0
 	else:
 		var more := _more_button()
 		if more:
 			list.remove_child(more)
 			more.free()
+	var token := _token()
 	var added := 0
 	for session in sessions:
 		if typeof(session) != TYPE_DICTIONARY:
@@ -108,7 +116,10 @@ func _apply_sessions(sessions: Array, notice: String, next_cursor: String, appen
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(session)
 		card.chat_requested.connect(_open_chat)
+		card.detail_settled.connect(_on_detail_settled)
 		list.add_child(card)
+		_detail_pending += 1
+		card.begin_detail(token, _repo_slug)
 		added += 1
 	if added == 0 and not notice.is_empty():
 		var label := Label.new()
@@ -123,6 +134,29 @@ func _apply_sessions(sessions: Array, notice: String, next_cursor: String, appen
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(_load_more)
 		list.add_child(button)
+
+
+func _on_detail_settled(kept: bool) -> void:
+	_detail_pending = maxi(_detail_pending - 1, 0)
+	if _detail_pending > 0 or not _next_cursor.is_empty():
+		return
+	var staying := _card_count() - (0 if kept else 1)
+	if staying > 0:
+		return
+	var list := $ScrollContainer/VBoxContainer
+	var label := Label.new()
+	label.text = "当前仓库没有未归档的云端会话。"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_child(label)
+
+
+func _card_count() -> int:
+	var count := 0
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if child.has_signal("detail_settled"):
+			count += 1
+	return count
 
 
 func _more_button() -> Button:
