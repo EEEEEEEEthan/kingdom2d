@@ -6,6 +6,7 @@ const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn"
 const _CHAT_WINDOW := preload("res://addons/godot_github_cursor_kanban/chat_window.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
+const _MAIN_BRANCH_ICON := "res://addons/godot_github_cursor_kanban/icons/main_branch.png"
 const _REFRESH_PATH := "res://addons/godot_github_cursor_kanban/icons/refresh.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
@@ -43,6 +44,11 @@ func _enter_tree() -> void:
 	_refresh_button.tooltip_text = tr("刷新")
 	_refresh_button.pressed.connect(_refresh_cards)
 	toolbar.add_child(_refresh_button)
+	var main_button := Button.new()
+	main_button.icon = _load_png_texture(_MAIN_BRANCH_ICON)
+	main_button.tooltip_text = tr("切回主分支")
+	main_button.pressed.connect(_confirm_reset_to_main)
+	toolbar.add_child(main_button)
 	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
@@ -98,6 +104,25 @@ func _apply_cards(cards: Array) -> void:
 		_card_list.add_child(card)
 
 
+func _confirm_reset_to_main() -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = tr("切回主分支")
+	dialog.dialog_text = tr("用最新远程主分支覆盖本地并切换过去？未提交的改动会丢失。")
+	dialog.ok_button_text = tr("是")
+	dialog.cancel_button_text = tr("否")
+	dialog.confirmed.connect(_reset_to_main)
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	EditorInterface.get_base_control().add_child(dialog)
+	dialog.popup_centered()
+
+
+func _reset_to_main() -> void:
+	if not _Board.reset_to_remote_default(_Board.project_path()):
+		return
+	_restart_after_branch_switch()
+
+
 func _on_chat_requested(session_id: String, title: String) -> void:
 	if session_id.is_empty():
 		return
@@ -135,6 +160,10 @@ func _on_checkout_requested(branch: String) -> void:
 func _checkout_and_restart(branch: String) -> void:
 	if not _Board.checkout_branch(_Board.project_path(), branch):
 		return
+	_restart_after_branch_switch()
+
+
+func _restart_after_branch_switch() -> void:
 	var settings := EditorInterface.get_editor_settings()
 	var restart := true
 	if settings.has_setting(_SETTING_RESTART):
