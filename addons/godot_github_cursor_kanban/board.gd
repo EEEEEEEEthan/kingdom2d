@@ -304,6 +304,9 @@ static func _prefer_card(left: Dictionary, right: Dictionary) -> Dictionary:
 
 
 static func _is_empty_card(card: Dictionary) -> bool:
+	# 没名字、也没有 PR 的会话只占一行空白，不进看板。
+	if str(card.get("title", "")).strip_edges().is_empty() and int(card.get("pr_number", 0)) == 0:
+		return true
 	return str(card.get("session_id", "")).is_empty() and int(card.get("pr_number", 0)) == 0 and str(card.get("pr_url", "")).is_empty()
 
 
