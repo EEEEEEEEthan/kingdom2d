@@ -24,7 +24,7 @@ var _refreshing := false
 var _chat_windows := {}
 var _thread: Thread
 var _job: Dictionary = {}
-const _RUN_CONCURRENCY := 8
+const _RUN_CONCURRENCY := 16
 
 var _agents_http: HTTPRequest
 var _run_pool: Array[HTTPRequest] = []
