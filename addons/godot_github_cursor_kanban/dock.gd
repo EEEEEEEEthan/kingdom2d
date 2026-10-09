@@ -10,8 +10,12 @@ const _SECTION := "kanban"
 
 var _refreshing := false
 var _next_cursor := ""
-var _detail_pending := 0
 var _repo_slug := ""
+var _page_token := 0
+var _verify_left := 0
+var _page_notice := ""
+var _page_slots: Array = []
+var _archive_checks: Array = []
 var _chat_windows := {}
 var _mutex := Mutex.new()
 var _pending: Dictionary = {}
@@ -37,6 +41,8 @@ func _process(_delta: float) -> void:
 		payload = _pending
 	_mutex.unlock()
 	if ready:
+		if int(payload.get("page", -1)) != _page_token:
+			return
 		_apply_sessions(
 			payload.get("sessions", []),
 			str(payload.get("notice", "")),
@@ -68,17 +74,20 @@ func _load_page(cursor: String, append: bool) -> void:
 	if _refreshing:
 		return
 	_refreshing = true
+	_page_token += 1
 	$HBoxContainer/Refresh.disabled = true
 	var more := _more_button()
 	if more:
 		more.disabled = true
 	var token := _token()
+	var page := _page_token
 	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
 	WorkerThreadPool.add_task(func() -> void:
 		var slug := _origin_slug(root)
 		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug, cursor)
 		payload["repo_slug"] = slug
 		payload["append"] = append
+		payload["page"] = page
 		if not is_instance_valid(self):
 			return
 		_mutex.lock()
@@ -89,41 +98,219 @@ func _load_page(cursor: String, append: bool) -> void:
 
 
 func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool, repo_slug: String) -> void:
-	_refreshing = false
-	$HBoxContainer/Refresh.disabled = false
 	if not is_inside_tree():
+		_refreshing = false
 		return
 	_next_cursor = next_cursor
+	_page_notice = notice
 	if not repo_slug.is_empty():
 		_repo_slug = repo_slug
 	var list := $ScrollContainer/VBoxContainer
 	if not append:
 		_clear_cards()
-		_detail_pending = 0
 	else:
 		var more := _more_button()
 		if more:
 			list.remove_child(more)
 			more.free()
-	var token := _token()
-	var added := 0
+	var entries: Array = []
 	for session in sessions:
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
 		if bool(session.get("archived", false)):
 			continue
-		var card := _CARD.instantiate()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.apply(session)
-		card.chat_requested.connect(_open_chat)
-		card.detail_settled.connect(_on_detail_settled)
-		list.add_child(card)
-		_detail_pending += 1
-		card.begin_detail(token, _repo_slug)
+		entries.append(session)
+	_page_slots = []
+	_page_slots.resize(entries.size())
+	_archive_checks = []
+	_verify_left = 0
+	var token := _token()
+	var page := _page_token
+	for i in entries.size():
+		var session: Dictionary = entries[i]
+		var agent_id := str(session.get("id", ""))
+		var cached := _Client.cached_repo_match(agent_id, _repo_slug)
+		if cached == 0:
+			_page_slots[i] = {}
+		elif cached == 1:
+			var archived := _Client.cached_archived(agent_id)
+			if archived == 1:
+				_page_slots[i] = {}
+			elif archived == 0:
+				_page_slots[i] = session
+			else:
+				_verify_left += 1
+				_verify_session(page, i, session, token, _repo_slug)
+			if archived != -1:
+				_archive_checks.append(session)
+		else:
+			_verify_left += 1
+			_verify_session(page, i, session, token, _repo_slug)
+	if _verify_left == 0:
+		_commit_page()
+
+
+func _verify_session(page: int, index: int, session: Dictionary, token: String, repo_slug: String) -> void:
+	var agent_id := str(session.get("id", ""))
+	WorkerThreadPool.add_task(func() -> void:
+		var detail := _Client.request(
+			token,
+			HTTPClient.METHOD_GET,
+			"/v1/agents/%s" % agent_id.uri_encode()
+		)
+		_Client.remember_repos(agent_id, detail)
+		var patch := _Client.detail_patch(detail, repo_slug)
+		if is_instance_valid(self):
+			call_deferred("_on_verified", page, index, session, patch)
+	)
+
+
+func _on_verified(page: int, index: int, session: Dictionary, patch: Dictionary) -> void:
+	if page != _page_token or not is_inside_tree():
+		return
+	_page_slots[index] = _session_after_patch(session, patch)
+	_verify_left -= 1
+	if _verify_left <= 0:
+		_commit_page()
+
+
+func _session_after_patch(session: Dictionary, patch: Dictionary) -> Dictionary:
+	if bool(patch.get("_error", false)):
+		return session
+	if patch.is_empty():
+		return {}
+	var merged := session.duplicate()
+	merged["name"] = str(patch.get("name", session.get("name", "")))
+	merged["url"] = str(patch.get("url", session.get("url", "")))
+	merged["working"] = bool(patch.get("working", false))
+	return merged
+
+
+func _commit_page() -> void:
+	var added := 0
+	for slot in _page_slots:
+		if typeof(slot) != TYPE_DICTIONARY or slot.is_empty():
+			continue
+		_add_card(slot)
 		added += 1
-	if added == 0 and not notice.is_empty():
+	_page_slots = []
+	var checks := _archive_checks
+	_archive_checks = []
+	_finish_page(added)
+	var token := _token()
+	var page := _page_token
+	for session in checks:
+		if typeof(session) != TYPE_DICTIONARY:
+			continue
+		_refresh_archive(page, session, token, _repo_slug)
+
+
+func _refresh_archive(page: int, session: Dictionary, token: String, repo_slug: String) -> void:
+	var agent_id := str(session.get("id", ""))
+	WorkerThreadPool.add_task(func() -> void:
+		var detail := _Client.request(
+			token,
+			HTTPClient.METHOD_GET,
+			"/v1/agents/%s" % agent_id.uri_encode()
+		)
+		_Client.remember_repos(agent_id, detail)
+		var patch := _Client.detail_patch(detail, repo_slug)
+		if is_instance_valid(self):
+			call_deferred("_on_archive", page, session, patch)
+	)
+
+
+func _on_archive(page: int, session: Dictionary, patch: Dictionary) -> void:
+	if page != _page_token or not is_inside_tree():
+		return
+	var agent_id := str(session.get("id", ""))
+	if bool(patch.get("_error", false)):
+		return
+	if patch.is_empty():
+		_remove_card(agent_id)
+		_show_empty_if_needed()
+		return
+	var merged := _session_after_patch(session, patch)
+	var card := _find_card(agent_id)
+	if card:
+		card.apply(merged)
+		return
+	_remove_notice()
+	_add_card(merged)
+
+
+func _add_card(session: Dictionary) -> void:
+	var list := $ScrollContainer/VBoxContainer
+	var card := _CARD.instantiate()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.set_meta("session_id", str(session.get("id", "")))
+	card.apply(session)
+	card.chat_requested.connect(_open_chat)
+	var more := _more_button()
+	if more:
+		list.add_child(card)
+		list.move_child(card, more.get_index())
+	else:
+		list.add_child(card)
+
+
+func _find_card(session_id: String) -> Node:
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if str(child.get_meta("session_id", "")) == session_id:
+			return child
+	return null
+
+
+func _remove_card(session_id: String) -> void:
+	var card := _find_card(session_id)
+	if card == null:
+		return
+	var list := $ScrollContainer/VBoxContainer
+	list.remove_child(card)
+	card.free()
+
+
+func _remove_notice() -> void:
+	var list := $ScrollContainer/VBoxContainer
+	for child in list.get_children():
+		if child is Label:
+			list.remove_child(child)
+			child.free()
+
+
+func _show_empty_if_needed() -> void:
+	if _card_count() > 0 or not _next_cursor.is_empty() or _refreshing:
+		return
+	if _has_notice():
+		return
+	var label := Label.new()
+	label.text = "当前仓库没有未归档的云端会话。"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	$ScrollContainer/VBoxContainer.add_child(label)
+
+
+func _has_notice() -> bool:
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if child is Label:
+			return true
+	return false
+
+
+func _finish_page(added: int) -> void:
+	_refreshing = false
+	$HBoxContainer/Refresh.disabled = false
+	if not is_inside_tree():
+		return
+	var list := $ScrollContainer/VBoxContainer
+	var text := ""
+	if added == 0 and not _page_notice.is_empty():
+		text = _page_notice
+	elif added == 0 and _card_count() == 0 and _next_cursor.is_empty():
+		text = "当前仓库没有未归档的云端会话。"
+	if not text.is_empty():
 		var label := Label.new()
-		label.text = notice
+		label.text = text
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		list.add_child(label)
@@ -134,21 +321,6 @@ func _apply_sessions(sessions: Array, notice: String, next_cursor: String, appen
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(_load_more)
 		list.add_child(button)
-
-
-func _on_detail_settled(kept: bool) -> void:
-	_detail_pending = maxi(_detail_pending - 1, 0)
-	if _detail_pending > 0 or not _next_cursor.is_empty():
-		return
-	var staying := _card_count() - (0 if kept else 1)
-	if staying > 0:
-		return
-	var list := $ScrollContainer/VBoxContainer
-	var label := Label.new()
-	label.text = "当前仓库没有未归档的云端会话。"
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_child(label)
 
 
 func _card_count() -> int:
