@@ -31,18 +31,21 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "10分钟前"
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1397750838]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1688968319]
 layout_mode = 2
-size_flags_horizontal = 0
-theme_override_constants/margin_right = 16
 
-[node name="PanelContainer" type="PanelContainer" parent="MarginContainer" unique_id=969918240]
+[node name="PanelContainer" type="PanelContainer" parent="HBoxContainer" unique_id=969918240]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_5lg36")
 
-[node name="Content" type="RichTextLabel" parent="MarginContainer/PanelContainer" unique_id=1027279291]
+[node name="Content" type="RichTextLabel" parent="HBoxContainer/PanelContainer" unique_id=1027279291]
 unique_name_in_owner = true
+custom_maximum_size = Vector2(816, -1)
 layout_mode = 2
 text = "Content"
 fit_content = true
 script = SubResource("GDScript_5lg36")
+
+[node name="Spacing" type="Control" parent="HBoxContainer" unique_id=1981521106]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
