@@ -18,6 +18,7 @@ const _PROPERTY_DOMAIN := "godot.properties"
 var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
+var _refresh_button: Button
 var _refreshing := false
 var _chat_windows := {}
 
@@ -37,11 +38,11 @@ func _enter_tree() -> void:
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
-	var refresh_button := Button.new()
-	refresh_button.icon = _refresh_button_icon()
-	refresh_button.tooltip_text = tr("刷新")
-	refresh_button.pressed.connect(_refresh_cards)
-	toolbar.add_child(refresh_button)
+	_refresh_button = Button.new()
+	_refresh_button.icon = _refresh_button_icon()
+	_refresh_button.tooltip_text = tr("刷新")
+	_refresh_button.pressed.connect(_refresh_cards)
+	toolbar.add_child(_refresh_button)
 	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
@@ -60,6 +61,8 @@ func _refresh_cards() -> void:
 	if _card_list == null or _refreshing:
 		return
 	_refreshing = true
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = true
 	var settings := EditorInterface.get_editor_settings()
 	var token := ""
 	if settings.has_setting(_SETTING_TOKEN):
@@ -79,6 +82,8 @@ func _load_cards_off_thread(token: String, root: String) -> void:
 
 func _apply_cards(cards: Array) -> void:
 	_refreshing = false
+	if is_instance_valid(_refresh_button):
+		_refresh_button.disabled = false
 	if _card_list == null or not is_inside_tree():
 		return
 	for child in _card_list.get_children():
