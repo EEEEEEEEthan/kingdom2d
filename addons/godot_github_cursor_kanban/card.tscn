@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://kvsdcnxpbdk6"]
 
+[ext_resource type="Script" path="res://addons/godot_github_cursor_kanban/card.gd" id="1_card"]
+
 [node name="Card" type="PanelContainer" unique_id=2093432049]
+script = ExtResource("1_card")
 offset_right = 168.0
 offset_bottom = 18.0
 
