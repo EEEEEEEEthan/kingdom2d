@@ -93,7 +93,9 @@ static func load_agent_cache() -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(raw)
 	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
+		return {"agents": {}}
+	if not parsed.has("agents"):
+		return {"agents": parsed}
 	return parsed
 
 
@@ -201,7 +203,7 @@ static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Di
 	if repo_slug.is_empty():
 		return []
 	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
+		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "40",
 		"--json", "number,title,headRefName,url",
 	]), _ensure_job(job))
 	return _prs_from_gh(result, "看板：拉取已合并 PR 失败。")
@@ -410,7 +412,7 @@ static func api_headers(token: String) -> PackedStringArray:
 
 
 static func agents_path(cursor: String) -> String:
-	var path := "/v1/agents?limit=100&includeArchived=false"
+	var path := "/v1/agents?limit=40&includeArchived=false"
 	if not cursor.is_empty():
 		path += "&cursor=" + cursor.uri_encode()
 	return path

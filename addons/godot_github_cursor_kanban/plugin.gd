@@ -41,6 +41,8 @@ var _fetch_cursor := ""
 var _fetch_page := 0
 var _run_gen: Dictionary = {}
 var _agent_cache: Dictionary = {}
+var _prs_done := false
+var _agents_done := false
 
 
 func _enter_tree() -> void:
@@ -103,41 +105,53 @@ func _refresh_cards() -> void:
 	_fetch_gen += 1
 	_cancel_work()
 	_join_thread()
+	_prs_done = false
+	_agents_done = false
 	_job = {"cancel": false, "pids": [], "mutex": Mutex.new()}
-	_thread = Thread.new()
-	var err := _thread.start(_load_prs_off_thread.bind(token, _Board.project_path(), _job, _fetch_gen))
-	if err != OK:
-		_refreshing = false
-		_set_refresh_idle()
-		push_warning("看板：刷新线程启动失败。")
-
-
-func _load_prs_off_thread(token: String, root: String, job: Dictionary, gen: int) -> void:
-	var slug := _Board.origin_slug(root, job)
-	var bundle: Dictionary = _Board.list_board_prs(slug, job)
-	if is_instance_valid(self):
-		call_deferred("_continue_refresh", token, slug, bundle.get("open", []), bundle.get("merged", []), gen)
-
-
-func _continue_refresh(token: String, slug: String, prs: Array, merged: Array, gen: int) -> void:
-	if gen != _fetch_gen or not is_inside_tree():
-		return
-	_join_thread()
-	_fetch_token = token
-	_fetch_slug = slug
-	_fetch_prs = _dict_array(prs)
-	_fetch_merged = _dict_array(merged)
+	_fetch_slug = _Board.origin_slug(_Board.project_path())
+	_agent_cache = _Board.load_agent_cache()
+	_fetch_prs = _dict_array(_agent_cache.get("open_prs", []))
+	_fetch_merged = _dict_array(_agent_cache.get("merged_prs", []))
 	_fetch_sessions = []
 	_fetch_agents = []
 	_fetch_runs = []
 	_fetch_cursor = ""
 	_fetch_page = 0
-	_agent_cache = _Board.load_agent_cache()
+	_fetch_token = token
+	_paint_cards()
+	_thread = Thread.new()
+	var err := _thread.start(_load_prs_off_thread.bind(_Board.project_path(), _job, _fetch_gen))
+	if err != OK:
+		_prs_done = true
+		push_warning("看板：刷新线程启动失败。")
 	if token.is_empty():
 		push_warning("看板：未配置 Cursor token，只列出 PR。")
-		_finish_cards()
+		_agents_done = true
+	else:
+		_request_agents_page()
+	_maybe_idle()
+
+
+func _load_prs_off_thread(root: String, job: Dictionary, gen: int) -> void:
+	var slug := _Board.origin_slug(root, job)
+	var bundle: Dictionary = _Board.list_board_prs(slug, job)
+	if is_instance_valid(self):
+		call_deferred("_continue_prs", slug, bundle.get("open", []), bundle.get("merged", []), gen)
+
+
+func _continue_prs(slug: String, prs: Array, merged: Array, gen: int) -> void:
+	if gen != _fetch_gen or not is_inside_tree():
 		return
-	_request_agents_page()
+	_join_thread()
+	if not slug.is_empty():
+		_fetch_slug = slug
+	_fetch_prs = _dict_array(prs)
+	_fetch_merged = _dict_array(merged)
+	_agent_cache["open_prs"] = _fetch_prs
+	_agent_cache["merged_prs"] = _fetch_merged
+	_prs_done = true
+	_paint_cards()
+	_maybe_idle()
 
 
 func _request_agents_page() -> void:
@@ -235,12 +249,15 @@ func _remember_agent(item: Dictionary, repo: String, branch: String, pr_url: Str
 	var agent_id := str(item.get("id", ""))
 	if agent_id.is_empty() or repo.is_empty():
 		return
-	_agent_cache[agent_id] = {
+	_agents()[agent_id] = {
 		"run_id": str(item.get("latestRunId", "")),
 		"updated_at": str(item.get("updatedAt", "")),
 		"repo": repo,
 		"branch": branch,
 		"pr_url": pr_url,
+		"name": str(item.get("name", "")),
+		"url": str(item.get("url", "")),
+		"status": str(item.get("status", "")),
 	}
 
 
@@ -277,19 +294,17 @@ func _consume_agents_page(payload: Dictionary) -> void:
 	_fetch_page += 1
 	_fetch_cursor = str(payload.get("nextCursor", ""))
 	# 整页都命中缓存时，更旧的页也不会变，不再继续翻。
-	if _fetch_cursor.is_empty() or _fetch_page >= 5 or (page_stable and not items.is_empty()):
+	if _fetch_cursor.is_empty() or _fetch_page >= 1 or (page_stable and not items.is_empty()):
 		_pump_details()
 	else:
 		_request_agents_page()
 
 
 func _reuse_cached(item: Dictionary) -> bool:
-	var cached: Dictionary = _agent_cache.get(str(item.get("id", "")), {})
+	var cached: Dictionary = _agents().get(str(item.get("id", "")), {})
 	if cached.is_empty():
 		return false
 	if str(cached.get("run_id", "")) != str(item.get("latestRunId", "")):
-		return false
-	if str(cached.get("updated_at", "")) != str(item.get("updatedAt", "")):
 		return false
 	if str(cached.get("repo", "")).is_empty():
 		return false
@@ -300,11 +315,61 @@ func _reuse_cached(item: Dictionary) -> bool:
 
 
 func _finish_cards() -> void:
+	_agents_done = true
+	_paint_cards()
+	_maybe_idle()
+
+
+func _paint_cards() -> void:
 	if not is_inside_tree():
-		_refreshing = false
 		return
-	_Board.save_agent_cache(_agent_cache)
-	_apply_cards(_Board.merge_cards(_fetch_sessions, _fetch_prs, _fetch_merged))
+	var sessions := _sessions_for_board()
+	_apply_cards(_Board.merge_cards(sessions, _fetch_prs, _fetch_merged))
+	_refreshing = not (_prs_done and _agents_done)
+	if _refreshing:
+		if is_instance_valid(_refresh_button):
+			_refresh_button.disabled = true
+			_refresh_button.tooltip_text = tr("刷新中")
+	else:
+		_set_refresh_idle()
+
+
+func _maybe_idle() -> void:
+	if not _prs_done or not _agents_done:
+		return
+	if is_inside_tree():
+		_Board.save_agent_cache(_agent_cache)
+	_refreshing = false
+	_set_refresh_idle()
+
+
+func _sessions_for_board() -> Array[Dictionary]:
+	var sessions: Array[Dictionary] = []
+	var seen := {}
+	for session in _fetch_sessions:
+		var sid := str(session.get("id", ""))
+		seen[sid] = true
+		sessions.append(session)
+	for agent_id in _agents().keys():
+		if seen.has(str(agent_id)):
+			continue
+		var cached: Dictionary = _agents()[agent_id]
+		var item := {
+			"id": str(agent_id),
+			"name": str(cached.get("name", "")),
+			"url": str(cached.get("url", "")),
+			"status": str(cached.get("status", "")),
+		}
+		var session := _Board.session_from_cache(item, cached, _fetch_slug)
+		if not session.is_empty():
+			sessions.append(session)
+	return sessions
+
+
+func _agents() -> Dictionary:
+	if typeof(_agent_cache.get("agents", {})) != TYPE_DICTIONARY:
+		_agent_cache["agents"] = {}
+	return _agent_cache["agents"]
 
 
 func _dict_array(items: Array) -> Array[Dictionary]:
@@ -345,8 +410,6 @@ func _set_refresh_idle() -> void:
 
 
 func _apply_cards(cards: Array) -> void:
-	_refreshing = false
-	_set_refresh_idle()
 	if _card_list == null or not is_inside_tree():
 		return
 	for child in _card_list.get_children():
