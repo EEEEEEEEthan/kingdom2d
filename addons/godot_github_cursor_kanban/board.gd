@@ -167,13 +167,14 @@ static func checkout_branch(path: String, branch: String) -> bool:
 	if branch.is_empty() or branch.contains(" ") or branch.begins_with("-"):
 		push_warning("看板：没有可检出的分支。")
 		return false
-	var args := PackedStringArray(["-C", path, "checkout", branch])
+	# -f 丢掉工作区和暂存区里的本地修改，未跟踪文件不动。
+	var args := PackedStringArray(["-C", path, "checkout", "-f", branch])
 	if OS.execute("git", ["-C", path, "show-ref", "--verify", "--quiet", "refs/heads/" + branch], [], true) != 0:
 		var fetched := OS.execute("git", ["-C", path, "fetch", "origin", branch], [], true)
 		if fetched != 0:
 			push_warning("看板：拉取远程分支失败。")
 			return false
-		args = PackedStringArray(["-C", path, "checkout", "-B", branch, "--track", "origin/" + branch])
+		args = PackedStringArray(["-C", path, "checkout", "-f", "-B", branch, "--track", "origin/" + branch])
 	var output: Array = []
 	var code := OS.execute("git", args, output, true)
 	if code != 0:
