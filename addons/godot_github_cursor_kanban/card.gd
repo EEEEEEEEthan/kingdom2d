@@ -19,7 +19,8 @@ var _checking := false
 
 func apply(session: Dictionary) -> void:
 	%CardName.text = str(session.get("name", ""))
-	_set_working(bool(session.get("working", false)))
+	var working := bool(session.get("working", false))
+	_set_working(working)
 	_url = str(session.get("url", _url))
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
