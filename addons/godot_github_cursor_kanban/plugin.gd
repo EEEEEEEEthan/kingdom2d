@@ -2,6 +2,8 @@
 extends EditorPlugin
 
 const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn")
+const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
+const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
@@ -13,6 +15,7 @@ const _PROPERTY_DOMAIN := "godot.properties"
 
 var _dock: EditorDock
 var _translations: Array[Translation] = []
+var _card_list: VBoxContainer
 
 
 func _enter_tree() -> void:
@@ -25,6 +28,12 @@ func _enter_tree() -> void:
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
+	var refresh_button := Button.new()
+	refresh_button.text = tr("刷新")
+	refresh_button.pressed.connect(_refresh_cards)
+	content.add_child(refresh_button)
+	content.move_child(refresh_button, 1)
+	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
 	_dock.title = tr("看板")
@@ -33,6 +42,42 @@ func _enter_tree() -> void:
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
 	add_dock(_dock)
+	_refresh_cards()
+
+
+func _refresh_cards() -> void:
+	if _card_list == null:
+		return
+	for child in _card_list.get_children():
+		_card_list.remove_child(child)
+		child.free()
+	var settings := EditorInterface.get_editor_settings()
+	var token := ""
+	if settings.has_setting(_SETTING_TOKEN):
+		token = str(settings.get_setting(_SETTING_TOKEN))
+	var root := _Board.project_path()
+	var slug := _Board.origin_slug(root)
+	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
+	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
+	for card_data in _Board.merge_cards(sessions, prs):
+		var card := _CARD_SCENE.instantiate()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.apply(card_data)
+		card.checkout_requested.connect(_on_checkout_requested)
+		_card_list.add_child(card)
+
+
+func _on_checkout_requested(branch: String) -> void:
+	if not _Board.checkout_branch(_Board.project_path(), branch):
+		return
+	var settings := EditorInterface.get_editor_settings()
+	var restart := true
+	if settings.has_setting(_SETTING_RESTART):
+		restart = bool(settings.get_setting(_SETTING_RESTART))
+	elif settings.has_setting(_SETTING_RESTART_LEGACY):
+		restart = bool(settings.get_setting(_SETTING_RESTART_LEGACY))
+	if restart and EditorInterface.has_method("restart_editor"):
+		EditorInterface.call("restart_editor", true)
 
 
 func _exit_tree() -> void:
