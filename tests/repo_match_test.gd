@@ -68,6 +68,21 @@ func _init() -> void:
 	_Client.remember_repos("bc-empty", {})
 	if _Client.cached_repo_match("bc-empty", slug) != -1:
 		_fail("查询失败不能写入缓存")
+	if _Client.cached_archived("bc-cache") != 0:
+		_fail("未归档的详情应记下未归档")
+	_Client.remember_repos("bc-arch", {
+		"status": "ARCHIVED",
+		"repos": [{"url": "https://github.com/EEEEEEEEthan/kingdom2d"}],
+	})
+	if _Client.cached_archived("bc-arch") != 1:
+		_fail("已归档的详情应记下归档")
+	if _Client.cached_repo_match("bc-arch", slug) != 1:
+		_fail("归档后仓库归属还在")
+	_Client._repo_cache["bc-old"] = [slug.to_lower()]
+	if _Client.cached_repo_match("bc-old", slug) != 1:
+		_fail("旧的仓库缓存还能对上")
+	if _Client.cached_archived("bc-old") != -1:
+		_fail("旧缓存没有归档状态")
 	print("repo_match_test ok")
 	quit(0)
 
