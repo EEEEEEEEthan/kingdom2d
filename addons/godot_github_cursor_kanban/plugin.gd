@@ -113,6 +113,21 @@ func _on_chat_requested(session_id: String, title: String) -> void:
 
 
 func _on_checkout_requested(branch: String) -> void:
+	if branch.is_empty():
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = tr("切换分支")
+	dialog.dialog_text = tr("放弃所有修改并切换到 %s？") % branch
+	dialog.ok_button_text = tr("是")
+	dialog.cancel_button_text = tr("否")
+	dialog.confirmed.connect(_checkout_and_restart.bind(branch))
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	EditorInterface.get_base_control().add_child(dialog)
+	dialog.popup_centered()
+
+
+func _checkout_and_restart(branch: String) -> void:
 	if not _Board.checkout_branch(_Board.project_path(), branch):
 		return
 	var settings := EditorInterface.get_editor_settings()
