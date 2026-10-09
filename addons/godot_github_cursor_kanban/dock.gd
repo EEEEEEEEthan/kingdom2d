@@ -9,10 +9,14 @@ const _SETTING_RESTART := "kanban/restart_editor_after_branch_switch"
 const _SECTION := "kanban"
 
 var _refreshing := false
+var _list_pending := false
 var _next_cursor := ""
-var _detail_pending := 0
 var _repo_slug := ""
+var _page_token := 0
+var _page_notice := ""
+var _suppress_persist := false
 var _chat_windows := {}
+var _new_chat_seq := 0
 var _mutex := Mutex.new()
 var _pending: Dictionary = {}
 var _pending_ready := false
@@ -22,6 +26,7 @@ func _ready() -> void:
 	set_process(true)
 	$HBoxContainer/Refresh.pressed.connect(_refresh_from_start)
 	$"HBoxContainer/Checkout Master".pressed.connect(_checkout_master)
+	$"HBoxContainer/New Chat".pressed.connect(_open_new_chat)
 	%Settings.pressed.connect(_open_settings)
 	_clear_cards()
 	call_deferred("_refresh_from_start")
@@ -37,6 +42,8 @@ func _process(_delta: float) -> void:
 		payload = _pending
 	_mutex.unlock()
 	if ready:
+		if int(payload.get("page", -1)) != _page_token:
+			return
 		_apply_sessions(
 			payload.get("sessions", []),
 			str(payload.get("notice", "")),
@@ -55,30 +62,27 @@ func _exit_tree() -> void:
 
 
 func _refresh_from_start() -> void:
-	_load_page("", false)
-
-
-func _load_more() -> void:
-	if _next_cursor.is_empty():
-		return
-	_load_page(_next_cursor, true)
-
-
-func _load_page(cursor: String, append: bool) -> void:
 	if _refreshing:
 		return
 	_refreshing = true
+	_page_token += 1
 	$HBoxContainer/Refresh.disabled = true
-	var more := _more_button()
-	if more:
-		more.disabled = true
 	var token := _token()
+	var page := _page_token
 	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	var slug := _origin_slug(root)
+	if not slug.is_empty():
+		_repo_slug = slug
+	_show_cached_sessions(slug)
+	_fetch_page("", page, slug, token)
+
+
+func _fetch_page(cursor: String, page: int, slug: String, token: String) -> void:
+	_list_pending = true
 	WorkerThreadPool.add_task(func() -> void:
-		var slug := _origin_slug(root)
 		var payload: Dictionary = _Client.list_unarchived_sessions(token, slug, cursor)
 		payload["repo_slug"] = slug
-		payload["append"] = append
+		payload["page"] = page
 		if not is_instance_valid(self):
 			return
 		_mutex.lock()
@@ -88,89 +92,185 @@ func _load_page(cursor: String, append: bool) -> void:
 	)
 
 
-func _apply_sessions(sessions: Array, notice: String, next_cursor: String, append: bool, repo_slug: String) -> void:
-	_refreshing = false
-	$HBoxContainer/Refresh.disabled = false
+func _apply_sessions(sessions: Array, notice: String, next_cursor: String, _append: bool, repo_slug: String) -> void:
 	if not is_inside_tree():
+		_list_pending = false
+		_refreshing = false
 		return
 	_next_cursor = next_cursor
+	_page_notice = notice
 	if not repo_slug.is_empty():
 		_repo_slug = repo_slug
-	var list := $ScrollContainer/VBoxContainer
-	if not append:
-		_clear_cards()
-		_detail_pending = 0
-	else:
-		var more := _more_button()
-		if more:
-			list.remove_child(more)
-			more.free()
+	_list_pending = false
+	_remove_notice()
 	var token := _token()
-	var added := 0
+	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
 	for session in sessions:
 		if typeof(session) != TYPE_DICTIONARY:
 			continue
-		if bool(session.get("archived", false)):
+		session = _with_cached_link(session)
+		var agent_id := str(session.get("id", ""))
+		if agent_id.is_empty() or bool(session.get("archived", false)):
 			continue
-		var card := _CARD.instantiate()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.apply(session)
-		card.chat_requested.connect(_open_chat)
-		card.checkout_requested.connect(_confirm_checkout)
-		card.detail_settled.connect(_on_detail_settled)
-		list.add_child(card)
-		_detail_pending += 1
-		card.begin_detail(token, _repo_slug)
-		added += 1
-	if added == 0 and not notice.is_empty():
-		var label := Label.new()
-		label.text = notice
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		list.add_child(label)
+		var existing := _find_card(agent_id)
+		if existing:
+			existing.apply(session)
+			continue
+		if _Client.cached_repo_match(agent_id, _repo_slug) == 0:
+			continue
+		if _Client.cached_merged(agent_id) == 1:
+			continue
+		_add_card(session, false)
+		_find_card(agent_id).begin_self_check(token, _repo_slug, root)
 	if not _next_cursor.is_empty():
-		var button := Button.new()
-		button.text = "More"
-		button.set_meta("kanban_more", true)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(_load_more)
-		list.add_child(button)
-
-
-func _on_detail_settled(_kept: bool) -> void:
-	_detail_pending = maxi(_detail_pending - 1, 0)
-	if _detail_pending > 0 or not _next_cursor.is_empty():
+		_fetch_page(_next_cursor, _page_token, _repo_slug, token)
 		return
-	if _card_count() > 0:
+	_finish_page(_card_count())
+
+
+func _show_cached_sessions(repo_slug: String) -> void:
+	_clear_cards()
+	var token := _token()
+	var root := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	for session in _Client.load_session_list(repo_slug):
+		if typeof(session) != TYPE_DICTIONARY:
+			continue
+		session = _with_cached_link(session)
+		var agent_id := str(session.get("id", ""))
+		if _Client.cached_merged(agent_id) == 1:
+			continue
+		_add_card(session, true)
+		_find_card(agent_id).begin_self_check(token, repo_slug, root)
+
+
+func _with_cached_link(session: Dictionary) -> Dictionary:
+	var copy := session.duplicate()
+	var agent_id := str(copy.get("id", ""))
+	var pr: Variant = _Client.cached_pr_url(agent_id)
+	if pr != null and str(copy.get("pr_url", "")).is_empty():
+		copy["pr_url"] = str(pr)
+	var branch := _Client.cached_branch(agent_id)
+	if not branch.is_empty() and str(copy.get("branch", "")).is_empty():
+		copy["branch"] = branch
+	return copy
+
+
+func _persist_sessions() -> void:
+	if _suppress_persist:
+		return
+	if _repo_slug.is_empty():
+		return
+	var sessions: Array = []
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if not child.visible:
+			continue
+		var session: Variant = child.get_meta("session", null)
+		if typeof(session) != TYPE_DICTIONARY:
+			continue
+		sessions.append(session)
+	_Client.save_session_list(_repo_slug, sessions)
+
+
+func _add_card(session: Dictionary, shown: bool) -> void:
+	var list := $ScrollContainer/VBoxContainer
+	var card := _CARD.instantiate()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.visible = shown
+	card.set_meta("session_id", str(session.get("id", "")))
+	card.set_meta("session", session.duplicate())
+	card.apply(session)
+	card.chat_requested.connect(_open_chat)
+	card.checkout_requested.connect(_checkout_branch_prompt)
+	card.session_updated.connect(_persist_sessions)
+	card.tree_exited.connect(_on_card_exited)
+	list.add_child(card)
+
+
+func _on_card_exited() -> void:
+	if not is_inside_tree():
+		return
+	_persist_sessions()
+	_show_empty_if_needed()
+
+
+func _find_card(session_id: String) -> Node:
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if str(child.get_meta("session_id", "")) == session_id:
+			return child
+	return null
+
+
+func _remove_card(session_id: String) -> void:
+	var card := _find_card(session_id)
+	if card == null:
 		return
 	var list := $ScrollContainer/VBoxContainer
+	list.remove_child(card)
+	card.free()
+
+
+func _remove_notice() -> void:
+	var list := $ScrollContainer/VBoxContainer
+	for child in list.get_children():
+		if child is Label:
+			list.remove_child(child)
+			child.free()
+
+
+func _show_empty_if_needed() -> void:
+	if _card_count() > 0 or not _next_cursor.is_empty() or _refreshing or _list_pending:
+		return
+	if _has_notice():
+		return
 	var label := Label.new()
 	label.text = "当前仓库没有未归档的云端会话。"
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_child(label)
+	$ScrollContainer/VBoxContainer.add_child(label)
+
+
+func _has_notice() -> bool:
+	for child in $ScrollContainer/VBoxContainer.get_children():
+		if child is Label:
+			return true
+	return false
+
+
+func _finish_page(added: int) -> void:
+	if not is_inside_tree():
+		_refreshing = false
+		return
+	_refreshing = false
+	$HBoxContainer/Refresh.disabled = false
+	var list := $ScrollContainer/VBoxContainer
+	var text := ""
+	if _page_notice.contains("失败") or (added == 0 and not _page_notice.is_empty()):
+		text = _page_notice
+	elif added == 0:
+		text = "当前仓库没有未归档的云端会话。"
+	if not text.is_empty():
+		var label := Label.new()
+		label.text = text
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		list.add_child(label)
 
 
 func _card_count() -> int:
 	var count := 0
 	for child in $ScrollContainer/VBoxContainer.get_children():
-		if child.has_signal("detail_settled") and not bool(child.get_meta("kanban_dropping", false)):
+		if child.has_signal("detail_settled"):
 			count += 1
 	return count
 
 
-func _more_button() -> Button:
-	for child in $ScrollContainer/VBoxContainer.get_children():
-		if child is Button and bool(child.get_meta("kanban_more", false)):
-			return child
-	return null
-
-
 func _clear_cards() -> void:
+	_suppress_persist = true
 	var list := $ScrollContainer/VBoxContainer
 	for child in list.get_children():
 		list.remove_child(child)
 		child.free()
+	_suppress_persist = false
 
 
 func _open_chat(session_id: String, title: String) -> void:
@@ -188,26 +288,67 @@ func _open_chat(session_id: String, title: String) -> void:
 	window.open_session(_token(), session_id, title)
 
 
+func _open_new_chat() -> void:
+	if _token().is_empty():
+		push_warning("看板：未配置 Cursor token。")
+		return
+	var path := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	var slug := _origin_slug(path)
+	if slug.is_empty():
+		push_warning("看板：读不到当前仓库的 origin。")
+		return
+	var ref := _current_branch(path)
+	if ref.is_empty():
+		ref = "master"
+	_new_chat_seq += 1
+	var key := "new:%d" % _new_chat_seq
+	var window: Window = _CHAT.instantiate()
+	EditorInterface.get_base_control().add_child(window)
+	_chat_windows[key] = window
+	window.tree_exited.connect(func() -> void:
+		if _chat_windows.get(key) == window:
+			_chat_windows.erase(key)
+	)
+	window.session_created.connect(_on_new_session_created.bind(key))
+	window.open_new(_token(), "https://github.com/" + slug, ref)
+
+
+func _on_new_session_created(session_id: String, key: String) -> void:
+	var window: Window = _chat_windows.get(key) as Window
+	if window != null and is_instance_valid(window):
+		_chat_windows.erase(key)
+		_chat_windows[session_id] = window
+		if not window.tree_exited.is_connected(_forget_chat.bind(session_id, window)):
+			window.tree_exited.connect(_forget_chat.bind(session_id, window))
+	_refresh_from_start()
+
+
+func _forget_chat(session_id: String, window: Window) -> void:
+	if _chat_windows.get(session_id) == window:
+		_chat_windows.erase(session_id)
+
+
 func _checkout_master() -> void:
-	_confirm_checkout("master")
+	_checkout_branch_prompt("master")
 
 
-func _confirm_checkout(branch: String) -> void:
+func _checkout_branch_prompt(branch: String) -> void:
 	if branch.is_empty():
+		push_warning("看板：这个会话没有远程分支。")
 		return
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "切换分支"
 	dialog.dialog_text = "放弃所有修改并切换到 %s？" % branch
 	dialog.ok_button_text = "是"
 	dialog.cancel_button_text = "否"
-	dialog.confirmed.connect(_checkout_and_restart.bind(branch))
+	dialog.confirmed.connect(_do_checkout.bind(branch))
 	dialog.confirmed.connect(dialog.queue_free)
 	dialog.canceled.connect(dialog.queue_free)
 	EditorInterface.get_base_control().add_child(dialog)
 	dialog.popup_centered()
 
 
-func _checkout_and_restart(branch: String) -> void:
+func _do_checkout(branch: String) -> void:
 	var path := ProjectSettings.globalize_path("res://").trim_suffix("/")
 	if not _checkout_branch(path, branch):
 		return
@@ -329,6 +470,17 @@ func _token() -> String:
 	if not settings.has_setting(_SETTING_TOKEN):
 		return ""
 	return str(settings.get_setting(_SETTING_TOKEN))
+
+
+static func _current_branch(path: String) -> String:
+	var output: Array = []
+	var code := OS.execute("git", ["-C", path, "rev-parse", "--abbrev-ref", "HEAD"], output, true)
+	if code != 0 or output.is_empty():
+		return ""
+	var branch := str(output[0]).strip_edges()
+	if branch.is_empty() or branch == "HEAD":
+		return ""
+	return branch
 
 
 static func _origin_slug(path: String) -> String:

@@ -4,49 +4,54 @@ extends PanelContainer
 signal chat_requested(session_id: String, title: String)
 signal checkout_requested(branch: String)
 signal detail_settled(kept: bool)
+signal session_updated
 
 const _Client := preload("res://addons/godot_github_cursor_kanban/cursor_client.gd")
 
-var _dot_working: Texture2D
-var _dot_idle: Texture2D
+const _SPINNER_SIZE := 14
+const _SPIN_TURNS_PER_SEC := 1.1
+
+var _spinner: Texture2D
+var _spinning := false
 var _url := ""
-var _branch := ""
+var _checking := false
 
 
 func apply(session: Dictionary) -> void:
 	%CardName.text = str(session.get("name", ""))
 	var working := bool(session.get("working", false))
-	%SessionStatus.texture = _working_texture() if working else _idle_texture()
-	%SessionStatus.tooltip_text = "工作中" if working else "空闲"
-	%SessionStatus.custom_minimum_size = Vector2(12, 12)
-	%SessionStatus.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_set_working(working)
 	_url = str(session.get("url", _url))
-	if session.has("branch"):
-		_set_branch(str(session.get("branch", "")))
-	else:
-		_set_branch(_branch)
 	%Chat.set_meta("session_id", str(session.get("id", "")))
 	%Chat.set_meta("title", str(session.get("name", "")))
+	var branch := str(session.get("branch", ""))
+	var pr_url := str(session.get("pr_url", ""))
+	%Checkout.visible = not pr_url.is_empty()
+	%Checkout.set_meta("branch", branch)
+	var stored: Variant = get_meta("session", {})
+	if typeof(stored) == TYPE_DICTIONARY:
+		var copy := (stored as Dictionary).duplicate()
+		copy["name"] = %CardName.text
+		copy["url"] = _url
+		copy["working"] = working
+		copy["branch"] = branch
+		copy["pr_url"] = pr_url
+		set_meta("session", copy)
 	if not %Chat.pressed.is_connected(_on_chat_pressed):
 		%Chat.pressed.connect(_on_chat_pressed)
 	if not %Checkout.pressed.is_connected(_on_checkout_pressed):
 		%Checkout.pressed.connect(_on_checkout_pressed)
 
 
-func begin_detail(token: String, repo_slug: String) -> void:
+func begin_self_check(token: String, repo_slug: String, repo_path: String) -> void:
+	if _checking:
+		return
 	var agent_id := str(%Chat.get_meta("session_id", ""))
 	if token.is_empty() or agent_id.is_empty():
 		detail_settled.emit(true)
 		return
-	var cached := _Client.cached_repo_match(agent_id, repo_slug)
-	if cached == 0:
-		set_meta("kanban_dropping", true)
-		detail_settled.emit(false)
-		queue_free()
-		return
-	var known_branch := _Client.cached_branch(agent_id)
-	if not known_branch.is_empty():
-		_set_branch(known_branch)
+	_checking = true
+	var branch := str(%Checkout.get_meta("branch", ""))
 	WorkerThreadPool.add_task(func() -> void:
 		var detail := _Client.request(
 			token,
@@ -55,79 +60,114 @@ func begin_detail(token: String, repo_slug: String) -> void:
 		)
 		_Client.remember_repos(agent_id, detail)
 		var patch := _Client.detail_patch(detail, repo_slug)
-		if not patch.is_empty() and not bool(patch.get("_error", false)):
-			var run_id := str(detail.get("latestRunId", ""))
-			if not run_id.is_empty():
-				var run := _Client.request(
-					token,
-					HTTPClient.METHOD_GET,
-					"/v1/agents/%s/runs/%s" % [agent_id.uri_encode(), run_id.uri_encode()]
-				)
-				if not run.is_empty():
-					patch = _Client.annotate_git(patch, run, repo_slug)
-					if not bool(patch.get("hide_merged", false)):
-						_Client.remember_branch(agent_id, str(patch.get("branch", "")))
+		if not bool(patch.get("_error", false)) and not patch.is_empty():
+			if _drop_merged(agent_id, repo_path, str(patch.get("branch", branch))):
+				patch = {}
 		if is_instance_valid(self):
-			call_deferred("_finish_detail", patch)
+			call_deferred("_finish_self_check", patch)
 	)
 
 
-func _finish_detail(patch: Dictionary) -> void:
+func _drop_merged(agent_id: String, repo_path: String, branch: String) -> bool:
+	var head := branch.strip_edges()
+	if head.is_empty():
+		head = _Client.cached_branch(agent_id)
+	if head.is_empty() or head == "master":
+		_Client.remember_merged(agent_id, false)
+		return false
+	if OS.execute("git", ["-C", repo_path, "fetch", "origin", head, "master"], [], true) != 0:
+		return false
+	var merged := _Client.branch_merged(repo_path, head)
+	if merged == 1:
+		_Client.remember_merged(agent_id, true)
+		return true
+	if merged == 0:
+		_Client.remember_merged(agent_id, false)
+	return false
+
+
+func _finish_self_check(patch: Dictionary) -> void:
+	_checking = false
 	if not is_inside_tree():
 		return
 	if bool(patch.get("_error", false)):
 		detail_settled.emit(true)
 		return
-	if patch.is_empty() or bool(patch.get("hide_merged", false)):
-		set_meta("kanban_dropping", true)
+	if patch.is_empty():
 		detail_settled.emit(false)
 		queue_free()
 		return
-	var session := {
+	var branch := str(patch.get("branch", ""))
+	if branch.is_empty():
+		branch = str(%Checkout.get_meta("branch", ""))
+	var pr_url := str(patch.get("pr_url", ""))
+	if pr_url.is_empty():
+		var stored: Variant = get_meta("session", {})
+		if typeof(stored) == TYPE_DICTIONARY:
+			pr_url = str(stored.get("pr_url", ""))
+	apply({
 		"id": str(%Chat.get_meta("session_id", "")),
 		"name": str(patch.get("name", %CardName.text)),
 		"url": str(patch.get("url", _url)),
 		"working": bool(patch.get("working", false)),
-	}
-	if patch.has("branch"):
-		session["branch"] = str(patch.get("branch", ""))
-	apply(session)
+		"branch": branch,
+		"pr_url": pr_url,
+	})
+	visible = true
+	session_updated.emit()
 	detail_settled.emit(true)
-
-
-func _set_branch(branch: String) -> void:
-	_branch = branch
-	%Checkout.tooltip_text = _branch if not _branch.is_empty() else "还没有可检出的分支"
-
-
-func _on_checkout_pressed() -> void:
-	if _branch.is_empty():
-		push_warning("看板：还没有可检出的分支。")
-		return
-	checkout_requested.emit(_branch)
 
 
 func _on_chat_pressed() -> void:
 	chat_requested.emit(str(%Chat.get_meta("session_id", "")), str(%Chat.get_meta("title", "")))
 
 
-func _working_texture() -> Texture2D:
-	if _dot_working == null:
-		_dot_working = _make_dot(Color(0.2, 0.75, 0.35))
-	return _dot_working
+func _on_checkout_pressed() -> void:
+	checkout_requested.emit(str(%Checkout.get_meta("branch", "")))
 
 
-func _idle_texture() -> Texture2D:
-	if _dot_idle == null:
-		_dot_idle = _make_dot(Color(0.55, 0.55, 0.55))
-	return _dot_idle
+func _enter_tree() -> void:
+	set_process(_spinning)
 
 
-func _make_dot(color: Color) -> Texture2D:
-	var image := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+func _process(delta: float) -> void:
+	var status := %SessionStatus
+	status.pivot_offset = status.size * 0.5
+	status.rotation = fposmod(status.rotation + delta * TAU * _SPIN_TURNS_PER_SEC, TAU)
+
+
+func _set_working(working: bool) -> void:
+	_spinning = working
+	var status := %SessionStatus
+	status.visible = working
+	status.tooltip_text = "工作中" if working else ""
+	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	status.custom_minimum_size = Vector2(_SPINNER_SIZE, _SPINNER_SIZE)
+	status.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if working:
+		status.texture = _spinner_texture()
+	else:
+		status.rotation = 0.0
+	set_process(working and is_inside_tree())
+
+
+func _spinner_texture() -> Texture2D:
+	if _spinner != null:
+		return _spinner
+	var n := _SPINNER_SIZE
+	var image := Image.create(n, n, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	for y in 12:
-		for x in 12:
-			if Vector2(x - 5.5, y - 5.5).length() <= 5.0:
-				image.set_pixel(x, y, color)
-	return ImageTexture.create_from_image(image)
+	var center := Vector2(n - 1, n - 1) * 0.5
+	for y in n:
+		for x in n:
+			var offset := Vector2(x, y) - center
+			var radius := offset.length()
+			if radius < 3.4 or radius > 5.6:
+				continue
+			var along := fposmod(atan2(offset.y, offset.x) + PI, TAU) / TAU
+			if along > 0.78:
+				continue
+			image.set_pixel(x, y, Color(0.9, 0.9, 0.9, lerpf(0.15, 1.0, along / 0.78)))
+	_spinner = ImageTexture.create_from_image(image)
+	return _spinner

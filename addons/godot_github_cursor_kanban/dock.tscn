@@ -23,6 +23,10 @@ text = "Refresh"
 layout_mode = 2
 text = "Checkout Master"
 
+[node name="New Chat" type="Button" parent="HBoxContainer" unique_id=1842201933]
+layout_mode = 2
+text = "New Chat"
+
 [node name="Settings" type="Button" parent="HBoxContainer" unique_id=324213873]
 unique_name_in_owner = true
 layout_mode = 2
