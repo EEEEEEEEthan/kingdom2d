@@ -3,8 +3,10 @@ extends EditorPlugin
 
 const _DOCK_SCENE := preload("res://addons/godot_github_cursor_kanban/dock.tscn")
 const _CARD_SCENE := preload("res://addons/godot_github_cursor_kanban/card.tscn")
+const _CHAT_WINDOW := preload("res://addons/godot_github_cursor_kanban/chat_window.tscn")
 const _Board := preload("res://addons/godot_github_cursor_kanban/board.gd")
 const _GEAR_PATH := "res://addons/godot_github_cursor_kanban/icons/gear.png"
+const _REFRESH_PATH := "res://addons/godot_github_cursor_kanban/icons/refresh.png"
 const _SECTION := "kanban"
 const _TRANSLATION_CSV := "res://addons/godot_github_cursor_kanban/translations/kanban.csv"
 # 英文蛇形键，显示名交给属性翻译域（中文默认，英文编辑器语言下为英文）。
@@ -16,6 +18,8 @@ const _PROPERTY_DOMAIN := "godot.properties"
 var _dock: EditorDock
 var _translations: Array[Translation] = []
 var _card_list: VBoxContainer
+var _refreshing := false
+var _chat_windows := {}
 
 
 func _enter_tree() -> void:
@@ -24,15 +28,21 @@ func _enter_tree() -> void:
 
 	var content := _DOCK_SCENE.instantiate() as Control
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var toolbar := HBoxContainer.new()
+	toolbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(toolbar)
+	content.move_child(toolbar, 0)
 	var settings_button := content.get_node("Settings") as Button
+	content.remove_child(settings_button)
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
 	var refresh_button := Button.new()
-	refresh_button.text = tr("刷新")
+	refresh_button.icon = _refresh_button_icon()
+	refresh_button.tooltip_text = tr("刷新")
 	refresh_button.pressed.connect(_refresh_cards)
-	content.add_child(refresh_button)
-	content.move_child(refresh_button, 1)
+	toolbar.add_child(refresh_button)
+	toolbar.add_child(settings_button)
 	_card_list = content.get_node("ScrollContainer/VBoxContainer") as VBoxContainer
 
 	_dock = EditorDock.new()
@@ -42,29 +52,64 @@ func _enter_tree() -> void:
 	_dock.default_slot = EditorDock.DOCK_SLOT_LEFT_BR
 	_dock.add_child(content)
 	add_dock(_dock)
-	_refresh_cards()
+	# 启动时只排队，不在主线程上拉会话和 PR。
+	call_deferred("_refresh_cards")
 
 
 func _refresh_cards() -> void:
-	if _card_list == null:
+	if _card_list == null or _refreshing:
 		return
-	for child in _card_list.get_children():
-		_card_list.remove_child(child)
-		child.free()
+	_refreshing = true
 	var settings := EditorInterface.get_editor_settings()
 	var token := ""
 	if settings.has_setting(_SETTING_TOKEN):
 		token = str(settings.get_setting(_SETTING_TOKEN))
-	var root := _Board.project_path()
+	WorkerThreadPool.add_task(_load_cards_off_thread.bind(token, _Board.project_path()))
+
+
+func _load_cards_off_thread(token: String, root: String) -> void:
 	var slug := _Board.origin_slug(root)
 	var sessions: Array[Dictionary] = _Board.list_sessions(token, slug)
 	var prs: Array[Dictionary] = _Board.list_open_prs(slug)
-	for card_data in _Board.merge_cards(sessions, prs):
+	var merged: Array[Dictionary] = _Board.list_merged_prs(slug)
+	var cards := _Board.merge_cards(sessions, prs, merged)
+	if is_instance_valid(self):
+		call_deferred("_apply_cards", cards)
+
+
+func _apply_cards(cards: Array) -> void:
+	_refreshing = false
+	if _card_list == null or not is_inside_tree():
+		return
+	for child in _card_list.get_children():
+		_card_list.remove_child(child)
+		child.free()
+	for card_data in cards:
 		var card := _CARD_SCENE.instantiate()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.apply(card_data)
 		card.checkout_requested.connect(_on_checkout_requested)
+		card.chat_requested.connect(_on_chat_requested)
 		_card_list.add_child(card)
+
+
+func _on_chat_requested(session_id: String, title: String) -> void:
+	if session_id.is_empty():
+		return
+	var window: Window = _chat_windows.get(session_id) as Window
+	if window == null or not is_instance_valid(window):
+		window = _CHAT_WINDOW.instantiate()
+		EditorInterface.get_base_control().add_child(window)
+		_chat_windows[session_id] = window
+		window.tree_exited.connect(func() -> void:
+			if _chat_windows.get(session_id) == window:
+				_chat_windows.erase(session_id)
+		)
+	var settings := EditorInterface.get_editor_settings()
+	var token := ""
+	if settings.has_setting(_SETTING_TOKEN):
+		token = str(settings.get_setting(_SETTING_TOKEN))
+	window.open_session(token, session_id, title)
 
 
 func _on_checkout_requested(branch: String) -> void:
@@ -97,6 +142,11 @@ func _checkout_and_restart(branch: String) -> void:
 
 func _exit_tree() -> void:
 	_uninstall_translations()
+	for session_id in _chat_windows.keys():
+		var window: Window = _chat_windows[session_id] as Window
+		if is_instance_valid(window):
+			window.queue_free()
+	_chat_windows.clear()
 	if _dock:
 		remove_dock(_dock)
 		_dock.free()
@@ -182,6 +232,15 @@ func _ensure_setting(
 	})
 
 
+func _refresh_button_icon() -> Texture2D:
+	var base := EditorInterface.get_base_control()
+	if base:
+		for icon_name in ["Reload", "Loop", "RotateRight"]:
+			if base.has_theme_icon(icon_name, "EditorIcons"):
+				return base.get_theme_icon(icon_name, "EditorIcons")
+	return _load_png_texture(_REFRESH_PATH)
+
+
 func _settings_button_icon() -> Texture2D:
 	var base := EditorInterface.get_base_control()
 	if base:
@@ -193,7 +252,11 @@ func _settings_button_icon() -> Texture2D:
 
 
 func _load_gear_texture() -> Texture2D:
-	var file := FileAccess.open(_GEAR_PATH, FileAccess.READ)
+	return _load_png_texture(_GEAR_PATH)
+
+
+func _load_png_texture(path: String) -> Texture2D:
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return null
 	var image := Image.new()
