@@ -51,8 +51,6 @@ func refresh() -> void:
 
 
 func _on_messages(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-	if result == HTTPRequest.RESULT_CANCELED:
-		return
 	var list := %ChatPanel.get_node("VBoxContainer") as VBoxContainer
 	for child in list.get_children():
 		list.remove_child(child)

@@ -86,6 +86,27 @@ static func _session_from_agent(token: String, item: Dictionary, repo_slug: Stri
 	return session_from_agent(item, run, repo_slug)
 
 
+static func list_board_prs(repo_slug: String, job: Dictionary = {}) -> Dictionary:
+	var open_box: Array = [[]]
+	var merged_box: Array = [[]]
+	if repo_slug.is_empty():
+		return {"open": open_box[0], "merged": merged_box[0]}
+	var open_thread := Thread.new()
+	var merged_thread := Thread.new()
+	open_thread.start(_fill_prs.bind("open", repo_slug, job, open_box))
+	merged_thread.start(_fill_prs.bind("merged", repo_slug, job, merged_box))
+	open_thread.wait_to_finish()
+	merged_thread.wait_to_finish()
+	return {"open": open_box[0], "merged": merged_box[0]}
+
+
+static func _fill_prs(kind: String, repo_slug: String, job: Dictionary, box: Array) -> void:
+	if kind == "merged":
+		box[0] = list_merged_prs(repo_slug, job)
+	else:
+		box[0] = list_open_prs(repo_slug, job)
+
+
 static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
 	var prs: Array[Dictionary] = []
 	if repo_slug.is_empty():
