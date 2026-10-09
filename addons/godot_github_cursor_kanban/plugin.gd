@@ -223,7 +223,7 @@ func _find_filter_line_edit(dialog: Node) -> LineEdit:
 	var matches: Array[LineEdit] = []
 	_collect_line_edits(dialog, matches)
 	for line_edit in matches:
-		if line_edit.placeholder == "Filter Settings" or line_edit.placeholder == "筛选设置":
+		if line_edit.placeholder_text == "Filter Settings" or line_edit.placeholder_text == "筛选设置":
 			return line_edit
 	return matches[0] if not matches.is_empty() else null
 
