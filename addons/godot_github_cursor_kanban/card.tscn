@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://kvsdcnxpbdk6"]
 
 [ext_resource type="Script" uid="uid://coc7vau0pum0l" path="res://addons/godot_github_cursor_kanban/card.gd" id="1_card"]
-[ext_resource type="Texture2D" path="res://addons/godot_github_cursor_kanban/icons/chat.png" id="2_chat"]
-[ext_resource type="Texture2D" path="res://addons/godot_github_cursor_kanban/icons/checkout.png" id="3_checkout"]
 
 [node name="Card" type="PanelContainer" unique_id=2093432049]
 offset_right = 168.0
@@ -28,7 +26,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 tooltip_text = "打开聊天"
-icon = ExtResource("2_chat")
 
 [node name="Checkout" type="Button" parent="VBoxContainer" unique_id=967422996]
 unique_name_in_owner = true
@@ -36,4 +33,3 @@ custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 size_flags_horizontal = 8
 tooltip_text = "检出分支"
-icon = ExtResource("3_checkout")

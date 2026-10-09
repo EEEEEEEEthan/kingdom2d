@@ -88,7 +88,10 @@ static func _same_repo(repo_url: String, repo_slug: String) -> bool:
 static func load_agent_cache() -> Dictionary:
 	if not FileAccess.file_exists(_CACHE_PATH):
 		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_CACHE_PATH))
+	var raw := FileAccess.get_file_as_string(_CACHE_PATH).strip_edges()
+	if not raw.begins_with("{"):
+		return {}
+	var parsed: Variant = JSON.parse_string(raw)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed
@@ -102,30 +105,13 @@ static func save_agent_cache(cache: Dictionary) -> void:
 
 
 static func list_open_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
-	var prs: Array[Dictionary] = []
 	if repo_slug.is_empty():
-		return prs
+		return []
 	var result := _run("gh", PackedStringArray([
 		"pr", "list", "--repo", repo_slug, "--state", "open",
 		"--json", "number,title,headRefName,url",
 	]), _ensure_job(job))
-	if not bool(result["ok"]):
-		push_warning("看板：拉取未合并 PR 失败。")
-		return prs
-	var parsed: Variant = JSON.parse_string(str(result["text"]))
-	if typeof(parsed) != TYPE_ARRAY:
-		push_warning("看板：拉取未合并 PR 失败。")
-		return prs
-	for item in parsed:
-		if typeof(item) != TYPE_DICTIONARY:
-			continue
-		prs.append({
-			"number": int(item.get("number", 0)),
-			"title": str(item.get("title", "")),
-			"branch": str(item.get("headRefName", "")),
-			"url": str(item.get("url", "")),
-		})
-	return prs
+	return _prs_from_gh(result, "看板：拉取未合并 PR 失败。")
 
 
 static func list_sessions(token: String, repo_slug: String) -> Array[Dictionary]:
@@ -185,20 +171,19 @@ static func _fill_prs(kind: String, repo_slug: String, job: Dictionary, box: Arr
 		box[0] = list_open_prs(repo_slug, job)
 
 
-static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
+static func _prs_from_gh(result: Dictionary, fail_text: String) -> Array[Dictionary]:
 	var prs: Array[Dictionary] = []
-	if repo_slug.is_empty():
+	var text := str(result.get("text", "")).strip_edges()
+	if not bool(result.get("ok", false)) or not text.begins_with("["):
+		var detail := str(result.get("err", "")).strip_edges()
+		if detail.is_empty():
+			push_warning(fail_text)
+		else:
+			push_warning("%s %s" % [fail_text, detail])
 		return prs
-	var result := _run("gh", PackedStringArray([
-		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
-		"--json", "number,title,headRefName,url",
-	]), _ensure_job(job))
-	if not bool(result["ok"]):
-		push_warning("看板：拉取已合并 PR 失败。")
-		return prs
-	var parsed: Variant = JSON.parse_string(str(result["text"]))
+	var parsed: Variant = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_ARRAY:
-		push_warning("看板：拉取已合并 PR 失败。")
+		push_warning(fail_text)
 		return prs
 	for item in parsed:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -210,6 +195,16 @@ static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Di
 			"url": str(item.get("url", "")),
 		})
 	return prs
+
+
+static func list_merged_prs(repo_slug: String, job: Dictionary = {}) -> Array[Dictionary]:
+	if repo_slug.is_empty():
+		return []
+	var result := _run("gh", PackedStringArray([
+		"pr", "list", "--repo", repo_slug, "--state", "merged", "--limit", "200",
+		"--json", "number,title,headRefName,url",
+	]), _ensure_job(job))
+	return _prs_from_gh(result, "看板：拉取已合并 PR 失败。")
 
 
 static func merge_cards(sessions: Array[Dictionary], prs: Array[Dictionary], merged_prs: Array[Dictionary] = []) -> Array[Dictionary]:
@@ -532,16 +527,19 @@ static func _run(program: String, args: PackedStringArray, job: Dictionary) -> D
 	var killer := Thread.new()
 	killer.start(_watch_pid.bind(pid, job, 20000, state))
 	var stdout: FileAccess = launched.get("stdio")
+	var stderr: FileAccess = launched.get("stderr")
 	var text := stdout.get_as_text() if stdout else ""
+	var err_text := stderr.get_as_text() if stderr else ""
 	if killer.is_started():
 		killer.wait_to_finish()
 	if OS.is_process_running(pid):
 		OS.kill(pid)
+	var code := OS.get_process_exit_code(pid)
 	mutex.lock()
 	(job["pids"] as Array).erase(pid)
 	mutex.unlock()
-	var ok := not bool(state["killed"]) and not _cancelled(job)
-	return {"ok": ok, "text": text}
+	var ok := code == 0 and not bool(state["killed"]) and not _cancelled(job)
+	return {"ok": ok, "text": text, "err": err_text.strip_edges()}
 
 
 static func _watch_pid(pid: int, job: Dictionary, timeout_ms: int, state: Dictionary) -> void:

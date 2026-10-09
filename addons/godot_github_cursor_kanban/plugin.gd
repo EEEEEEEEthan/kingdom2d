@@ -55,6 +55,7 @@ func _enter_tree() -> void:
 	content.move_child(toolbar, 0)
 	var settings_button := content.get_node("Settings") as Button
 	content.remove_child(settings_button)
+	settings_button.owner = null
 	settings_button.icon = _settings_button_icon()
 	settings_button.tooltip_text = tr("看板设置")
 	settings_button.pressed.connect(_open_kanban_editor_settings)
