@@ -48,8 +48,10 @@ static func _spawn_initial_characters(game) -> void:
 		character.set_appearance(
 			randi() % PixelHead.GENDER_COUNT,
 			randi() % PixelHead.HAIR_COUNT,
+			PixelHead.HAIR_COLORS[randi() % PixelHead.HAIR_COLORS.size()],
 			randi() % PixelHead.EYES_COUNT,
-			randi() % PixelHead.SKIN_COUNT,
+			PixelHead.EYE_COLORS[randi() % PixelHead.EYE_COLORS.size()],
+			PixelHead.SKIN_COLORS[randi() % PixelHead.SKIN_COLORS.size()],
 		)
 		var cell_index := candidate_cell_indices[index]
 		character.position.x = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE

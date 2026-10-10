@@ -1,19 +1,20 @@
 extends SceneTree
 
-## 无界面检查：部件拼头、肤色、眨眼两帧。
+## 遮罩是纯白，颜色只来自色板下标。
 
 
 func _init() -> void:
-	if load("res://game/characters/character.gd") == null or load("res://game/game_builder.gd") == null:
-		push_error("角色脚本没编过")
+	if load("res://game/characters/character.gd") == null or load("res://addons/pixel_head/plugin.gd") == null:
+		push_error("脚本没编过")
 		quit(1)
 		return
-	var open_head := PixelHead.create(0, 2, 1, 0)
-	var closed_head := PixelHead.create(1, 3, 0, 3)
+	_assert_masks_are_white()
+	var open_head := PixelHead.create(0, 2, PixelHead.HAIR_COLORS[2], 1, PixelHead.EYE_COLORS[0], PixelHead.SKIN_COLORS[0])
+	var closed_head := PixelHead.create(1, 3, PixelHead.HAIR_COLORS[3], 0, PixelHead.EYE_COLORS[1], PixelHead.SKIN_COLORS[3])
 	root.add_child(open_head)
 	root.add_child(closed_head)
 	_assert_parts(open_head)
-	_assert_skin_differs()
+	_assert_color_is_independent()
 	_assert_blink(open_head)
 	_export_sheet(open_head, closed_head)
 	_export_catalog()
@@ -21,36 +22,41 @@ func _init() -> void:
 	quit(0)
 
 
+func _assert_masks_are_white() -> void:
+	var image := PixelHead._HAIRS[0].get_image()
+	var found := false
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel := image.get_pixel(x, y)
+			if pixel.a <= 0.0:
+				continue
+			found = true
+			if pixel.r < 0.99 or pixel.g < 0.99 or pixel.b < 0.99:
+				push_error("发型遮罩不是纯白")
+				quit(1)
+				return
+	if not found:
+		push_error("发型遮罩是空的")
+		quit(1)
+
+
 func _assert_parts(head: PixelHead) -> void:
-	for part_name in ["Skin", "Mouth", "Hair", "EyesOpen", "EyesClosed"]:
-		var part := head.get_node(part_name) as Sprite2D
-		if part == null or part.texture == null:
-			push_error("缺少部件 %s" % part_name)
-			quit(1)
-			return
-		if part.texture.get_width() != PixelHead.SIZE or part.texture.get_height() != PixelHead.SIZE:
-			push_error("尺寸不对 %s" % part_name)
-			quit(1)
-			return
-	assert(head.eyes_open.visible)
-	assert(not head.eyes_closed.visible)
+	if head.get_child_count() != 0:
+		push_error("头应该是单个节点")
+		quit(1)
+	assert(not head.is_blinking)
 
 
-func _assert_skin_differs() -> void:
-	var light := PixelHead.create(0, 0, 0, 0)
-	var dark := PixelHead.create(0, 0, 0, 3)
-	root.add_child(light)
-	root.add_child(dark)
-	var light_pixel := light.skin.texture.get_image().get_pixel(3, 3)
-	var dark_pixel := dark.skin.texture.get_image().get_pixel(3, 3)
-	assert(light_pixel != dark_pixel)
+func _assert_color_is_independent() -> void:
+	var blonde := PixelHead.create(0, 0, 6, 0, 9, 0)
+	var red := PixelHead.create(0, 0, 7, 0, 9, 0)
+	assert(blonde.hair_id == red.hair_id)
+	assert(PixelHead.PALETTE[blonde.hair_color_idx] != PixelHead.PALETTE[red.hair_color_idx])
 
 
 func _assert_blink(head: PixelHead) -> void:
 	head.blink()
 	assert(head.is_blinking)
-	assert(not head.eyes_open.visible)
-	assert(head.eyes_closed.visible)
 
 
 func _export_sheet(open_head: PixelHead, closed_head: PixelHead) -> void:
@@ -60,9 +66,7 @@ func _export_sheet(open_head: PixelHead, closed_head: PixelHead) -> void:
 	_blit_head(sheet, open_head, 0, 0, scale)
 	closed_head.blink()
 	_blit_head(sheet, closed_head, PixelHead.SIZE * scale, 0, scale)
-	var path := "/opt/cursor/artifacts/pixel_head_sheet.png"
-	var error := sheet.save_png(path)
-	assert(error == OK, "save png %s" % error)
+	assert(sheet.save_png("/opt/cursor/artifacts/pixel_head_sheet.png") == OK)
 
 
 func _export_catalog() -> void:
@@ -74,7 +78,14 @@ func _export_catalog() -> void:
 	sheet.fill(Color8(34, 32, 52))
 	for eyes_id in rows:
 		for hair_id in cols:
-			var head := PixelHead.create(eyes_id % PixelHead.GENDER_COUNT, hair_id, eyes_id, hair_id % PixelHead.SKIN_COUNT)
+			var head := PixelHead.create(
+				eyes_id % PixelHead.GENDER_COUNT,
+				hair_id,
+				PixelHead.HAIR_COLORS[hair_id],
+				eyes_id,
+				PixelHead.EYE_COLORS[eyes_id % PixelHead.EYE_COLORS.size()],
+				PixelHead.SKIN_COLORS[hair_id % PixelHead.SKIN_COLORS.size()],
+			)
 			root.add_child(head)
 			if eyes_id == rows - 1:
 				head.blink()
@@ -86,16 +97,22 @@ func _export_catalog() -> void:
 
 
 func _blit_head(sheet: Image, head: PixelHead, origin_x: int, origin_y: int, scale: int) -> void:
-	var layers: Array[Sprite2D] = [head.skin, head.mouth, head.hair]
+	var face := head.gender_id
+	_blit_mask(sheet, PixelHead._FACES[face], PixelHead.PALETTE[head.skin_color_idx], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._BLUSHES[face], PixelHead.PALETTE[head.mouth_color_idx], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._MOUTHS[face], PixelHead.PALETTE[head.mouth_color_idx], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._HAIRS[head.hair_id], PixelHead.PALETTE[head.hair_color_idx], origin_x, origin_y, scale)
 	if head.is_blinking:
-		layers.append(head.eyes_closed)
-	else:
-		layers.append(head.eyes_open)
-	for layer in layers:
-		var image := layer.texture.get_image()
-		for y in PixelHead.SIZE:
-			for x in PixelHead.SIZE:
-				var pixel := image.get_pixel(x, y)
-				if pixel.a <= 0.0:
-					continue
-				sheet.fill_rect(Rect2i(origin_x + x * scale, origin_y + y * scale, scale, scale), pixel)
+		_blit_mask(sheet, PixelHead._EYES_CLOSED, PixelHead.PALETTE[9], origin_x, origin_y, scale)
+		return
+	_blit_mask(sheet, PixelHead._EYE_WHITES[head.eyes_id], PixelHead.PALETTE[10], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._EYE_PUPILS[head.eyes_id], PixelHead.PALETTE[head.eye_color_idx], origin_x, origin_y, scale)
+
+
+func _blit_mask(sheet: Image, mask: Texture2D, color: Color, origin_x: int, origin_y: int, scale: int) -> void:
+	var image := mask.get_image()
+	for y in image.get_height():
+		for x in image.get_width():
+			if image.get_pixel(x, y).a <= 0.0:
+				continue
+			sheet.fill_rect(Rect2i(origin_x + x * scale, origin_y + y * scale, scale, scale), color)
