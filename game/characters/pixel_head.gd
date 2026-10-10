@@ -14,17 +14,17 @@ const _BLINK_GAP_MAX := 5.0
 const _BLINK_HOLD := 0.12
 
 const _SKIN_COLORS: Array[Color] = [
+	Color8(255, 224, 206),
 	Color8(238, 195, 154),
 	Color8(217, 160, 102),
-	Color8(143, 86, 59),
-	Color8(102, 57, 49),
+	Color8(196, 140, 100),
 ]
 const _HAIR_COLORS: Array[Color] = [
 	Color8(69, 42, 40),
 	Color8(138, 111, 48),
 	Color8(251, 242, 54),
 	Color8(172, 50, 50),
-	Color8(63, 63, 116),
+	Color8(40, 28, 22),
 ]
 const _EYE_COLORS: Array[Color] = [
 	Color8(34, 32, 52),
