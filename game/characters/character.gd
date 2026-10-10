@@ -53,6 +53,7 @@ func serialize() -> Dictionary:
 		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
 	}
 
+
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:
 		_ai_context = CharacterAiContext.new(self)
