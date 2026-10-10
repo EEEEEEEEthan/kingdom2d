@@ -78,20 +78,19 @@ func _clamp_camera_x(x: float) -> float:
 	return clampf(x, half_view, Game.MAP_WIDTH - half_view)
 "
 
-[sub_resource type="GDScript" id="GDScript_day_night_light"]
-script/source = "extends DirectionalLight2D
+[sub_resource type="GDScript" id="GDScript_sky"]
+script/source = "extends Sprite2D
 
 const _KEY_DAY_FRACTIONS := [0.0, 0.23, 0.27, 0.5, 0.73, 0.77, 1.0]
-const _KEY_LIGHT_COLORS := [
-	Color(0.45, 0.5, 0.75),
-	Color(0.55, 0.45, 0.65),
-	Color(1.0, 0.72, 0.48),
-	Color(1.0, 0.97, 0.88),
-	Color(1.0, 0.58, 0.32),
-	Color(0.5, 0.42, 0.68),
-	Color(0.45, 0.5, 0.75),
+const _KEY_SKY_TOP_COLORS := [
+	Color(0.18, 0.22, 0.42),
+	Color(0.32, 0.28, 0.48),
+	Color(0.71, 0.81, 0.98),
+	Color(0.45, 0.72, 1.0),
+	Color(0.98, 0.55, 0.32),
+	Color(0.28, 0.24, 0.46),
+	Color(0.18, 0.22, 0.42),
 ]
-const _KEY_LIGHT_ENERGIES := [0.18, 0.22, 0.55, 1.0, 0.5, 0.2, 0.18]
 const _SUNRISE_FRACTION := 0.25
 const _SUNSET_FRACTION := 0.75
 const _KEY_AMBIENT_COLORS := [
@@ -102,15 +101,6 @@ const _KEY_AMBIENT_COLORS := [
 	Color(0.95, 0.72, 0.5),
 	Color(0.48, 0.44, 0.66),
 	Color(0.42, 0.48, 0.72),
-]
-const _KEY_SKY_TOP_COLORS := [
-	Color(0.18, 0.22, 0.42),
-	Color(0.32, 0.28, 0.48),
-	Color(0.71, 0.81, 0.98),
-	Color(0.45, 0.72, 1.0),
-	Color(0.98, 0.55, 0.32),
-	Color(0.28, 0.24, 0.46),
-	Color(0.18, 0.22, 0.42),
 ]
 const _KEY_SKY_BOTTOM_COLORS := [
 	Color(0.28, 0.32, 0.55),
@@ -130,24 +120,18 @@ var _sky_gradient: Gradient
 
 
 func _ready() -> void:
-	var sky_texture := %Sky.texture as GradientTexture2D
-	_sky_gradient = sky_texture.gradient
-	_apply_day_night()
+	_sky_gradient = (texture as GradientTexture2D).gradient
+	_apply_sky()
 
 
 func _process(_delta: float) -> void:
-	_apply_day_night()
+	_apply_sky()
 
 
-func _apply_day_night() -> void:
+func _apply_sky() -> void:
 	var day_fraction := _game.game_time.day_fraction
-	var sun_phase := _sun_phase(day_fraction)
-	var sun_height := _sun_height_from_phase(sun_phase)
-	color = _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_COLORS, day_fraction)
-	var base_energy := _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_ENERGIES, day_fraction)
-	energy = base_energy * sun_height
-	#height = sun_height
-	rotation = PI * 0.5 - sun_phase
+	var sun_phase := (day_fraction - _SUNRISE_FRACTION) / (_SUNSET_FRACTION - _SUNRISE_FRACTION) * PI
+	var sun_height := 0.0 if sun_phase <= 0.0 or sun_phase >= PI else sin(sun_phase)
 	var night_tint := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
 	%CanvasModulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
 	var sky_top := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_TOP_COLORS, day_fraction)
@@ -157,16 +141,6 @@ func _apply_day_night() -> void:
 	_sky_gradient.set_color(1, sky_bottom)
 
 
-func _sun_phase(day_fraction: float) -> float:
-	return (day_fraction - _SUNRISE_FRACTION) / (_SUNSET_FRACTION - _SUNRISE_FRACTION) * PI
-
-
-func _sun_height_from_phase(sun_phase: float) -> float:
-	if sun_phase <= 0.0 or sun_phase >= PI:
-		return 0.0
-	return sin(sun_phase)
-
-
 func _sample_color_keyframes(key_fractions: Array, key_colors: Array, day_fraction: float) -> Color:
 	if day_fraction >= key_fractions[key_fractions.size() - 1]:
 		return key_colors[key_colors.size() - 1]
@@ -177,96 +151,6 @@ func _sample_color_keyframes(key_fractions: Array, key_colors: Array, day_fracti
 			var weight := (day_fraction - start_fraction) / (end_fraction - start_fraction)
 			return key_colors[index].lerp(key_colors[index + 1], weight)
 	return key_colors[0]
-
-
-func _sample_scalar_keyframes(key_fractions: Array, key_values: Array, day_fraction: float) -> float:
-	if day_fraction >= key_fractions[key_fractions.size() - 1]:
-		return key_values[key_values.size() - 1]
-	for index in key_fractions.size() - 1:
-		var end_fraction: float = key_fractions[index + 1]
-		if day_fraction < end_fraction:
-			var start_fraction: float = key_fractions[index]
-			var weight := (day_fraction - start_fraction) / (end_fraction - start_fraction)
-			return lerpf(key_values[index], key_values[index + 1], weight)
-	return key_values[0]
-"
-
-[sub_resource type="GDScript" id="GDScript_moon_light"]
-script/source = "extends DirectionalLight2D
-
-const _KEY_DAY_FRACTIONS := [0.0, 0.23, 0.27, 0.5, 0.73, 0.77, 1.0]
-const _KEY_LIGHT_COLORS := [
-	Color(0.45, 0.5, 0.75),
-	Color(0.55, 0.45, 0.65),
-	Color(1.0, 0.72, 0.48),
-	Color(1.0, 0.97, 0.88),
-	Color(1.0, 0.58, 0.32),
-	Color(0.5, 0.42, 0.68),
-	Color(0.45, 0.5, 0.75),
-]
-const _KEY_LIGHT_ENERGIES := [0.18, 0.22, 0.55, 1.0, 0.5, 0.2, 0.18]
-const _SUNRISE_FRACTION := 0.25
-const _SUNSET_FRACTION := 0.75
-const _NIGHT_DURATION := 1.0 - (_SUNSET_FRACTION - _SUNRISE_FRACTION)
-
-var _game: Game:
-	get:
-		return owner as Game
-
-
-func _ready() -> void:
-	_apply_moon_light()
-
-
-func _process(_delta: float) -> void:
-	_apply_moon_light()
-
-
-func _apply_moon_light() -> void:
-	var day_fraction := _game.game_time.day_fraction
-	var sun_phase := _sun_phase(day_fraction)
-	if sun_phase > 0.0 and sun_phase < PI:
-		energy = 0.0
-		return
-	var moon_phase := _night_fraction(day_fraction) * PI
-	var moon_height := sin(moon_phase)
-	color = _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_COLORS, day_fraction)
-	var base_energy := _sample_scalar_keyframes(_KEY_DAY_FRACTIONS, _KEY_LIGHT_ENERGIES, day_fraction)
-	energy = base_energy * moon_height
-	height = moon_height
-	rotation = PI * 0.5 - moon_phase
-
-
-func _sun_phase(day_fraction: float) -> float:
-	return (day_fraction - _SUNRISE_FRACTION) / (_SUNSET_FRACTION - _SUNRISE_FRACTION) * PI
-
-
-func _night_fraction(day_fraction: float) -> float:
-	return fmod(day_fraction - _SUNSET_FRACTION + 1.0, 1.0) / _NIGHT_DURATION
-
-
-func _sample_color_keyframes(key_fractions: Array, key_colors: Array, day_fraction: float) -> Color:
-	if day_fraction >= key_fractions[key_fractions.size() - 1]:
-		return key_colors[key_colors.size() - 1]
-	for index in key_fractions.size() - 1:
-		var end_fraction: float = key_fractions[index + 1]
-		if day_fraction < end_fraction:
-			var start_fraction: float = key_fractions[index]
-			var weight := (day_fraction - start_fraction) / (end_fraction - start_fraction)
-			return key_colors[index].lerp(key_colors[index + 1], weight)
-	return key_colors[0]
-
-
-func _sample_scalar_keyframes(key_fractions: Array, key_values: Array, day_fraction: float) -> float:
-	if day_fraction >= key_fractions[key_fractions.size() - 1]:
-		return key_values[key_values.size() - 1]
-	for index in key_fractions.size() - 1:
-		var end_fraction: float = key_fractions[index + 1]
-		if day_fraction < end_fraction:
-			var start_fraction: float = key_fractions[index]
-			var weight := (day_fraction - start_fraction) / (end_fraction - start_fraction)
-			return lerpf(key_values[index], key_values[index + 1], weight)
-	return key_values[0]
 "
 
 [sub_resource type="GDScript" id="GDScript_editor_time_debug"]
@@ -310,14 +194,13 @@ layer = -1
 
 [node name="Sky" type="Sprite2D" parent="CelestialLayer" unique_id=591946890]
 unique_name_in_owner = true
-light_mask = 0
 z_index = -4096
 position = Vector2(0, 32)
 scale = Vector2(4096, 0.164)
 texture = SubResource("GradientTexture2D_dxrkv")
+script = SubResource("GDScript_sky")
 
 [node name="CelestialBody" type="Sprite2D" parent="CelestialLayer" unique_id=1597964607]
-light_mask = 0
 script = ExtResource("6_celestial")
 
 [node name="Horizon" type="Node2D" parent="." unique_id=1004483569]
@@ -346,16 +229,6 @@ process_thread_messages = 0
 position = Vector2(0, 32)
 process_callback = 0
 script = SubResource("GDScript_camera")
-
-[node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=307614254]
-color = Color(1, 0.97, 0.88, 1)
-energy = 0.25
-height = 0.35
-script = SubResource("GDScript_day_night_light")
-
-[node name="MoonDirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=248916419]
-color = Color(0.55, 0.62, 0.88, 1)
-script = SubResource("GDScript_moon_light")
 
 [node name="EditorTimeDebugController" type="Node" parent="." unique_id=1847293650]
 script = SubResource("GDScript_editor_time_debug")
