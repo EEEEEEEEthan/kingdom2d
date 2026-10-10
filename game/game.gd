@@ -105,3 +105,17 @@ func is_map_center_off_screen() -> bool:
 
 func start_build_placement(structure_config: StructureConfig) -> void:
 	horizon.add_child(await StructureBuildPlacement.new(self, structure_config))
+
+
+func spawn_resident_at_cell(cell_index: int) -> Character:
+	var character := character_manager.create_character()
+	character.set_appearance(
+		randi() % PixelHead.GENDER_COUNT,
+		randi() % PixelHead.HAIR_COUNT,
+		PixelHead.HAIR_COLORS[randi() % PixelHead.HAIR_COLORS.size()],
+		randi() % PixelHead.EYES_COUNT,
+		PixelHead.EYE_COLORS[randi() % PixelHead.EYE_COLORS.size()],
+		PixelHead.SKIN_COLORS[randi() % PixelHead.SKIN_COLORS.size()],
+	)
+	character.position.x = get_position_by_cell_index(cell_index) + HALF_TILE_SIZE
+	return character

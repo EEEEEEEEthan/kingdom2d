@@ -81,33 +81,6 @@ class WheelHook extends Node:
 		controller._try_apply_width_wheel(event, get_window())
 "
 
-[sub_resource type="GDScript" id="GDScript_quit_confirm"]
-script/source = "extends ConfirmationDialog
-
-func _ready() -> void:
-	visible = false
-
-func _on_confirmed() -> void:
-	owner.get_tree().quit()
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_VISIBILITY_CHANGED and visible:
-		_place_near_global_mouse()
-
-
-func _place_near_global_mouse() -> void:
-	var anchor_global := DisplayServer.mouse_get_position()
-	var screen := DisplayServer.get_screen_from_rect(Rect2(anchor_global, Vector2.ONE))
-	current_screen = screen
-	reset_size()
-	var window_size := size
-	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var pos := anchor_global
-	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - window_size.x))
-	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - window_size.y))
-	position = pos
-"
-
 [node name="Main" type="Node" unique_id=1799066687]
 script = ExtResource("1_main")
 
@@ -125,30 +98,8 @@ unique_name_in_owner = true
 [node name="DisplayScaleWheelController" type="Node" parent="." unique_id=93423411]
 script = SubResource("GDScript_display_scale_wheel")
 
-[node name="QuitConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1203847291]
-unique_name_in_owner = true
-transparent_bg = true
-snap_2d_transforms_to_pixel = true
-snap_2d_vertices_to_pixel = true
-anisotropic_filtering_level = 0
-canvas_item_default_texture_filter = 0
-oversampling_override = 1.0
-title = "退出"
-position = Vector2i(0, 36)
-size = Vector2i(212, 160)
-transient = false
-unresizable = true
-always_on_top = true
-transparent = true
-content_scale_stretch = 1
-content_scale_factor = 2.0
-ok_button_text = "退出"
-dialog_text = "确定要退出游戏吗？"
-script = SubResource("GDScript_quit_confirm")
-
 [connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
 [connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
-[connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]

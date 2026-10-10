@@ -34,4 +34,4 @@ func _pin_engine_root_offscreen() -> void:
 
 
 func request_quit() -> void:
-	%QuitConfirmDialog.visible = true
+	get_tree().quit()
