@@ -33,6 +33,10 @@ func _ready() -> void:
 	if Settings.game_width_ratio > max_ratio:
 		Settings.game_width_ratio = max_ratio
 	set_value_no_signal(minf(Settings.game_width_ratio, max_value))
+	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
+
+func _on_settings_game_width_ratio_changed(new_ratio: float) -> void:
+	set_value_no_signal(minf(new_ratio, max_value))
 
 func _on_value_changed(new_value: float) -> void:
 	Settings.game_width_ratio = new_value

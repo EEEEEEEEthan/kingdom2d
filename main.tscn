@@ -10,6 +10,9 @@ script/source = "extends Node
 
 const MIN_DISPLAY_SCALE := 1
 const MAX_DISPLAY_SCALE := 8
+const MIN_WIDTH_RATIO := 0.125
+const WIDTH_RATIO_STEP := 0.125
+const MAX_GAME_WIDTH := 4096
 const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
 
 
@@ -47,11 +50,35 @@ func _try_apply_display_scale_wheel(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
+# Alt+滚轮只改窗口宽度比例，不改缩放。与控制台宽度滑条步长一致。
+func _try_apply_width_wheel(event: InputEvent, window: Window) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if not mouse_button.alt_pressed or mouse_button.ctrl_pressed:
+		return
+	if mouse_button.button_index != MOUSE_BUTTON_WHEEL_UP and mouse_button.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+		return
+	if not mouse_button.pressed:
+		return
+	var delta := WIDTH_RATIO_STEP if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP else -WIDTH_RATIO_STEP
+	var screen_width := maxi(1, DisplayServer.screen_get_size(window.current_screen).x)
+	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
+	var new_ratio := clampf(Settings.game_width_ratio + delta, MIN_WIDTH_RATIO, max_ratio)
+	new_ratio = snappedf(new_ratio, WIDTH_RATIO_STEP)
+	new_ratio = clampf(new_ratio, MIN_WIDTH_RATIO, max_ratio)
+	if is_equal_approx(new_ratio, Settings.game_width_ratio):
+		return
+	Settings.game_width_ratio = new_ratio
+	get_viewport().set_input_as_handled()
+
+
 class WheelHook extends Node:
 	var controller: Node
 
 	func _input(event: InputEvent) -> void:
 		controller._try_apply_display_scale_wheel(event)
+		controller._try_apply_width_wheel(event, get_window())
 "
 
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
