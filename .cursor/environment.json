@@ -1,0 +1,4 @@
+{
+  "name": "Kingdom2D",
+  "install": "bash .cursor/install-godot.sh"
+}
