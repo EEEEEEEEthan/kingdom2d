@@ -7,14 +7,9 @@ const _BUSH_SPAWN_COUNT_MIN = 48
 const _BUSH_SPAWN_COUNT_MAX = 160
 const _BUSH_NOISE_FREQUENCY = 0.012
 const _BUSH_NOISE_CLUSTER_POWER = 4.0
-const _CHARACTER_SPAWN_COUNT = 8
-const _CHARACTER_SPAWN_RADIUS = 8
-
-
 static func build(game) -> void:
 	game.terrain.fill_terrain(Terrain.TerrainType.Land)
 	_spawn_sovereign_banner(game)
-	_spawn_initial_characters(game)
 	_spawn_random_oaks(game)
 	_spawn_clustered_bushes(game)
 
@@ -27,26 +22,6 @@ static func _spawn_sovereign_banner(game) -> void:
 	var structure_manager := game.structure_manager as StructureManager
 	var banner := StructureConfig.sovereign_banner.instantiate() as Structure
 	structure_manager.add_structure(banner, _map_center_cell_index())
-
-
-static func _spawn_initial_characters(game) -> void:
-	randomize()
-	var character_manager := game.character_manager as CharacterManager
-	var center_cell_index := _map_center_cell_index()
-	var candidate_cell_indices: Array[int] = []
-	for offset in range(-_CHARACTER_SPAWN_RADIUS, _CHARACTER_SPAWN_RADIUS + 1):
-		if offset == 0:
-			continue
-		var cell_index := center_cell_index + offset
-		if cell_index < 0 or cell_index >= Game.MAP_CELL_COUNT:
-			continue
-		candidate_cell_indices.append(cell_index)
-	candidate_cell_indices.shuffle()
-	var spawn_count := mini(_CHARACTER_SPAWN_COUNT, candidate_cell_indices.size())
-	for index in spawn_count:
-		var character := character_manager.create_character()
-		var cell_index := candidate_cell_indices[index]
-		character.position.x = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE
 
 
 static func _spawn_random_oaks(game) -> void:

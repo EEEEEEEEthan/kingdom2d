@@ -7,6 +7,7 @@ enum TypeId {
 	SUNKEN_FLOOR_THATCH_HOVEL = 2,
 	SOVEREIGN_BANNER = 3,
 	BUSH = 4,
+	REFUGEE_HUT = 5,
 }
 
 static var oak: StructureConfig:
@@ -36,6 +37,15 @@ static var sovereign_banner: StructureConfig:
 			sovereign_banner._scene_path = &"res://game/structures/sovereign_banner.tscn"
 		return sovereign_banner
 
+static var refugee_hut: StructureConfig:
+	get:
+		if not refugee_hut:
+			refugee_hut = StructureConfig.new()
+			refugee_hut.id = TypeId.REFUGEE_HUT
+			refugee_hut.name = &"难民棚"
+			refugee_hut._scene_path = &"res://game/structures/refugee_hut.tscn"
+		return refugee_hut
+
 static var bush: StructureConfig:
 	get:
 		if not bush:
@@ -50,6 +60,7 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	sunken_floor_thatch_hovel.id: sunken_floor_thatch_hovel,
 	sovereign_banner.id: sovereign_banner,
 	bush.id: bush,
+	refugee_hut.id: refugee_hut,
 }
 
 var id: TypeId = TypeId.NONE
