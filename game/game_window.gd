@@ -2,6 +2,7 @@ extends Window
 
 signal control_window_open_requested
 signal quit_requested
+signal structure_window_requested(structure_id: int)
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
@@ -48,6 +49,7 @@ func _ready() -> void:
 	%GameHud.sync_pin_from_pined(pined)
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
+	%Game.structure_window_requested.connect(structure_window_requested.emit)
 	apply_layout(true)
 	visible = true
 

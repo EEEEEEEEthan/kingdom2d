@@ -1,6 +1,8 @@
 extends Node
 class_name Game
 
+signal structure_window_requested(structure_id: int)
+
 const TILE_SIZE = 8
 const HALF_TILE_SIZE = round(TILE_SIZE / 2.0)
 const MAP_CELL_COUNT = 512
@@ -56,8 +58,30 @@ func advance_debug_time_by_hours(hours: float = 1.0) -> void:
 	game_time.all_days += hours / 24.0
 
 
+var _click_origin := Vector2(-100000, -100000)
+
+
 func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
+
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if mouse_button.pressed:
+		_click_origin = mouse_button.position
+		return
+	if _click_origin.distance_to(mouse_button.position) > 4.0:
+		return
+	if _placement_active():
+		return
+	var cell := _cell_under_mouse()
+	var structure := structure_manager.index_to_structures[cell]
+	if structure is WorkSite:
+		structure_window_requested.emit(structure.id)
 
 func new_game() -> void:
 	_clear()
@@ -105,3 +129,16 @@ func is_map_center_off_screen() -> bool:
 
 func start_build_placement(structure_config: StructureConfig) -> void:
 	horizon.add_child(await StructureBuildPlacement.new(self, structure_config))
+
+
+func _placement_active() -> bool:
+	for child in horizon.get_children():
+		if child is StructureBuildPlacement:
+			return true
+	return false
+
+
+func _cell_under_mouse() -> int:
+	var local: Vector2 = structure_manager.get_global_transform().affine_inverse() * structure_manager.get_global_mouse_position()
+	var index := roundi((local.x - HALF_TILE_SIZE) / float(TILE_SIZE))
+	return clampi(index, 0, MAP_CELL_COUNT - 1)

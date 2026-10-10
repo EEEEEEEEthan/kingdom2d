@@ -4,4 +4,5 @@ enum TypeId {
 	NONE = 0,
 	WAIT_DURATION = 1,
 	MOVE_TO_WORLD_X = 2,
+	WORK_UNIT = 3,
 }

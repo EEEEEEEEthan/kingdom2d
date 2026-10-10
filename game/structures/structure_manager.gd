@@ -61,4 +61,5 @@ func _register_structure(structure: Structure) -> void:
 		return
 	index_to_structures[structure.cell_index] = structure
 	await structure.tree_exiting
-	index_to_structures[structure.cell_index] = null
+	if index_to_structures[structure.cell_index] == structure:
+		index_to_structures[structure.cell_index] = null

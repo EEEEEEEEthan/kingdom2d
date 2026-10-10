@@ -7,6 +7,10 @@ enum TypeId {
 	SUNKEN_FLOOR_THATCH_HOVEL = 2,
 	SOVEREIGN_BANNER = 3,
 	BUSH = 4,
+	TENT = 5,
+	WOOD_CABIN = 6,
+	LUMBER_CAMP = 7,
+	BUILDERS_GUILD = 8,
 }
 
 static var oak: StructureConfig:
@@ -45,15 +49,57 @@ static var bush: StructureConfig:
 			bush._scene_path = &"res://game/structures/bush.tscn"
 		return bush
 
+static var tent: StructureConfig:
+	get:
+		if not tent:
+			tent = StructureConfig.new()
+			tent.id = TypeId.TENT
+			tent.name = &"帐篷"
+			tent._scene_path = &"res://game/structures/tent.tscn"
+		return tent
+
+static var wood_cabin: StructureConfig:
+	get:
+		if not wood_cabin:
+			wood_cabin = StructureConfig.new()
+			wood_cabin.id = TypeId.WOOD_CABIN
+			wood_cabin.name = &"小木屋"
+			wood_cabin.show_in_build_menu = false
+			wood_cabin._scene_path = &"res://game/structures/wood_cabin.tscn"
+		return wood_cabin
+
+static var lumber_camp: StructureConfig:
+	get:
+		if not lumber_camp:
+			lumber_camp = StructureConfig.new()
+			lumber_camp.id = TypeId.LUMBER_CAMP
+			lumber_camp.name = &"伐木营地"
+			lumber_camp._scene_path = &"res://game/structures/lumber_camp.tscn"
+		return lumber_camp
+
+static var builders_guild: StructureConfig:
+	get:
+		if not builders_guild:
+			builders_guild = StructureConfig.new()
+			builders_guild.id = TypeId.BUILDERS_GUILD
+			builders_guild.name = &"建筑工工会"
+			builders_guild._scene_path = &"res://game/structures/builders_guild.tscn"
+		return builders_guild
+
 static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	oak.id: oak,
 	sunken_floor_thatch_hovel.id: sunken_floor_thatch_hovel,
 	sovereign_banner.id: sovereign_banner,
 	bush.id: bush,
+	tent.id: tent,
+	wood_cabin.id: wood_cabin,
+	lumber_camp.id: lumber_camp,
+	builders_guild.id: builders_guild,
 }
 
 var id: TypeId = TypeId.NONE
 var name: StringName
+var show_in_build_menu := true
 var max_hp = 32
 var _scene_path: StringName
 var _scene: PackedScene:

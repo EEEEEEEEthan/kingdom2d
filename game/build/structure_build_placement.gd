@@ -62,6 +62,8 @@ func _try_place() -> void:
 	_preview.modulate = Color.WHITE
 	_preview_juice.dispose()
 	structure_manager.add_structure(_preview, _preview.cell_index)
+	if _preview.has_method("on_player_placed"):
+		_preview.on_player_placed(_game)
 	_preview.play_bounce()
 	queue_free()
 

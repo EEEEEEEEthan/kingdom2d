@@ -73,6 +73,8 @@ const MENU_CONTENT_SCALE := 2.0
 
 func _ready() -> void:
 	for structure_config in StructureConfig.configs_by_id.values():
+		if not structure_config.show_in_build_menu:
+			continue
 		%BuildSubmenu.add_item(structure_config.name, structure_config.id)
 	_apply_menu_content_scale()
 	add_submenu_item(\"建造\", %BuildSubmenu.name)
