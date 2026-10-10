@@ -55,7 +55,7 @@ func _on_confirmed() -> void:
 	owner.reset_game_requested.emit()
 "
 
-[node name="ControlWindow" type="Window" unique_id=1280178936]
+[node name="ControlWindow" type="PopupPanel" unique_id=1280178936]
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
@@ -64,7 +64,8 @@ oversampling_override = 1.0
 title = "Kingdom2D"
 position = Vector2i(100, 36)
 size = Vector2i(256, 288)
-always_on_top = true
+transparent = false
+always_on_top = false
 content_scale_mode = 1
 content_scale_stretch = 1
 content_scale_factor = 2.0
