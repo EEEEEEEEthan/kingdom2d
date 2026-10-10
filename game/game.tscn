@@ -91,6 +91,17 @@ const _KEY_SKY_TOP_COLORS := [
 	Color(0.28, 0.24, 0.46),
 	Color(0.18, 0.22, 0.42),
 ]
+const _SUNRISE_FRACTION := 0.25
+const _SUNSET_FRACTION := 0.75
+const _KEY_AMBIENT_COLORS := [
+	Color(0.42, 0.48, 0.72),
+	Color(0.5, 0.44, 0.62),
+	Color(0.92, 0.78, 0.62),
+	Color(1.0, 1.0, 1.0),
+	Color(0.95, 0.72, 0.5),
+	Color(0.48, 0.44, 0.66),
+	Color(0.42, 0.48, 0.72),
+]
 const _KEY_SKY_BOTTOM_COLORS := [
 	Color(0.28, 0.32, 0.55),
 	Color(0.42, 0.36, 0.58),
@@ -119,6 +130,10 @@ func _process(_delta: float) -> void:
 
 func _apply_sky() -> void:
 	var day_fraction := _game.game_time.day_fraction
+	var sun_phase := (day_fraction - _SUNRISE_FRACTION) / (_SUNSET_FRACTION - _SUNRISE_FRACTION) * PI
+	var sun_height := 0.0 if sun_phase <= 0.0 or sun_phase >= PI else sin(sun_phase)
+	var night_tint := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_AMBIENT_COLORS, day_fraction)
+	%CanvasModulate.color = night_tint if sun_height <= 0.0 else night_tint.lerp(Color.WHITE, sun_height)
 	var sky_top := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_TOP_COLORS, day_fraction)
 	var sky_bottom := _sample_color_keyframes(_KEY_DAY_FRACTIONS, _KEY_SKY_BOTTOM_COLORS, day_fraction)
 	sky_bottom.a = 0.0
@@ -170,6 +185,9 @@ func _process(_delta: float) -> void:
 
 [node name="Game" type="Node" unique_id=1189113459]
 script = ExtResource("1_dxrkv")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1982736450]
+unique_name_in_owner = true
 
 [node name="CelestialLayer" type="CanvasLayer" parent="." unique_id=466522127]
 layer = -1

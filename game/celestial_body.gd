@@ -27,6 +27,7 @@ func _process(_delta: float) -> void:
 
 
 func _update_visual() -> void:
+	modulate = owner.get_node("CanvasModulate").color
 	var day_fraction := _game.game_time.day_fraction
 	var sun_height := _sun_height_from_day_fraction(day_fraction)
 	if sun_height > 0.0:
