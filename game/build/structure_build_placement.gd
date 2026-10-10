@@ -62,7 +62,7 @@ func _try_place() -> void:
 	_preview.modulate = Color.WHITE
 	_preview_juice.dispose()
 	structure_manager.add_structure(_preview, _preview.cell_index)
-	if _structure_config.id == StructureConfig.TypeId.REFUGEE_HUT:
+	if _structure_config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		_game.spawn_resident_at_cell(_preview.cell_index)
 	_preview.play_bounce()
 	queue_free()
