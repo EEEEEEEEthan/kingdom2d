@@ -32,6 +32,7 @@ func _run() -> int:
 	failed += _check("工会取一份，建筑工一份一份敲完帐篷", _builder_one_by_one())
 	failed += _check("班次外不开新单元", _shift_gate())
 	failed += _check("帐篷下单后三次交付变成小木屋", _tent_upgrade_node())
+	failed += _check("开局没有预置居民", _no_preset_residents())
 	print("失败 %d" % failed)
 	return 1 if failed else 0
 
@@ -175,6 +176,17 @@ func _shift_gate() -> bool:
 	var starts_off := off.day_time_period == GameTime.DayTimePeriod.WORK
 	var starts_on := on.day_time_period == GameTime.DayTimePeriod.WORK
 	return not starts_off and starts_on and unit_running
+
+
+func _no_preset_residents() -> bool:
+	if FileAccess.file_exists(Game.SAVE_FILE_PATH):
+		DirAccess.open("user://").remove(Game.SAVE_FILE_PATH.get_file())
+	var game := (load("res://game/game.tscn") as PackedScene).instantiate() as Game
+	root.add_child(game)
+	game.new_game()
+	var empty: bool = game.character_manager.characters.is_empty()
+	game.free()
+	return empty
 
 
 func _tent_upgrade_node() -> bool:
