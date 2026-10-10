@@ -5,10 +5,6 @@ signal reset_game_requested
 
 func _ready() -> void:
 	visible = false
-	# 工程开了逐像素透明。设置窗若不走透明视口，客户区在合成器里是空的。
-	# 下面用实色铺满，文字和滑条才能看清。
-	transparent = true
-	transparent_bg = true
 
 
 func open_near_mouse() -> void:
@@ -19,7 +15,5 @@ func open_near_mouse() -> void:
 	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - window_size.x))
 	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - window_size.y))
 	current_screen = screen
-	position = pos
-	show()
-	mode = MODE_WINDOWED
-	grab_focus()
+	# 普通 Window 在这套逐像素透明下客户区不绘制。弹层和菜单同一条路径，内容才看得到。
+	popup(Rect2i(pos, window_size))

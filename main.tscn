@@ -18,6 +18,10 @@ func _ready() -> void:
 	for child in owner.get_children():
 		if child is Window:
 			_attach_hook(child as Window)
+			# 设置窗挂在游戏窗下面，仍要接住 Ctrl+滚轮缩放。
+			for nested in child.get_children():
+				if nested is Window:
+					_attach_hook(nested as Window)
 
 
 func _attach_hook(window: Window) -> void:
@@ -88,7 +92,7 @@ script = ExtResource("1_main")
 unique_name_in_owner = true
 anisotropic_filtering_level = 0
 
-[node name="ControlWindow" parent="." unique_id=413646671 instance=ExtResource("2_control_window")]
+[node name="ControlWindow" parent="GameWindow" unique_id=413646671 instance=ExtResource("2_control_window")]
 unique_name_in_owner = true
 visible = false
 
@@ -119,9 +123,9 @@ ok_button_text = "退出"
 dialog_text = "确定要退出游戏吗？"
 script = SubResource("GDScript_quit_confirm")
 
-[connection signal="control_window_open_requested" from="GameWindow" to="ControlWindow" method="open_near_mouse"]
+[connection signal="control_window_open_requested" from="GameWindow" to="GameWindow/ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
-[connection signal="reset_game_requested" from="ControlWindow" to="GameWindow" method="reset_game"]
-[connection signal="control_window_open_requested" from="Tray" to="ControlWindow" method="open_near_mouse"]
+[connection signal="reset_game_requested" from="GameWindow/ControlWindow" to="GameWindow" method="reset_game"]
+[connection signal="control_window_open_requested" from="Tray" to="GameWindow/ControlWindow" method="open_near_mouse"]
 [connection signal="quit_requested" from="Tray" to="." method="request_quit"]
 [connection signal="confirmed" from="QuitConfirmDialog" to="QuitConfirmDialog" method="_on_confirmed"]
