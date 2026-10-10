@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://djbym0x02cuni" path="res://main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://n3eb1xsiuq1d" path="res://control_window.tscn" id="2_control_window"]
 [ext_resource type="PackedScene" uid="uid://bxn51co5pbs21" path="res://tray/tray.tscn" id="3_tray"]
+[ext_resource type="PackedScene" path="res://game/structure_window.tscn" id="4_structure_window"]
 
 [sub_resource type="GDScript" id="GDScript_display_scale_wheel"]
 script/source = "extends Node
@@ -89,6 +90,10 @@ unique_name_in_owner = true
 anisotropic_filtering_level = 0
 
 [node name="ControlWindow" parent="." unique_id=413646671 instance=ExtResource("2_control_window")]
+unique_name_in_owner = true
+visible = false
+
+[node name="StructureWindow" parent="." instance=ExtResource("4_structure_window")]
 unique_name_in_owner = true
 visible = false
 

@@ -1,0 +1,63 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/structure_window.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://theme.png" id="2_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
+atlas = ExtResource("2_theme")
+region = Rect2(5, 5, 6, 6)
+
+[node name="StructureWindow" type="Window"]
+title = "建筑"
+position = Vector2i(120, 48)
+size = Vector2i(280, 320)
+always_on_top = true
+content_scale_mode = 1
+content_scale_stretch = 1
+content_scale_factor = 2.0
+script = ExtResource("1_script")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_bg")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Info" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "建筑"
+
+[node name="Upgrade" type="Button" parent="Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "升级"
+
+[node name="People" type="VBoxContainer" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[connection signal="close_requested" from="." to="." method="hide"]
+[connection signal="pressed" from="Margin/VBox/Upgrade" to="." method="_on_upgrade_pressed"]

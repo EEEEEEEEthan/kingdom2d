@@ -6,6 +6,7 @@ const ENGINE_ROOT_SIZE := Vector2i(1, 1)
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
+	%GameWindow.get_node("%Game").structure_inspect_requested.connect(_open_structure_window)
 	if not _uses_system_tray():
 		return
 	%Tray.game_show_requested.connect(func ():
@@ -15,6 +16,10 @@ func _ready() -> void:
 	_pin_engine_root_offscreen()
 	await get_tree().process_frame
 	_pin_engine_root_offscreen()
+
+
+func _open_structure_window(structure_id: int) -> void:
+	%StructureWindow.open_for(%GameWindow.get_node("%Game"), structure_id)
 
 
 func _uses_system_tray() -> bool:

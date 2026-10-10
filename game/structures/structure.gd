@@ -15,8 +15,9 @@ var cell_index: int:
 		return cell_index
 	set(value):
 		cell_index = value
-		if not is_node_ready(): await ready
 		position = Vector2(value * Game.TILE_SIZE + Game.HALF_TILE_SIZE, 0)
+		if not is_node_ready():
+			await ready
 		_on_cell_index_updated()
 
 var active: bool:

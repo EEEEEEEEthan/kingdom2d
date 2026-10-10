@@ -55,10 +55,32 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 	_register_structure(structure)
 
 
+func remove_structure(structure: Structure) -> void:
+	if structure.cell_index >= 0 and structure.cell_index < index_to_structures.size():
+		if index_to_structures[structure.cell_index] == structure:
+			index_to_structures[structure.cell_index] = null
+	structure.queue_free()
+
+
+func replace_tent_with_hut(tent: LoopStructure, game: Game) -> LoopStructure:
+	var cell_index := tent.cell_index
+	var residents: Array[Character] = []
+	for character in game.character_manager.characters.values():
+		if character.home_id == tent.id:
+			residents.append(character)
+	remove_structure(tent)
+	var hut := StructureConfig.wooden_hut.instantiate() as LoopStructure
+	add_structure(hut, cell_index)
+	for character in residents:
+		character.home_id = hut.id
+	return hut
+
+
 func _register_structure(structure: Structure) -> void:
 	if index_to_structures[structure.cell_index]:
 		printerr("建筑重叠!");
 		return
 	index_to_structures[structure.cell_index] = structure
 	await structure.tree_exiting
-	index_to_structures[structure.cell_index] = null
+	if index_to_structures[structure.cell_index] == structure:
+		index_to_structures[structure.cell_index] = null

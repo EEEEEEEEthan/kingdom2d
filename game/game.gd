@@ -1,6 +1,8 @@
 extends Node
 class_name Game
 
+signal structure_inspect_requested(structure_id: int)
+
 const TILE_SIZE = 8
 const HALF_TILE_SIZE = round(TILE_SIZE / 2.0)
 const MAP_CELL_COUNT = 512
@@ -58,6 +60,51 @@ func advance_debug_time_by_hours(hours: float = 1.0) -> void:
 
 func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
+
+
+const _CLICK_SLOP := 4.0
+
+var _click_press_position := Vector2.ZERO
+var _click_tracking := false
+
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if mouse_button.pressed:
+		_click_tracking = true
+		_click_press_position = mouse_button.position
+		return
+	if not _click_tracking:
+		return
+	_click_tracking = false
+	if _click_press_position.distance_to(mouse_button.position) > _CLICK_SLOP:
+		return
+	if _placement_active():
+		return
+	_try_inspect_structure()
+
+
+func _placement_active() -> bool:
+	for child in horizon.get_children():
+		if child is StructureBuildPlacement:
+			return true
+	return false
+
+
+func _try_inspect_structure() -> void:
+	var structure_manager_node := structure_manager
+	var local: Vector2 = structure_manager_node.get_global_transform().affine_inverse() * structure_manager_node.get_global_mouse_position()
+	var index := roundi((local.x - HALF_TILE_SIZE) / float(TILE_SIZE))
+	if index < 0 or index >= MAP_CELL_COUNT:
+		return
+	var structure := structure_manager_node.index_to_structures[index]
+	if structure == null or structure.id <= 0:
+		return
+	structure_inspect_requested.emit(structure.id)
 
 func new_game() -> void:
 	_clear()

@@ -59,11 +59,30 @@ func _try_place() -> void:
 	var structure_manager := _game.structure_manager
 	if structure_manager.index_to_structures[_preview.cell_index]:
 		return
+	if not _pay_build_cost():
+		return
 	_preview.modulate = Color.WHITE
 	_preview_juice.dispose()
 	structure_manager.add_structure(_preview, _preview.cell_index)
+	if _preview.has_method("on_placed"):
+		_preview.on_placed(_game)
 	_preview.play_bounce()
 	queue_free()
+
+
+func _pay_build_cost() -> bool:
+	var cost := _structure_config.build_cost_logs
+	if cost <= 0:
+		return true
+	var warehouse: LoopStructure
+	for structure in _game.structure_manager.index_to_structures:
+		if structure is LoopStructure and (structure as LoopStructure).kind == LoopStructure.Kind.WAREHOUSE:
+			warehouse = structure
+			break
+	if warehouse == null or warehouse.logs < cost:
+		return false
+	warehouse.logs -= cost
+	return true
 
 
 func _cancel() -> void:
