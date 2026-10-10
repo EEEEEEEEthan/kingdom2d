@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://blk7dkr6ylt2w" path="res://game/characters/character.gd" id="1_85w1m"]
 [ext_resource type="Script" uid="uid://xqi7kv2y70eo" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_bwt3b"]
+[ext_resource type="PackedScene" uid="uid://bpxlhead8x8k2" path="res://game/characters/pixel_head.tscn" id="2_head"]
 
 [sub_resource type="Texture2D" id="Texture2D_ewbhm"]
 resource_local_to_scene = false
@@ -16,3 +17,6 @@ script = ExtResource("1_85w1m")
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=284777522]
 texture = SubResource("Texture2D_ewbhm")
 offset = Vector2(0, -3)
+
+[node name="PixelHead" parent="." unique_id=1849203320 instance=ExtResource("2_head")]
+position = Vector2(0, -12)

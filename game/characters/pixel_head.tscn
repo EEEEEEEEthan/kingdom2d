@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpxlhead8x8k2"]
+
+[ext_resource type="Script" uid="uid://cmyq3hvrqns60" path="res://game/characters/pixel_head.gd" id="1_head"]
+
+[node name="PixelHead" type="Node2D" unique_id=1849203311]
+script = ExtResource("1_head")
+
+[node name="Skin" type="Sprite2D" parent="." unique_id=1849203312]
+
+[node name="Mouth" type="Sprite2D" parent="." unique_id=1849203313]
+
+[node name="Hair" type="Sprite2D" parent="." unique_id=1849203314]
+
+[node name="EyesOpen" type="Sprite2D" parent="." unique_id=1849203315]
+
+[node name="EyesClosed" type="Sprite2D" parent="." unique_id=1849203316]
+visible = false

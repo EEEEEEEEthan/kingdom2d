@@ -84,12 +84,13 @@ func serialize() -> Dictionary:
 
 
 func _ensure_head() -> void:
-	if head == null or not is_instance_valid(head):
+	head = get_node_or_null("PixelHead") as PixelHead
+	if head == null:
 		head = PixelHead.create(gender_id, hair_id, eyes_id, skin_id)
 		head.position = Vector2(0, -12)
 		add_child(head)
-	else:
-		head.apply(gender_id, hair_id, eyes_id, skin_id)
+		return
+	head.apply(gender_id, hair_id, eyes_id, skin_id)
 
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:

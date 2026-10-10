@@ -1,7 +1,8 @@
+@tool
 extends Node2D
 class_name PixelHead
 
-## 8×8 像素头。皮肤、头发、眼睛、嘴是分开的精灵，眼睛会自己眨。
+## 8×8 像素头场景。改 gender_id、hair_id、eyes_id、skin_id 即可。眼睛会自己眨。
 
 const SIZE := 8
 const GENDER_COUNT := 2
@@ -36,10 +37,23 @@ const _LINE := Color8(34, 32, 52)
 const _MOUTH := Color8(172, 50, 50)
 const _BLUSH := Color8(217, 87, 99)
 
-var gender_id := 0
-var hair_id := 0
-var eyes_id := 0
-var skin_id := 0
+@export_range(0, GENDER_COUNT - 1) var gender_id := 0:
+	set(value):
+		gender_id = _wrap(value, GENDER_COUNT)
+		_paint()
+@export_range(0, HAIR_COUNT - 1) var hair_id := 0:
+	set(value):
+		hair_id = _wrap(value, HAIR_COUNT)
+		_paint()
+@export_range(0, EYES_COUNT - 1) var eyes_id := 0:
+	set(value):
+		eyes_id = _wrap(value, EYES_COUNT)
+		_paint()
+@export_range(0, SKIN_COUNT - 1) var skin_id := 0:
+	set(value):
+		skin_id = _wrap(value, SKIN_COUNT)
+		_paint()
+
 var is_blinking := false
 
 var _blink_left := 0.0
@@ -52,25 +66,20 @@ var eyes_open: Sprite2D
 var eyes_closed: Sprite2D
 
 
-static func create(gender_id: int, hair_id: int, eyes_id: int, skin_id: int) -> PixelHead:
-	var head := PixelHead.new()
-	head.name = "PixelHead"
-	head.gender_id = _wrap(gender_id, GENDER_COUNT)
-	head.hair_id = _wrap(hair_id, HAIR_COUNT)
-	head.eyes_id = _wrap(eyes_id, EYES_COUNT)
-	head.skin_id = _wrap(skin_id, SKIN_COUNT)
-	head._mount_parts()
-	head._paint()
-	head._sync_eyes()
+static func create(next_gender_id: int, next_hair_id: int, next_eyes_id: int, next_skin_id: int) -> PixelHead:
+	var head := (load("res://game/characters/pixel_head.tscn") as PackedScene).instantiate() as PixelHead
+	head.gender_id = next_gender_id
+	head.hair_id = next_hair_id
+	head.eyes_id = next_eyes_id
+	head.skin_id = next_skin_id
 	return head
 
 
 func apply(next_gender_id: int, next_hair_id: int, next_eyes_id: int, next_skin_id: int) -> void:
-	gender_id = _wrap(next_gender_id, GENDER_COUNT)
-	hair_id = _wrap(next_hair_id, HAIR_COUNT)
-	eyes_id = _wrap(next_eyes_id, EYES_COUNT)
-	skin_id = _wrap(next_skin_id, SKIN_COUNT)
-	_paint()
+	gender_id = next_gender_id
+	hair_id = next_hair_id
+	eyes_id = next_eyes_id
+	skin_id = next_skin_id
 
 
 func blink() -> void:
@@ -80,8 +89,12 @@ func blink() -> void:
 
 
 func _ready() -> void:
-	_gap_left = randf_range(_BLINK_GAP_MIN, _BLINK_GAP_MAX)
+	_paint()
 	_sync_eyes()
+	if Engine.is_editor_hint():
+		set_process(false)
+		return
+	_gap_left = randf_range(_BLINK_GAP_MIN, _BLINK_GAP_MAX)
 
 
 func _process(delta: float) -> void:
@@ -97,23 +110,14 @@ func _process(delta: float) -> void:
 		blink()
 
 
-func _mount_parts() -> void:
-	skin = _add_part("Skin")
-	mouth = _add_part("Mouth")
-	hair = _add_part("Hair")
-	eyes_open = _add_part("EyesOpen")
-	eyes_closed = _add_part("EyesClosed")
-	eyes_closed.visible = false
-
-
-func _add_part(part_name: String) -> Sprite2D:
-	var sprite := Sprite2D.new()
-	sprite.name = part_name
-	add_child(sprite)
-	return sprite
-
-
 func _paint() -> void:
+	if get_node_or_null("Skin") == null:
+		return
+	skin = $Skin
+	mouth = $Mouth
+	hair = $Hair
+	eyes_open = $EyesOpen
+	eyes_closed = $EyesClosed
 	var skin_color := _SKIN_COLORS[skin_id]
 	var hair_color := _HAIR_COLORS[hair_id]
 	var eye_color := _EYE_COLORS[eyes_id]
