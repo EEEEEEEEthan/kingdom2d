@@ -5,6 +5,10 @@ signal reset_game_requested
 
 func _ready() -> void:
 	visible = false
+	# 工程开了逐像素透明。设置窗若不走透明视口，客户区在合成器里是空的。
+	# 下面用实色铺满，文字和滑条才能看清。
+	transparent = true
+	transparent_bg = true
 
 
 func open_near_mouse() -> void:
