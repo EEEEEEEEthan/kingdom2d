@@ -11,6 +11,9 @@ script/source = "extends Node
 
 const MIN_DISPLAY_SCALE := 1
 const MAX_DISPLAY_SCALE := 8
+const MIN_WIDTH_RATIO := 0.125
+const WIDTH_RATIO_STEP := 0.125
+const MAX_GAME_WIDTH := 4096
 const HOOK_NODE_NAME := \"DisplayScaleWheelHook\"
 
 
@@ -30,29 +33,48 @@ func _attach_hook(window: Window) -> void:
 	window.add_child(hook)
 
 
-func _try_apply_display_scale_wheel(event: InputEvent) -> void:
+func _try_apply_display_scale_wheel(event: InputEvent, window: Window = null) -> void:
 	if not event is InputEventMouseButton:
 		return
 	var mouse_button := event as InputEventMouseButton
-	if not mouse_button.ctrl_pressed:
+	var scrolling_scale := mouse_button.ctrl_pressed and not mouse_button.alt_pressed
+	var scrolling_width := mouse_button.alt_pressed and not mouse_button.ctrl_pressed
+	if not scrolling_scale and not scrolling_width:
 		return
 	if mouse_button.button_index != MOUSE_BUTTON_WHEEL_UP and mouse_button.button_index != MOUSE_BUTTON_WHEEL_DOWN:
 		return
 	if not mouse_button.pressed:
 		return
 	var delta := 1 if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP else -1
-	var new_scale := clampi(Settings.display_scale + delta, MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE)
-	if new_scale == Settings.display_scale:
-		return
-	Settings.display_scale = new_scale
+	if scrolling_width:
+		_apply_width_wheel(delta, window)
+	else:
+		var new_scale := clampi(Settings.display_scale + delta, MIN_DISPLAY_SCALE, MAX_DISPLAY_SCALE)
+		if new_scale == Settings.display_scale:
+			return
+		Settings.display_scale = new_scale
 	get_viewport().set_input_as_handled()
+
+
+func _apply_width_wheel(delta: int, window: Window) -> void:
+	var screen := 0
+	if window:
+		screen = window.current_screen
+	var screen_width := maxi(1, DisplayServer.screen_get_size(screen).x)
+	var max_ratio := minf(1.0, float(MAX_GAME_WIDTH) / float(screen_width))
+	var next_ratio := clampf(Settings.game_width_ratio + float(delta) * WIDTH_RATIO_STEP, MIN_WIDTH_RATIO, max_ratio)
+	next_ratio = snappedf(next_ratio, WIDTH_RATIO_STEP)
+	next_ratio = clampf(next_ratio, MIN_WIDTH_RATIO, max_ratio)
+	if is_equal_approx(next_ratio, Settings.game_width_ratio):
+		return
+	Settings.game_width_ratio = next_ratio
 
 
 class WheelHook extends Node:
 	var controller: Node
 
 	func _input(event: InputEvent) -> void:
-		controller._try_apply_display_scale_wheel(event)
+		controller._try_apply_display_scale_wheel(event, get_window())
 "
 
 [sub_resource type="GDScript" id="GDScript_quit_confirm"]
