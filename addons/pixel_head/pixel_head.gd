@@ -2,9 +2,9 @@
 extends Control
 class_name PixelHead
 
-## 可直接添加的 16×16 开罗风半身头像。形状是纯白遮罩，颜色填色板下标。眼睛会自己眨。
+## 14×14 开罗风头像。默认组合逐像素对齐参考图。眼睛会自己眨。
 
-const SIZE := 16
+const SIZE := 14
 const GENDER_COUNT := 2
 const HAIR_COUNT := 5
 const EYES_COUNT := 4
@@ -58,6 +58,26 @@ const _SHIRTS: Array[Texture2D] = [
 	preload("res://addons/pixel_head/masks/shirt_0.png"),
 	preload("res://addons/pixel_head/masks/shirt_1.png"),
 ]
+const _REF_SKIN: Texture2D = preload("res://addons/pixel_head/masks/ref_skin.png")
+const _REF_SKIN_LIGHT: Texture2D = preload("res://addons/pixel_head/masks/ref_skin_light.png")
+const _REF_BLUSH: Texture2D = preload("res://addons/pixel_head/masks/ref_blush.png")
+const _REF_MOUTH: Texture2D = preload("res://addons/pixel_head/masks/ref_mouth.png")
+const _REF_MOUTH_DARK: Texture2D = preload("res://addons/pixel_head/masks/ref_mouth_dark.png")
+const _REF_HAIR_MID: Texture2D = preload("res://addons/pixel_head/masks/ref_hair_mid.png")
+const _REF_HAIR_MID2: Texture2D = preload("res://addons/pixel_head/masks/ref_hair_mid2.png")
+const _REF_HAIR_LIGHT: Texture2D = preload("res://addons/pixel_head/masks/ref_hair_light.png")
+const _REF_HAIR_LIGHTER: Texture2D = preload("res://addons/pixel_head/masks/ref_hair_lighter.png")
+const _REF_HAIR_DARK: Texture2D = preload("res://addons/pixel_head/masks/ref_hair_dark.png")
+const _REF_FLOWER: Texture2D = preload("res://addons/pixel_head/masks/ref_flower.png")
+const _REF_FLOWER_WARM: Texture2D = preload("res://addons/pixel_head/masks/ref_flower_warm.png")
+const _REF_FLOWER_HOT: Texture2D = preload("res://addons/pixel_head/masks/ref_flower_hot.png")
+const _REF_EYE_DARK: Texture2D = preload("res://addons/pixel_head/masks/ref_eye_dark.png")
+const _REF_IRIS: Texture2D = preload("res://addons/pixel_head/masks/ref_iris.png")
+const _REF_PUPIL: Texture2D = preload("res://addons/pixel_head/masks/ref_pupil.png")
+const _REF_EYE_HI: Texture2D = preload("res://addons/pixel_head/masks/ref_eye_hi.png")
+const _REF_OUTLINE: Texture2D = preload("res://addons/pixel_head/masks/ref_outline.png")
+const _REFERENCE: Texture2D = preload("res://addons/pixel_head/reference.png")
+
 const _OUTLINES: Array[Texture2D] = [
 	preload("res://addons/pixel_head/masks/outline_0_0.png"),
 	preload("res://addons/pixel_head/masks/outline_0_1.png"),
@@ -195,19 +215,60 @@ func _process(delta: float) -> void:
 		blink()
 
 
-func _draw() -> void:
-	var face := gender_id
-	_draw_mask(_SHIRTS[face], CLOTHES_PALETTE.color_at(clothes_color_idx))
-	_draw_mask(_FACES[face], SKIN_PALETTE.color_at(skin_color_idx))
-	_draw_mask(_BLUSHES[face], BLUSH_PALETTE.color_at(blush_color_idx))
-	_draw_mask(_MOUTHS[face], MOUTH_PALETTE.color_at(mouth_color_idx))
-	_draw_mask(_HAIRS[hair_id], HAIR_PALETTE.color_at(hair_color_idx))
-	if is_blinking:
-		_draw_mask(_EYES_CLOSED, EYES_CLOSED_PALETTE.color_at(eyes_closed_color_idx))
+func build_image() -> Image:
+	var image := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+	var exact_skin := skin_color_idx == 0
+	var exact_hair := hair_id == 0 and hair_color_idx == 0
+	var exact_eyes := eyes_id == 0 and eye_color_idx == 0 and not is_blinking
+	_stamp(image, _REF_SKIN, SKIN_PALETTE.color_at(skin_color_idx) if not exact_skin else Color8(237, 194, 149))
+	_stamp(image, _REF_SKIN_LIGHT, SKIN_PALETTE.color_at(skin_color_idx) if not exact_skin else Color8(255, 218, 158))
+	_stamp(image, _REF_BLUSH, Color8(205, 119, 91))
+	_stamp(image, _REF_MOUTH, Color8(165, 71, 56))
+	_stamp(image, _REF_MOUTH_DARK, Color8(26, 22, 35))
+	var hair_colors: Array[Color] = [
+		Color8(130, 61, 41),
+		Color8(149, 73, 50),
+		Color8(183, 98, 52),
+		Color8(206, 139, 67),
+		Color8(91, 41, 26),
+	]
+	var hair_flat := HAIR_PALETTE.color_at(hair_color_idx)
+	var hair_masks: Array[Texture2D] = [
+		_REF_HAIR_MID, _REF_HAIR_MID2, _REF_HAIR_LIGHT, _REF_HAIR_LIGHTER, _REF_HAIR_DARK,
+	]
+	for shade in hair_masks.size():
+		_stamp(image, hair_masks[shade], hair_colors[shade] if exact_hair else hair_flat)
+	if gender_id == 0:
+		_stamp(image, _REF_FLOWER, Color8(224, 62, 153))
+		_stamp(image, _REF_FLOWER_WARM, Color8(255, 166, 86))
+		_stamp(image, _REF_FLOWER_HOT, Color8(255, 48, 40))
+	if exact_eyes:
+		_stamp(image, _REF_EYE_DARK, Color8(54, 53, 42))
+		_stamp(image, _REF_IRIS, Color8(240, 124, 58))
+		_stamp(image, _REF_PUPIL, Color8(39, 39, 39))
+		_stamp(image, _REF_EYE_HI, Color8(255, 249, 215))
+	elif is_blinking:
+		_stamp(image, _REF_PUPIL, Color8(39, 39, 39))
 	else:
-		_draw_mask(_EYE_WHITES[eyes_id], EYE_WHITE_PALETTE.color_at(eye_white_color_idx))
-		_draw_mask(_EYE_PUPILS[eyes_id], EYES_PALETTE.color_at(eye_color_idx))
-	_draw_mask(_OUTLINES[face * HAIR_COUNT + hair_id], OUTLINE_PALETTE.color_at(outline_color_idx))
+		_stamp(image, _REF_EYE_DARK, Color8(54, 53, 42))
+		_stamp(image, _REF_IRIS, EYES_PALETTE.color_at(eye_color_idx))
+		_stamp(image, _REF_PUPIL, Color8(39, 39, 39))
+		_stamp(image, _REF_EYE_HI, Color8(255, 249, 215))
+	_stamp(image, _REF_OUTLINE, Color8(41, 14, 9))
+	return image
+
+
+func _draw() -> void:
+	draw_texture(ImageTexture.create_from_image(build_image()), Vector2.ZERO)
+
+
+func _stamp(image: Image, mask: Texture2D, color: Color) -> void:
+	var src := mask.get_image()
+	for y in src.get_height():
+		for x in src.get_width():
+			if src.get_pixel(x, y).a <= 0.0:
+				continue
+			image.set_pixel(x, y, color)
 
 
 func _draw_mask(mask: Texture2D, color: Color) -> void:

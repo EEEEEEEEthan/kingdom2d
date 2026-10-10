@@ -10,6 +10,7 @@ func _init() -> void:
 		return
 	_assert_masks_are_white()
 	_assert_canvas_size()
+	_assert_reference_pixels()
 	var open_head := PixelHead.create(0, 2, 2, 1, 0, 0)
 	var closed_head := PixelHead.create(1, 3, 3, 0, 1, 3)
 	root.add_child(open_head)
@@ -42,7 +43,7 @@ func _assert_masks_are_white() -> void:
 
 
 func _assert_canvas_size() -> void:
-	var image := PixelHead._FACES[0].get_image()
+	var image := PixelHead._REF_OUTLINE.get_image()
 	if image.get_width() != PixelHead.SIZE or image.get_height() != PixelHead.SIZE:
 		push_error("脸遮罩不是 %d" % PixelHead.SIZE)
 		quit(1)
@@ -66,6 +67,25 @@ func _assert_color_is_independent() -> void:
 func _assert_blink(head: PixelHead) -> void:
 	head.blink()
 	assert(head.is_blinking)
+
+
+func _assert_reference_pixels() -> void:
+	var head := PixelHead.create(0, 0, 0, 0, 0, 0)
+	root.add_child(head)
+	var got := head.build_image()
+	var ref := PixelHead._REFERENCE.get_image()
+	var mismatch := 0
+	for y in PixelHead.SIZE:
+		for x in PixelHead.SIZE:
+			var pixel := got.get_pixel(x, y)
+			if pixel.a <= 0.0:
+				continue
+			var expect := ref.get_pixel(x, y)
+			if pixel.r8 != expect.r8 or pixel.g8 != expect.g8 or pixel.b8 != expect.b8:
+				mismatch += 1
+	if mismatch != 0:
+		push_error("和参考图像素不一致 %d" % mismatch)
+		quit(1)
 
 
 func _export_sheet(open_head: PixelHead, closed_head: PixelHead) -> void:
@@ -107,19 +127,13 @@ func _export_catalog() -> void:
 
 
 func _blit_head(sheet: Image, head: PixelHead, origin_x: int, origin_y: int, scale: int) -> void:
-	var face := head.gender_id
-	_blit_mask(sheet, PixelHead._SHIRTS[face], PixelHead.CLOTHES_PALETTE.color_at(head.clothes_color_idx), origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._FACES[face], PixelHead.SKIN_PALETTE.color_at(head.skin_color_idx), origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._BLUSHES[face], PixelHead.BLUSH_PALETTE.color_at(head.blush_color_idx), origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._MOUTHS[face], PixelHead.MOUTH_PALETTE.color_at(head.mouth_color_idx), origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._HAIRS[head.hair_id], PixelHead.HAIR_PALETTE.color_at(head.hair_color_idx), origin_x, origin_y, scale)
-	if head.is_blinking:
-		_blit_mask(sheet, PixelHead._EYES_CLOSED, PixelHead.EYES_CLOSED_PALETTE.color_at(head.eyes_closed_color_idx), origin_x, origin_y, scale)
-	else:
-		_blit_mask(sheet, PixelHead._EYE_WHITES[head.eyes_id], PixelHead.EYE_WHITE_PALETTE.color_at(head.eye_white_color_idx), origin_x, origin_y, scale)
-		_blit_mask(sheet, PixelHead._EYE_PUPILS[head.eyes_id], PixelHead.EYES_PALETTE.color_at(head.eye_color_idx), origin_x, origin_y, scale)
-	var outline := PixelHead._OUTLINES[face * PixelHead.HAIR_COUNT + head.hair_id]
-	_blit_mask(sheet, outline, PixelHead.OUTLINE_PALETTE.color_at(head.outline_color_idx), origin_x, origin_y, scale)
+	var image := head.build_image()
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel := image.get_pixel(x, y)
+			if pixel.a <= 0.0:
+				continue
+			sheet.fill_rect(Rect2i(origin_x + x * scale, origin_y + y * scale, scale, scale), pixel)
 
 
 func _blit_mask(sheet: Image, mask: Texture2D, color: Color, origin_x: int, origin_y: int, scale: int) -> void:
