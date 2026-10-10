@@ -19,6 +19,10 @@ class Mover:
 
 
 func _init() -> void:
+	call_deferred("_go")
+
+
+func _go() -> void:
 	var failed := _run()
 	quit(failed)
 
@@ -33,6 +37,7 @@ func _run() -> int:
 	failed += _check("班次外不开新单元", _shift_gate())
 	failed += _check("帐篷下单后三次交付变成小木屋", _tent_upgrade_node())
 	failed += _check("开局没有预置居民", _no_preset_residents())
+	failed += _check("旧档里的无家小人读回来会被丢掉", _saved_demo_people_do_not_return())
 	print("失败 %d" % failed)
 	return 1 if failed else 0
 
@@ -185,8 +190,44 @@ func _no_preset_residents() -> bool:
 	root.add_child(game)
 	game.new_game()
 	var empty: bool = game.character_manager.characters.is_empty()
+	var visible := 0
+	for child in game.character_manager.get_children():
+		if child is Character:
+			visible += 1
 	game.free()
-	return empty
+	return empty and visible == 0
+
+
+func _saved_demo_people_do_not_return() -> bool:
+	if FileAccess.file_exists(Game.SAVE_FILE_PATH):
+		DirAccess.open("user://").remove(Game.SAVE_FILE_PATH.get_file())
+	var game := (load("res://game/game.tscn") as PackedScene).instantiate() as Game
+	root.add_child(game)
+	game.new_game()
+	for _index in 8:
+		game.character_manager.create_character()
+	game.save_game()
+	game.free()
+	var loaded := (load("res://game/game.tscn") as PackedScene).instantiate() as Game
+	root.add_child(loaded)
+	var demo_gone: bool = loaded.character_manager.characters.is_empty()
+	var visible := 0
+	for child in loaded.character_manager.get_children():
+		if child is Character:
+			visible += 1
+	var tent := StructureConfig.tent.instantiate() as WorkSite
+	loaded.structure_manager.add_structure(tent, 20)
+	tent.on_player_placed(loaded)
+	var from_tent: bool = loaded.character_manager.characters.size() == 1
+	loaded.save_game()
+	loaded.free()
+	var again := (load("res://game/game.tscn") as PackedScene).instantiate() as Game
+	root.add_child(again)
+	var kept: bool = again.character_manager.characters.size() == 1
+	again.free()
+	if FileAccess.file_exists(Game.SAVE_FILE_PATH):
+		DirAccess.open("user://").remove(Game.SAVE_FILE_PATH.get_file())
+	return demo_gone and visible == 0 and from_tent and kept
 
 
 func _tent_upgrade_node() -> bool:

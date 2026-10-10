@@ -52,6 +52,11 @@ func _ready() -> void:
 		load_game()
 	else:
 		new_game()
+	var visible_people := 0
+	for child in character_manager.get_children():
+		if child is Character:
+			visible_people += 1
+	print("开局居民 %d 场景小人 %d" % [character_manager.characters.size(), visible_people])
 
 
 func advance_debug_time_by_hours(hours: float = 1.0) -> void:

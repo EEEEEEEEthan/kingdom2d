@@ -41,4 +41,8 @@ func deserialize(data: Dictionary) -> void:
 	for d in data.get(_KEY_CHARACTERS, []):
 		var chr = _instantiate_character()
 		chr.deserialize(d)
+		# 旧档里的 demo 小人没有住房。没有帐篷的人不读回来。
+		if chr.home_structure_id <= 0:
+			chr.free()
+			continue
 		characters[chr.id] = chr
