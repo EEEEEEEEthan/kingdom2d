@@ -3,14 +3,42 @@ extends PopupPanel
 var _game: Game
 var _structure_id := 0
 var _people_signature := ""
+var _info: Label
+var _upgrade: Button
+var _people: VBoxContainer
 
 
 func _ready() -> void:
 	visible = false
-	var panel := StyleBoxFlat.new()
-	panel.bg_color = Color(0.561, 0.337, 0.231, 1)
-	panel.set_content_margin_all(6)
-	add_theme_stylebox_override("panel", panel)
+	borderless = true
+	always_on_top = false
+	transparent = false
+	unfocusable = true
+	visibility_changed.connect(_on_visibility_changed)
+	_info = %Info
+	_upgrade = %Upgrade
+	_people = %People
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.561, 0.337, 0.231, 1)
+	style.set_content_margin_all(6)
+	add_theme_stylebox_override("panel", style)
+	var bar := HBoxContainer.new()
+	bar.name = "TitleBar"
+	bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	var title_label := Label.new()
+	title_label.name = "TitleLabel"
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.text = "建筑"
+	bar.add_child(title_label)
+	var close_button := Button.new()
+	close_button.text = "×"
+	close_button.pressed.connect(hide)
+	bar.add_child(close_button)
+	bar.gui_input.connect(_on_title_gui_input)
+	bar.z_index = 100
+	bar.top_level = true
+	bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	add_child(bar)
 
 
 func open_for(game: Game, structure_id: int) -> void:
@@ -29,12 +57,25 @@ func open_near_mouse() -> void:
 	pos.x = clampi(pos.x, usable.position.x, usable.position.x + maxi(0, usable.size.x - window_size.x))
 	pos.y = clampi(pos.y, usable.position.y, usable.position.y + maxi(0, usable.size.y - window_size.y))
 	current_screen = screen
+	always_on_top = false
+	transient = false
 	popup(Rect2i(pos, size))
+	_fit_client()
+	_raise_above_game()
 
 
 func _process(_delta: float) -> void:
-	if visible:
-		_refresh()
+	if not visible:
+		return
+	var bar := get_node_or_null("TitleBar") as Control
+	if bar:
+		var logical := Vector2(size) / content_scale_factor
+		bar.position = Vector2(4, 2)
+		bar.size = Vector2(logical.x - 8, 18)
+	var margin := get_node_or_null("Margin") as Control
+	if margin:
+		margin.offset_top = 40
+	_refresh()
 
 
 func _structure() -> Structure:
@@ -49,17 +90,20 @@ func _refresh() -> void:
 		hide()
 		return
 	title = structure.config.name
-	%Info.text = structure.inspect_text() if structure is LoopStructure else structure.config.name
+	var title_label := get_node_or_null("TitleBar/TitleLabel") as Label
+	if title_label:
+		title_label.text = structure.config.name
+	_info.text = structure.inspect_text() if structure is LoopStructure else structure.config.name
 	var loop := structure as LoopStructure
-	%Upgrade.visible = loop != null and (loop.kind == LoopStructure.Kind.WAREHOUSE or loop.kind == LoopStructure.Kind.LUMBER)
-	if %Upgrade.visible:
-		%Upgrade.text = "升级（%d 原木）" % LoopStructure.WAREHOUSE_UPGRADE_COST
-		%Upgrade.disabled = loop.logs < LoopStructure.WAREHOUSE_UPGRADE_COST
+	_upgrade.visible = loop != null and (loop.kind == LoopStructure.Kind.WAREHOUSE or loop.kind == LoopStructure.Kind.LUMBER)
+	if _upgrade.visible:
+		_upgrade.text = "升级（%d 原木）" % LoopStructure.WAREHOUSE_UPGRADE_COST
+		_upgrade.disabled = loop.logs < LoopStructure.WAREHOUSE_UPGRADE_COST
 	_rebuild_people(loop)
 
 
 func _rebuild_people(loop: LoopStructure) -> void:
-	var box := %People
+	var box := _people
 	if loop == null:
 		if _people_signature != "":
 			_people_signature = ""
@@ -127,6 +171,69 @@ func _duty_name(character: Character) -> String:
 		Character.Duty.BUILDER:
 			return "建筑工"
 	return "空闲"
+
+
+func _fit_client() -> void:
+	var margin := get_node_or_null("Margin") as Control
+	if margin:
+		margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+		margin.offset_left = 8
+		margin.offset_top = 36
+		margin.offset_right = -8
+		margin.offset_bottom = -8
+
+
+func _on_title_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and (event as InputEventMouseButton).pressed:
+		_drag_window()
+
+
+func _drag_window() -> void:
+	var offset := DisplayServer.mouse_get_position() - Vector2i(position)
+	while Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		position = DisplayServer.mouse_get_position() - offset
+		await get_tree().process_frame
+
+
+func _game_window() -> Window:
+	var parent_node := get_parent()
+	if parent_node == null:
+		return null
+	return parent_node.get_node_or_null("GameWindow") as Window
+
+
+func _raise_above_game() -> void:
+	var game_window := _game_window()
+	if game_window:
+		game_window.always_on_top = false
+		game_window.unfocusable = false
+		game_window.hide()
+		await get_tree().process_frame
+		game_window.show()
+	transient = false
+	unfocusable = true
+	var id := get_window_id()
+	await get_tree().process_frame
+	always_on_top = true
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_ALWAYS_ON_TOP, true, id)
+	for _i in 4:
+		DisplayServer.window_move_to_foreground(id)
+		await get_tree().process_frame
+
+
+func _on_visibility_changed() -> void:
+	if not visible:
+		_restore_game_top()
+
+
+func _restore_game_top() -> void:
+	var settings := get_parent().get_node_or_null("ControlWindow") as Window
+	if settings and settings.visible:
+		return
+	var game_window := _game_window()
+	if game_window:
+		game_window.unfocusable = true
+		game_window.always_on_top = true
 
 
 func _on_upgrade_pressed() -> void:
