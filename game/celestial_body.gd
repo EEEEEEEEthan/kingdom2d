@@ -17,7 +17,6 @@ var _game: Game:
 
 
 func _ready() -> void:
-	light_mask = 0
 	centered = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_update_visual()
@@ -28,7 +27,6 @@ func _process(_delta: float) -> void:
 
 
 func _update_visual() -> void:
-	modulate = owner.get_node("CanvasModulate").color
 	var day_fraction := _game.game_time.day_fraction
 	var sun_height := _sun_height_from_day_fraction(day_fraction)
 	if sun_height > 0.0:
