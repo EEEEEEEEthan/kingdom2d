@@ -9,8 +9,8 @@ func _init() -> void:
 		quit(1)
 		return
 	_assert_masks_are_white()
-	var open_head := PixelHead.create(0, 2, PixelHead.HAIR_COLORS[2], 1, PixelHead.EYE_COLORS[0], PixelHead.SKIN_COLORS[0])
-	var closed_head := PixelHead.create(1, 3, PixelHead.HAIR_COLORS[3], 0, PixelHead.EYE_COLORS[1], PixelHead.SKIN_COLORS[3])
+	var open_head := PixelHead.create(0, 2, 2, 1, 0, 0)
+	var closed_head := PixelHead.create(1, 3, 3, 0, 1, 3)
 	root.add_child(open_head)
 	root.add_child(closed_head)
 	_assert_parts(open_head)
@@ -48,10 +48,11 @@ func _assert_parts(head: PixelHead) -> void:
 
 
 func _assert_color_is_independent() -> void:
-	var blonde := PixelHead.create(0, 0, 6, 0, 9, 0)
-	var red := PixelHead.create(0, 0, 7, 0, 9, 0)
+	var blonde := PixelHead.create(0, 0, 2, 0, 0, 0)
+	var red := PixelHead.create(0, 0, 3, 0, 0, 0)
 	assert(blonde.hair_id == red.hair_id)
-	assert(PixelHead.PALETTE[blonde.hair_color_idx] != PixelHead.PALETTE[red.hair_color_idx])
+	assert(PixelHead.HAIR_PALETTE.color_at(blonde.hair_color_idx) != PixelHead.HAIR_PALETTE.color_at(red.hair_color_idx))
+	assert(PixelHead.SKIN_PALETTE != PixelHead.HAIR_PALETTE)
 
 
 func _assert_blink(head: PixelHead) -> void:
@@ -81,10 +82,10 @@ func _export_catalog() -> void:
 			var head := PixelHead.create(
 				eyes_id % PixelHead.GENDER_COUNT,
 				hair_id,
-				PixelHead.HAIR_COLORS[hair_id],
+				hair_id % PixelHead.HAIR_PALETTE.color_count(),
 				eyes_id,
-				PixelHead.EYE_COLORS[eyes_id % PixelHead.EYE_COLORS.size()],
-				PixelHead.SKIN_COLORS[hair_id % PixelHead.SKIN_COLORS.size()],
+				eyes_id % PixelHead.EYES_PALETTE.color_count(),
+				hair_id % PixelHead.SKIN_PALETTE.color_count(),
 			)
 			root.add_child(head)
 			if eyes_id == rows - 1:
@@ -98,15 +99,15 @@ func _export_catalog() -> void:
 
 func _blit_head(sheet: Image, head: PixelHead, origin_x: int, origin_y: int, scale: int) -> void:
 	var face := head.gender_id
-	_blit_mask(sheet, PixelHead._FACES[face], PixelHead.PALETTE[head.skin_color_idx], origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._BLUSHES[face], PixelHead.PALETTE[head.mouth_color_idx], origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._MOUTHS[face], PixelHead.PALETTE[head.mouth_color_idx], origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._HAIRS[head.hair_id], PixelHead.PALETTE[head.hair_color_idx], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._FACES[face], PixelHead.SKIN_PALETTE.color_at(head.skin_color_idx), origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._BLUSHES[face], PixelHead.BLUSH_PALETTE.color_at(head.blush_color_idx), origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._MOUTHS[face], PixelHead.MOUTH_PALETTE.color_at(head.mouth_color_idx), origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._HAIRS[head.hair_id], PixelHead.HAIR_PALETTE.color_at(head.hair_color_idx), origin_x, origin_y, scale)
 	if head.is_blinking:
-		_blit_mask(sheet, PixelHead._EYES_CLOSED, PixelHead.PALETTE[9], origin_x, origin_y, scale)
+		_blit_mask(sheet, PixelHead._EYES_CLOSED, PixelHead.EYES_CLOSED_PALETTE.color_at(head.eyes_closed_color_idx), origin_x, origin_y, scale)
 		return
-	_blit_mask(sheet, PixelHead._EYE_WHITES[head.eyes_id], PixelHead.PALETTE[10], origin_x, origin_y, scale)
-	_blit_mask(sheet, PixelHead._EYE_PUPILS[head.eyes_id], PixelHead.PALETTE[head.eye_color_idx], origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._EYE_WHITES[head.eyes_id], PixelHead.EYE_WHITE_PALETTE.color_at(head.eye_white_color_idx), origin_x, origin_y, scale)
+	_blit_mask(sheet, PixelHead._EYE_PUPILS[head.eyes_id], PixelHead.EYES_PALETTE.color_at(head.eye_color_idx), origin_x, origin_y, scale)
 
 
 func _blit_mask(sheet: Image, mask: Texture2D, color: Color, origin_x: int, origin_y: int, scale: int) -> void:

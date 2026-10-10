@@ -20,9 +20,9 @@ var id: int
 var ai_task_stack := CharacterAiTaskStack.new()
 var gender_id := 0
 var hair_id := 0
-var hair_color_idx := 4
+var hair_color_idx := 0
 var eyes_id := 0
-var eye_color_idx := 9
+var eye_color_idx := 0
 var skin_color_idx := 0
 var head: PixelHead
 
@@ -80,9 +80,9 @@ func deserialize(data: Dictionary) -> void:
 	set_appearance(
 		data.get(_KEY_GENDER, 0),
 		data.get(_KEY_HAIR, 0),
-		data.get(_KEY_HAIR_COLOR, 4),
+		data.get(_KEY_HAIR_COLOR, 0),
 		data.get(_KEY_EYES, 0),
-		data.get(_KEY_EYE_COLOR, 9),
+		data.get(_KEY_EYE_COLOR, 0),
 		data.get(_KEY_SKIN, 0),
 	)
 

@@ -8,24 +8,13 @@ const SIZE := 8
 const GENDER_COUNT := 2
 const HAIR_COUNT := 5
 const EYES_COUNT := 4
-const PALETTE: Array[Color] = [
-	Color8(255, 224, 206),
-	Color8(238, 195, 154),
-	Color8(217, 160, 102),
-	Color8(196, 140, 100),
-	Color8(69, 42, 40),
-	Color8(138, 111, 48),
-	Color8(251, 242, 54),
-	Color8(172, 50, 50),
-	Color8(40, 28, 22),
-	Color8(34, 32, 52),
-	Color8(255, 255, 255),
-	Color8(217, 87, 99),
-	Color8(75, 105, 47),
-]
-const SKIN_COLORS: Array[int] = [0, 1, 2, 3]
-const HAIR_COLORS: Array[int] = [4, 5, 6, 7, 8]
-const EYE_COLORS: Array[int] = [9, 5, 12]
+const SKIN_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/skin.tres")
+const HAIR_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/hair.tres")
+const EYES_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/eyes.tres")
+const MOUTH_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/mouth.tres")
+const BLUSH_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/blush.tres")
+const EYE_WHITE_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/eye_white.tres")
+const EYES_CLOSED_PALETTE: PixelHeadPalette = preload("res://addons/pixel_head/palettes/eyes_closed.tres")
 
 const _BLINK_GAP_MIN := 2.2
 const _BLINK_GAP_MAX := 5.0
@@ -76,21 +65,33 @@ const _EYES_CLOSED: Texture2D = preload("res://addons/pixel_head/masks/eyes_clos
 	set(value):
 		eyes_id = _wrap(value, EYES_COUNT)
 		queue_redraw()
-@export var hair_color_idx := 4:
+@export var hair_color_idx := 0:
 	set(value):
-		hair_color_idx = _wrap(value, PALETTE.size())
+		hair_color_idx = _wrap(value, HAIR_PALETTE.color_count())
 		queue_redraw()
-@export var eye_color_idx := 9:
+@export var eye_color_idx := 0:
 	set(value):
-		eye_color_idx = _wrap(value, PALETTE.size())
+		eye_color_idx = _wrap(value, EYES_PALETTE.color_count())
 		queue_redraw()
 @export var skin_color_idx := 0:
 	set(value):
-		skin_color_idx = _wrap(value, PALETTE.size())
+		skin_color_idx = _wrap(value, SKIN_PALETTE.color_count())
 		queue_redraw()
-@export var mouth_color_idx := 11:
+@export var mouth_color_idx := 0:
 	set(value):
-		mouth_color_idx = _wrap(value, PALETTE.size())
+		mouth_color_idx = _wrap(value, MOUTH_PALETTE.color_count())
+		queue_redraw()
+@export var blush_color_idx := 0:
+	set(value):
+		blush_color_idx = _wrap(value, BLUSH_PALETTE.color_count())
+		queue_redraw()
+@export var eye_white_color_idx := 0:
+	set(value):
+		eye_white_color_idx = _wrap(value, EYE_WHITE_PALETTE.color_count())
+		queue_redraw()
+@export var eyes_closed_color_idx := 0:
+	set(value):
+		eyes_closed_color_idx = _wrap(value, EYES_CLOSED_PALETTE.color_count())
 		queue_redraw()
 
 var is_blinking := false
@@ -168,15 +169,15 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var face := gender_id
-	_draw_mask(_FACES[face], PALETTE[skin_color_idx])
-	_draw_mask(_BLUSHES[face], PALETTE[mouth_color_idx])
-	_draw_mask(_MOUTHS[face], PALETTE[mouth_color_idx])
-	_draw_mask(_HAIRS[hair_id], PALETTE[hair_color_idx])
+	_draw_mask(_FACES[face], SKIN_PALETTE.color_at(skin_color_idx))
+	_draw_mask(_BLUSHES[face], BLUSH_PALETTE.color_at(blush_color_idx))
+	_draw_mask(_MOUTHS[face], MOUTH_PALETTE.color_at(mouth_color_idx))
+	_draw_mask(_HAIRS[hair_id], HAIR_PALETTE.color_at(hair_color_idx))
 	if is_blinking:
-		_draw_mask(_EYES_CLOSED, PALETTE[9])
+		_draw_mask(_EYES_CLOSED, EYES_CLOSED_PALETTE.color_at(eyes_closed_color_idx))
 		return
-	_draw_mask(_EYE_WHITES[eyes_id], PALETTE[10])
-	_draw_mask(_EYE_PUPILS[eyes_id], PALETTE[eye_color_idx])
+	_draw_mask(_EYE_WHITES[eyes_id], EYE_WHITE_PALETTE.color_at(eye_white_color_idx))
+	_draw_mask(_EYE_PUPILS[eyes_id], EYES_PALETTE.color_at(eye_color_idx))
 
 
 func _draw_mask(mask: Texture2D, color: Color) -> void:
