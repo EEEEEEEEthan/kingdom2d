@@ -2,8 +2,8 @@
 setlocal
 cd /d "%~dp0"
 
-set "version=4.7.2"
-set "flavor=stable"
+set "version=4.8"
+set "flavor=dev7"
 set "engineDir=%USERPROFILE%\godot\%version%-%flavor%"
 set "engineExe=%engineDir%\Godot_v%version%-%flavor%_win64.exe"
 

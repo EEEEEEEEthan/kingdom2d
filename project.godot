@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Kingdom2D"
 run/main_scene="uid://dkui3dlb4vu1c"
-config/features=PackedStringArray("4.7")
+config/features=PackedStringArray("4.8")
 
 [autoload]
 
@@ -40,7 +40,7 @@ movie_writer/disable_vsync=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_editable_texture/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_editable_texture/plugin.cfg", "res://addons/godot_pull_requests/plugin.cfg")
 
 [gui]
 
