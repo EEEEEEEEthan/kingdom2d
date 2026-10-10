@@ -4,7 +4,7 @@ extends SceneTree
 
 
 func _init() -> void:
-	if load("res://game/characters/character.gd") == null or load("res://addons/pixel_head/plugin.gd") == null:
+	if load("res://addons/pixel_head/plugin.gd") == null:
 		push_error("脚本没编过")
 		quit(1)
 		return
