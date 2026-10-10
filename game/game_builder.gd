@@ -45,6 +45,12 @@ static func _spawn_initial_characters(game) -> void:
 	var spawn_count := mini(_CHARACTER_SPAWN_COUNT, candidate_cell_indices.size())
 	for index in spawn_count:
 		var character := character_manager.create_character()
+		character.set_appearance(
+			randi() % PixelHead.GENDER_COUNT,
+			randi() % PixelHead.HAIR_COUNT,
+			randi() % PixelHead.EYES_COUNT,
+			randi() % PixelHead.SKIN_COUNT,
+		)
 		var cell_index := candidate_cell_indices[index]
 		character.position.x = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE
 

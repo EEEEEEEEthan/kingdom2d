@@ -4,6 +4,10 @@ class_name Character
 const _KEY_ID = 1
 const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
+const _KEY_GENDER = 4
+const _KEY_HAIR = 5
+const _KEY_EYES = 6
+const _KEY_SKIN = 7
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
@@ -12,12 +16,27 @@ const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 var id: int
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
 var ai_task_stack := CharacterAiTaskStack.new()
+var gender_id := 0
+var hair_id := 0
+var eyes_id := 0
+var skin_id := 0
+var head: PixelHead
 
 var _ai_context: CharacterAiContext
 
 func _ready() -> void:
 	_get_ai_context()
+	_ensure_head()
 	set_process(true)
+
+
+func set_appearance(next_gender_id: int, next_hair_id: int, next_eyes_id: int, next_skin_id: int) -> void:
+	gender_id = next_gender_id
+	hair_id = next_hair_id
+	eyes_id = next_eyes_id
+	skin_id = next_skin_id
+	if is_node_ready():
+		_ensure_head()
 
 func _process(delta_seconds: float) -> void:
 	ai_task_stack.tick(delta_seconds, _get_ai_context())
@@ -45,13 +64,32 @@ func deserialize(data: Dictionary) -> void:
 	id = data[_KEY_ID]
 	position = Vector2(data[_KEY_POSITION], 0)
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
+	set_appearance(
+		data.get(_KEY_GENDER, 0),
+		data.get(_KEY_HAIR, 0),
+		data.get(_KEY_EYES, 0),
+		data.get(_KEY_SKIN, 0),
+	)
 
 func serialize() -> Dictionary:
 	return {
 		_KEY_ID: id,
 		_KEY_POSITION: position.x,
 		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
+		_KEY_GENDER: gender_id,
+		_KEY_HAIR: hair_id,
+		_KEY_EYES: eyes_id,
+		_KEY_SKIN: skin_id,
 	}
+
+
+func _ensure_head() -> void:
+	if head == null or not is_instance_valid(head):
+		head = PixelHead.create(gender_id, hair_id, eyes_id, skin_id)
+		head.position = Vector2(0, -12)
+		add_child(head)
+	else:
+		head.apply(gender_id, hair_id, eyes_id, skin_id)
 
 func _get_ai_context() -> CharacterAiContext:
 	if not _ai_context:
