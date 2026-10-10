@@ -226,7 +226,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dragging = false
 	elif event is InputEventMouseMotion and _dragging:
 		var mouse := DisplayServer.mouse_get_position()
-		_game_window.position = Vector2i(mouse.x - _drag_mouse_offset.x, _game_window.position.y)
+		var x := mouse.x - _drag_mouse_offset.x
+		_game_window.position = Vector2i(_game_window.clamp_horizontal_position(x), _game_window.position.y)
 "
 
 [node name="GameWindow" type="Window" unique_id=2073799186]

@@ -63,6 +63,22 @@ func compute_docked_global_position() -> Vector2i:
 	)
 
 
+func clamp_horizontal_position(x: int) -> int:
+	var screen := current_screen
+	return clamp_x_to_screen(
+		x,
+		DisplayServer.screen_get_position(screen).x,
+		DisplayServer.screen_get_size(screen).x,
+		size.x,
+	)
+
+
+static func clamp_x_to_screen(x: int, screen_x: int, screen_width: int, window_width: int) -> int:
+	if screen_width <= window_width:
+		return screen_x
+	return clampi(x, screen_x, screen_x + screen_width - window_width)
+
+
 func compute_hidden_below_global_position() -> Vector2i:
 	var docked_global_position := compute_docked_global_position()
 	var screen := current_screen
