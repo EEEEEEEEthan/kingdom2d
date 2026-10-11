@@ -79,6 +79,8 @@ const _REF_OUTLINE: Texture2D = preload("res://addons/pixel_head/masks/ref_outli
 const _REFERENCE: Texture2D = preload("res://addons/pixel_head/reference.png")
 const _MALE_REFERENCE: Texture2D = preload("res://addons/pixel_head/male_reference.png")
 const _MALE_REFERENCE_B: Texture2D = preload("res://addons/pixel_head/male_reference_b.png")
+const _FEMALE_REFERENCE_B: Texture2D = preload("res://addons/pixel_head/female_reference_b.png")
+const _FEMALE_B: Texture2D = preload("res://addons/pixel_head/parts/female_1.png")
 const _FEMALE_SKIN: Texture2D = preload("res://addons/pixel_head/parts/female_skin.png")
 const _FEMALE_SKIN_LIGHT: Texture2D = preload("res://addons/pixel_head/parts/female_skin_light.png")
 const _FEMALE_BLUSH: Texture2D = preload("res://addons/pixel_head/parts/female_blush.png")
@@ -244,7 +246,9 @@ func _process(delta: float) -> void:
 
 func build_image() -> Image:
 	var image := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
-	if gender_id == 0:
+	if gender_id == 0 and hair_id == 1:
+		_blit_part(image, _FEMALE_B)
+	elif gender_id == 0:
 		for part in [
 			_FEMALE_SKIN, _FEMALE_SKIN_LIGHT, _FEMALE_BLUSH, _FEMALE_MOUTH, _FEMALE_MOUTH_DARK,
 			_FEMALE_HAIR_MID, _FEMALE_HAIR_MID2, _FEMALE_HAIR_LIGHT, _FEMALE_HAIR_LIGHTER, _FEMALE_HAIR_DARK,
