@@ -190,6 +190,7 @@ script = ExtResource("1_dxrkv")
 unique_name_in_owner = true
 
 [node name="CelestialLayer" type="CanvasLayer" parent="." unique_id=466522127]
+unique_name_in_owner = true
 layer = -1
 
 [node name="Sky" type="Sprite2D" parent="CelestialLayer" unique_id=591946890]

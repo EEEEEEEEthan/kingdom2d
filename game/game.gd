@@ -44,6 +44,7 @@ var character_manager: CharacterManager:
 		if not is_node_ready():
 			await ready
 		%Terrain.view_height = value
+		%CelestialLayer.offset = Vector2(0, %Terrain.celestial_drop_y(value))
 
 func _ready() -> void:
 	if FileAccess.file_exists(SAVE_FILE_PATH):
