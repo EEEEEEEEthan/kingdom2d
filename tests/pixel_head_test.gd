@@ -1,6 +1,6 @@
 extends SceneTree
 
-## 遮罩是纯白，颜色只来自色板下标。
+## 彩色部位直接叠。女性默认组合对齐参考图。
 
 
 func _init() -> void:
@@ -8,7 +8,7 @@ func _init() -> void:
 		push_error("脚本没编过")
 		quit(1)
 		return
-	_assert_masks_are_white()
+	_assert_parts_are_colored()
 	_assert_canvas_size()
 	_assert_reference_pixels()
 	var open_head := PixelHead.create(0, 2, 2, 1, 0, 0)
@@ -24,8 +24,8 @@ func _init() -> void:
 	quit(0)
 
 
-func _assert_masks_are_white() -> void:
-	var image := PixelHead._HAIRS[0].get_image()
+func _assert_parts_are_colored() -> void:
+	var image := PixelHead._FEMALE_HAIR_MID.get_image()
 	var found := false
 	for y in image.get_height():
 		for x in image.get_width():
@@ -33,12 +33,12 @@ func _assert_masks_are_white() -> void:
 			if pixel.a <= 0.0:
 				continue
 			found = true
-			if pixel.r < 0.99 or pixel.g < 0.99 or pixel.b < 0.99:
-				push_error("发型遮罩不是纯白")
+			if pixel.r > 0.99 and pixel.g > 0.99 and pixel.b > 0.99:
+				push_error("头发部位不该是纯白遮罩")
 				quit(1)
 				return
 	if not found:
-		push_error("发型遮罩是空的")
+		push_error("头发部位是空的")
 		quit(1)
 
 
@@ -57,11 +57,30 @@ func _assert_parts(head: PixelHead) -> void:
 
 
 func _assert_color_is_independent() -> void:
-	var blonde := PixelHead.create(0, 0, 2, 0, 0, 0)
-	var red := PixelHead.create(0, 0, 3, 0, 0, 0)
-	assert(blonde.hair_id == red.hair_id)
-	assert(PixelHead.HAIR_PALETTE.color_at(blonde.hair_color_idx) != PixelHead.HAIR_PALETTE.color_at(red.hair_color_idx))
-	assert(PixelHead.SKIN_PALETTE != PixelHead.HAIR_PALETTE)
+	var female := PixelHead.create(0, 0, 0, 0, 0, 0)
+	var male_a := PixelHead.create(1, 0, 0, 0, 0, 0)
+	var male_b := PixelHead.create(1, 2, 0, 0, 0, 0)
+	root.add_child(female)
+	root.add_child(male_a)
+	root.add_child(male_b)
+	var female_image := female.build_image()
+	var male_image := male_a.build_image()
+	var other_image := male_b.build_image()
+	if _count_diff(female_image, male_image) == 0:
+		push_error("男性和女性头像一样")
+		quit(1)
+	if _count_diff(male_image, other_image) == 0:
+		push_error("两款男性头发一样")
+		quit(1)
+
+
+func _count_diff(left: Image, right: Image) -> int:
+	var diff := 0
+	for y in left.get_height():
+		for x in left.get_width():
+			if left.get_pixel(x, y) != right.get_pixel(x, y):
+				diff += 1
+	return diff
 
 
 func _assert_blink(head: PixelHead) -> void:
