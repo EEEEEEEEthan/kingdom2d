@@ -64,6 +64,7 @@ func _try_place() -> void:
 	structure_manager.add_structure(_preview, _preview.cell_index)
 	if _structure_config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		_game.spawn_resident_at_cell(_preview.cell_index)
+	_game.save_game()
 	_preview.play_bounce()
 	queue_free()
 
