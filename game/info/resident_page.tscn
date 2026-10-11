@@ -23,7 +23,7 @@ theme_override_constants/separation = 4
 [node name="IdentityLabel" type="Label" parent="Rows"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "阿禾，采集者"
+text = "Aldric Ashford，采集者"
 
 [node name="ActivityLabel" type="Label" parent="Rows"]
 unique_name_in_owner = true

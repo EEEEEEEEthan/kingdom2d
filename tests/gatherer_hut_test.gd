@@ -13,6 +13,7 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	game._clear()
+	await process_frame
 	load("res://game/game_builder.gd").build(game)
 	var hut_cell := -1
 	var bush_cell := -1
@@ -117,8 +118,12 @@ func _run() -> void:
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	if page.get_node("%Worker0").text != "居民 %s" % gatherer.id:
-		push_error("小屋窗口应列出工人")
+	if page.get_node("%Worker0").text != gatherer.display_name():
+		push_error("小屋窗口应列出工人姓名，实际 %s" % page.get_node("%Worker0").text)
+		quit(1)
+		return
+	if page.get_node("%Worker1").text != "空位":
+		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
 		quit(1)
 		return
 	browser.go_back()
