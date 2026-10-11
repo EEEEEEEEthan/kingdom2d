@@ -28,6 +28,7 @@ var _schedule_sleeping := false
 func _ready() -> void:
 	_get_ai_context()
 	set_process(true)
+	HoverOutline.attach(self)
 
 func _process(delta_seconds: float) -> void:
 	_apply_daily_schedule()

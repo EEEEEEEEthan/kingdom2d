@@ -54,6 +54,12 @@ func serialize() -> Dictionary:
 func _serialize() -> Dictionary:
 	return {}
 
+func _ready() -> void:
+	if Engine.is_editor_hint() or self is Plant:
+		return
+	HoverOutline.attach(self)
+
+
 func _on_cell_index_updated() -> void:
 	pass
 
