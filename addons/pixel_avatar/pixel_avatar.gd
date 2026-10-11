@@ -1,24 +1,46 @@
 @tool
-extends Node2D
+extends Control
 class_name PixelAvatar
 
 ## 脸、头发、眼睛、胡子、嘴、身体叠在同一张 atlas 上。
 ## 每格固定 16×16。列数是贴图宽度除以 16 的整数，下标超出后取模。
+## 六个部位在检查器里用滑条调。
 
 const CELL := 16
 const PART_COUNT := 6
 const PART_NAMES: PackedStringArray = ["脸", "头发", "眼睛", "胡子", "嘴", "身体"]
-const _DRAW_ORDER: Array[int] = [1, 2, 3, 4, 5, 0]
+const _DRAW_ORDER: Array[int] = [5, 0, 1, 2, 3, 4]
 
 @export var atlas: Texture2D = preload("res://addons/pixel_avatar/atlas.png"):
 	set(value):
 		atlas = value
 		_refresh()
+		notify_property_list_changed()
 
-var part_index: Array[int] = [0, 0, 0, 0, 0, 0]
-
-var _sprites: Array[Sprite2D] = []
-var _sliders: Array[HSlider] = []
+@export var 脸 := 0:
+	set(value):
+		脸 = _wrap(value)
+		queue_redraw()
+@export var 头发 := 0:
+	set(value):
+		头发 = _wrap(value)
+		queue_redraw()
+@export var 眼睛 := 0:
+	set(value):
+		眼睛 = _wrap(value)
+		queue_redraw()
+@export var 胡子 := 0:
+	set(value):
+		胡子 = _wrap(value)
+		queue_redraw()
+@export var 嘴 := 0:
+	set(value):
+		嘴 = _wrap(value)
+		queue_redraw()
+@export var 身体 := 0:
+	set(value):
+		身体 = _wrap(value)
+		queue_redraw()
 
 
 func variant_count() -> int:
@@ -31,87 +53,56 @@ func max_part_index() -> int:
 	return variant_count() - 1
 
 
-func set_part_index(part: int, value: int) -> void:
-	part_index[part] = posmod(value, variant_count())
-	_apply_sprite(part)
-	if part < _sliders.size():
-		_sliders[part].max_value = max_part_index()
-		_sliders[part].set_value_no_signal(part_index[part])
+func part_index(part: int) -> int:
+	match part:
+		0:
+			return 脸
+		1:
+			return 头发
+		2:
+			return 眼睛
+		3:
+			return 胡子
+		4:
+			return 嘴
+		_:
+			return 身体
 
 
-func _init() -> void:
-	_ensure_nodes()
-	_refresh()
+func part_region(part: int) -> Rect2:
+	return Rect2(part_index(part) * CELL, part * CELL, CELL, CELL)
 
 
-func _ensure_nodes() -> void:
-	if _sprites.size() == PART_COUNT and _sliders.size() == PART_COUNT:
-		return
-	var parts := get_node_or_null(^"Parts") as Node2D
-	if parts == null:
-		parts = Node2D.new()
-		parts.name = "Parts"
-		parts.scale = Vector2(6, 6)
-		parts.position = Vector2(56, 56)
-		add_child(parts)
-	_sprites.clear()
-	for part in PART_COUNT:
-		var sprite := parts.get_node_or_null(NodePath(PART_NAMES[part])) as Sprite2D
-		if sprite == null:
-			sprite = Sprite2D.new()
-			sprite.name = PART_NAMES[part]
-			sprite.centered = true
-			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			parts.add_child(sprite)
-		sprite.z_index = _DRAW_ORDER[part]
-		_sprites.append(sprite)
-	var layer := get_node_or_null(^"滑条") as CanvasLayer
-	if layer == null:
-		layer = CanvasLayer.new()
-		layer.name = "滑条"
-		add_child(layer)
-		var box := VBoxContainer.new()
-		box.position = Vector2(120, 12)
-		box.add_theme_constant_override("separation", 6)
-		layer.add_child(box)
-		for part in PART_COUNT:
-			var row := HBoxContainer.new()
-			var label := Label.new()
-			label.text = PART_NAMES[part]
-			label.custom_minimum_size = Vector2(40, 0)
-			var slider := HSlider.new()
-			slider.custom_minimum_size = Vector2(180, 18)
-			slider.step = 1
-			slider.min_value = 0
-			var captured := part
-			slider.value_changed.connect(func(next_value: float) -> void:
-				set_part_index(captured, int(next_value))
-			)
-			row.add_child(label)
-			row.add_child(slider)
-			box.add_child(row)
-	_sliders.clear()
-	var rows := layer.get_child(0)
-	for part in PART_COUNT:
-		_sliders.append(rows.get_child(part).get_child(1) as HSlider)
+func _validate_property(property: Dictionary) -> void:
+	if property.name in PART_NAMES:
+		property.hint = PROPERTY_HINT_RANGE
+		property.hint_string = "0,%d,1" % max_part_index()
+
+
+func _ready() -> void:
+	mouse_filter = MOUSE_FILTER_IGNORE
+	texture_filter = TEXTURE_FILTER_NEAREST
+	custom_minimum_size = Vector2(CELL, CELL)
+	if size.x < 1.0 or size.y < 1.0:
+		size = Vector2(CELL, CELL)
 
 
 func _refresh() -> void:
-	if _sprites.size() != PART_COUNT:
-		return
-	var count := variant_count()
-	for part in PART_COUNT:
-		part_index[part] = posmod(part_index[part], count)
-		_apply_sprite(part)
-		if part < _sliders.size():
-			_sliders[part].max_value = count - 1
-			_sliders[part].set_value_no_signal(part_index[part])
+	脸 = 脸
+	头发 = 头发
+	眼睛 = 眼睛
+	胡子 = 胡子
+	嘴 = 嘴
+	身体 = 身体
 
 
-func _apply_sprite(part: int) -> void:
-	if part >= _sprites.size():
+func _draw() -> void:
+	if atlas == null:
 		return
-	var sprite := _sprites[part]
-	sprite.texture = atlas
-	sprite.region_enabled = true
-	sprite.region_rect = Rect2(part_index[part] * CELL, part * CELL, CELL, CELL)
+	var dest := Rect2(Vector2.ZERO, size)
+	for part in _DRAW_ORDER:
+		draw_texture_rect_region(atlas, dest, part_region(part))
+
+
+func _wrap(value: int) -> int:
+	return posmod(value, variant_count())

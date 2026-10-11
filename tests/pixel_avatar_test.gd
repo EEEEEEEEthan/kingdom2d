@@ -1,6 +1,6 @@
 extends SceneTree
 
-## atlas 六行、每格 16，下标按列数取模，六个滑条改部位。
+## atlas 六行、每格 16。检查器滑条上限随列数变，下标取模。Control 自己画。
 
 
 func _initialize() -> void:
@@ -11,24 +11,19 @@ func _run() -> void:
 	var avatar := PixelAvatar.new()
 	root.add_child(avatar)
 	await process_frame
-	if avatar.get_child_count() < 2:
-		push_error("缺少部位节点或滑条")
+	if not avatar is Control or avatar.get_child_count() != 0:
+		push_error("应是没有子节点的 Control")
 		quit(1)
 		return
-	if avatar._sliders.size() != PixelAvatar.PART_COUNT:
-		push_error("滑条数量不对")
+	if not _range_hint_is(avatar, "头发", avatar.max_part_index()):
 		quit(1)
 		return
-	if avatar.variant_count() != avatar.atlas.get_width() / PixelAvatar.CELL:
-		push_error("列数应按 16 整除")
+	avatar.头发 = avatar.variant_count() + 2
+	if avatar.头发 != 2:
+		push_error("取模失败 %s" % avatar.头发)
 		quit(1)
 		return
-	avatar.set_part_index(1, avatar.variant_count() + 2)
-	if avatar.part_index[1] != 2:
-		push_error("取模失败 %s" % avatar.part_index[1])
-		quit(1)
-		return
-	if avatar._sprites[1].region_rect.position != Vector2(2 * PixelAvatar.CELL, PixelAvatar.CELL):
+	if avatar.part_region(1).position != Vector2(2 * PixelAvatar.CELL, PixelAvatar.CELL):
 		push_error("头发区域不对")
 		quit(1)
 		return
@@ -39,21 +34,33 @@ func _run() -> void:
 		push_error("50 宽应只有 3 列，实际 %s" % avatar.variant_count())
 		quit(1)
 		return
-	avatar.set_part_index(0, 5)
-	if avatar.part_index[0] != 2 or avatar._sliders[0].max_value != 2:
-		push_error("滑条上限或取模不对")
+	avatar.脸 = 5
+	if avatar.脸 != 2 or not _range_hint_is(avatar, "脸", 2):
+		push_error("检查器滑条上限或取模不对")
 		quit(1)
 		return
 	avatar.atlas = load("res://addons/pixel_avatar/atlas.png")
-	for part in PixelAvatar.PART_COUNT:
-		avatar._sliders[part].value = part % avatar.variant_count()
-		if avatar.part_index[part] != part % avatar.variant_count():
-			push_error("滑条没有写回部位")
-			quit(1)
-			return
+	avatar.脸 = 0
+	avatar.头发 = 1
+	avatar.眼睛 = 2
+	avatar.胡子 = 3
+	avatar.嘴 = 0
+	avatar.身体 = 1
 	_export_sheet(avatar)
 	print("pixel_avatar_test ok")
 	quit(0)
+
+
+func _range_hint_is(avatar: PixelAvatar, prop_name: String, max_index: int) -> bool:
+	for prop in avatar.get_property_list():
+		if prop.name != prop_name:
+			continue
+		if prop.hint != PROPERTY_HINT_RANGE or prop.hint_string != "0,%d,1" % max_index:
+			push_error("%s 滑条提示是 %s" % [prop_name, prop.hint_string])
+			return false
+		return true
+	push_error("没有属性 %s" % prop_name)
+	return false
 
 
 func _export_sheet(avatar: PixelAvatar) -> void:
@@ -63,7 +70,7 @@ func _export_sheet(avatar: PixelAvatar) -> void:
 	sheet.fill(Color8(34, 32, 52))
 	var source := avatar.atlas.get_image()
 	for index in count:
-		for part in PixelAvatar.PART_COUNT:
+		for part in PixelAvatar._DRAW_ORDER:
 			var from := Rect2i(index * PixelAvatar.CELL, part * PixelAvatar.CELL, PixelAvatar.CELL, PixelAvatar.CELL)
 			var cell := source.get_region(from)
 			for y in PixelAvatar.CELL:
