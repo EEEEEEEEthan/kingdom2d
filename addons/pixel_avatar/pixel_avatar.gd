@@ -9,6 +9,7 @@ class_name PixelAvatar
 
 const CELL := 16
 const HALF := 8
+const EYE_TOP := 4
 const EYES_PART := 2
 const PART_COUNT := 6
 const PART_NAMES: PackedStringArray = ["face", "hair", "eyes", "beard", "mouth", "body"]
@@ -137,7 +138,7 @@ func _draw() -> void:
 	if atlas == null:
 		return
 	var dest := Rect2(Vector2.ZERO, size)
-	var eye_dest := Rect2(0, 0, size.x, size.y * 0.5)
+	var eye_dest := Rect2(0, size.y * EYE_TOP / CELL, size.x, size.y * HALF / CELL)
 	for part in _DRAW_ORDER:
 		var region := part_region(part)
 		if part == EYES_PART:

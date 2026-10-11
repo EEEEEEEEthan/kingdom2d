@@ -109,6 +109,7 @@ func _blit_avatar(sheet: Image, source: Image, index: int, closed: bool, scale: 
 		var dest_y := 0
 		if part == PixelAvatar.EYES_PART:
 			region_h = PixelAvatar.HALF
+			dest_y = PixelAvatar.EYE_TOP
 			if closed:
 				region_y += PixelAvatar.HALF
 		var cell := source.get_region(Rect2i(index * PixelAvatar.CELL, region_y, PixelAvatar.CELL, region_h))
