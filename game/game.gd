@@ -106,6 +106,21 @@ func is_map_center_off_screen() -> bool:
 	return %Camera2D.is_map_center_off_screen()
 
 signal gatherer_hut_open_requested(hut: GathererHut)
+signal character_open_requested(character: Character)
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _build_placement_active():
+		return
+	var character := _character_under_mouse()
+	if not character:
+		return
+	get_viewport().set_input_as_handled()
+	character_open_requested.emit(character)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
@@ -127,6 +142,21 @@ func _build_placement_active() -> bool:
 		if child is StructureBuildPlacement:
 			return true
 	return false
+
+
+func _character_under_mouse() -> Character:
+	var local: Vector2 = character_manager.get_global_transform().affine_inverse() * character_manager.get_global_mouse_position()
+	var nearest: Character = null
+	var nearest_distance := 6.0
+	for character in character_manager.characters.values():
+		if not character.visible:
+			continue
+		var distance := local.distance_to(character.position + Vector2(0, -3))
+		if distance > nearest_distance:
+			continue
+		nearest = character
+		nearest_distance = distance
+	return nearest
 
 
 func _gatherer_hut_under_mouse() -> GathererHut:

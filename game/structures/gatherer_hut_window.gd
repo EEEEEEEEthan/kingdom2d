@@ -30,7 +30,7 @@ func _sync() -> void:
 		slider.set_value_no_signal(_hut.priority)
 	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
 	for slot in GathererHut.SLOT_COUNT:
-		var label := get_node("%Worker%d" % slot) as Label
+		var label := get_node("%%Worker%d" % slot) as Label
 		if slot < _hut.worker_ids.size():
 			label.text = "居民 %s" % _hut.worker_ids[slot]
 		else:

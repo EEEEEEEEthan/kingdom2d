@@ -15,6 +15,12 @@ func peek() -> CharacterAiTask:
 		return null
 	return _tasks[_tasks.size() - 1]
 
+func has_task(task_script: Script) -> bool:
+	for task in _tasks:
+		if task.get_script() == task_script:
+			return true
+	return false
+
 func push(task: CharacterAiTask, context: CharacterAiContext) -> void:
 	_tasks.append(task)
 	task.on_enter(context)
