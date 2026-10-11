@@ -99,10 +99,80 @@ func _get_ai_context() -> CharacterAiContext:
 		_ai_context = CharacterAiContext.new(self)
 	return _ai_context
 
-const _GIVEN_NAMES := ["禾", "山", "石", "溪", "木", "麦", "舟", "灯"]
+const _GIVEN_NAMES := [
+	"Aldric",
+	"Baldwin",
+	"Cedric",
+	"Dunstan",
+	"Edmund",
+	"Godfrey",
+	"Guy",
+	"Henry",
+	"Humphrey",
+	"Leofric",
+	"Miles",
+	"Osric",
+	"Ralph",
+	"Roger",
+	"Simon",
+	"Walter",
+	"Wulfric",
+	"Bernard",
+	"Cuthbert",
+	"Gilbert",
+	"Beatrice",
+	"Edith",
+	"Eleanor",
+	"Godiva",
+	"Hilda",
+	"Isolde",
+	"Joan",
+	"Matilda",
+	"Maud",
+	"Rowena",
+	"Winifred",
+	"Cecily",
+]
+const _SURNAMES := [
+	"Ashford",
+	"Baker",
+	"Blackwood",
+	"Carpenter",
+	"Carter",
+	"Cooper",
+	"Crowley",
+	"Dunmore",
+	"Eldridge",
+	"Fairfax",
+	"Fletcher",
+	"Grimsby",
+	"Holloway",
+	"Ironwood",
+	"Kingsley",
+	"Lockwood",
+	"Marsh",
+	"Mason",
+	"Mercer",
+	"Norwood",
+	"Oakley",
+	"Pemberton",
+	"Ravenscroft",
+	"Smith",
+	"Stonemoor",
+	"Tanner",
+	"Thorne",
+	"Underhill",
+	"Vance",
+	"Weaver",
+	"Whitmore",
+	"Wright",
+]
 
+# 姓名由「名 + 姓」组合而来，id 与组合一一对应，储备 32×32 保证不重名。
 func display_name() -> String:
-	return "阿%s" % _GIVEN_NAMES[posmod(id - 1, _GIVEN_NAMES.size())]
+	var given_count := _GIVEN_NAMES.size()
+	var index := posmod(id - 1, given_count * _SURNAMES.size())
+	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]
 
 func occupation_name() -> String:
 	if workplace_structure_id > 0:

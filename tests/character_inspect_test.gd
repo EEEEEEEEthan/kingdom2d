@@ -21,8 +21,8 @@ func _run() -> void:
 	game._clear()
 	var character = game.spawn_resident_at_cell(10)
 	character.set_process(false)
-	if character.display_name() != "阿禾":
-		push_error("id 1 姓名应为阿禾，实际 %s" % character.display_name())
+	if character.display_name() != "Aldric Ashford":
+		push_error("id 1 姓名应为 Aldric Ashford，实际 %s" % character.display_name())
 		quit(1)
 		return
 	if not character.occupation_name().is_empty():
@@ -84,13 +84,13 @@ func _run() -> void:
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	if page.get_node("%IdentityLabel").text != "阿禾":
+	if page.get_node("%IdentityLabel").text != "Aldric Ashford":
 		push_error("无业只显示姓名，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
 	character.workplace_structure_id = 1
 	page._process(0.0)
-	if page.get_node("%IdentityLabel").text != "阿禾，采集者":
+	if page.get_node("%IdentityLabel").text != "Aldric Ashford，采集者":
 		push_error("有职业应跟在姓名后面，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return

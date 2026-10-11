@@ -13,6 +13,7 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	game._clear()
+	await process_frame
 	load("res://game/game_builder.gd").build(game)
 	var hut_cell := -1
 	var bush_cell := -1
@@ -51,28 +52,21 @@ func _run() -> void:
 	bystander.workplace_structure_id = 0
 	hut.worker_ids.resize(1)
 	var hut_x = Game.get_position_by_cell_index(hut_cell) + Game.HALF_TILE_SIZE
-	var nearest_bush: Structure = bush
-	var nearest_distance := absi(bush_cell - hut_cell)
-	for structure in game.structure_manager.index_to_structures:
-		if not structure or structure.config.id != StructureConfig.TypeId.BUSH:
-			continue
-		var distance := absi(structure.cell_index - hut_cell)
-		if distance < nearest_distance:
-			nearest_bush = structure
-			nearest_distance = distance
-	bush = nearest_bush
-	var bush_x = Game.get_position_by_cell_index(bush.cell_index) + Game.HALF_TILE_SIZE
 	var saw_hut := false
-	var saw_bush := false
+	var bush_x := 0.0
+	bush = null
 	for _step in 400:
 		gatherer._process(0.5)
 		if is_equal_approx(gatherer.position.x, hut_x):
 			saw_hut = true
-		if is_equal_approx(gatherer.position.x, bush_x):
-			saw_bush = true
+		if bush == null:
+			bush = _bush_occupied_by(game, gatherer.id)
+			if bush != null:
+				bush_x = Game.get_position_by_cell_index(bush.cell_index) + Game.HALF_TILE_SIZE
+		if bush != null and is_equal_approx(gatherer.position.x, bush_x):
 			break
-	if not saw_hut or not saw_bush:
-		push_error("应先到小屋再到灌木 hut=%s bush=%s x=%s" % [saw_hut, saw_bush, gatherer.position.x])
+	if not saw_hut or bush == null:
+		push_error("应先到小屋再到灌木 hut=%s bush=%s x=%s" % [saw_hut, bush, gatherer.position.x])
 		quit(1)
 		return
 	await process_frame
@@ -116,6 +110,10 @@ func _run() -> void:
 		push_error("灌木不应消失")
 		quit(1)
 		return
+	if game.structure_manager.occupant_of(bush_id) != 0:
+		push_error("一轮结束后应释放灌木")
+		quit(1)
+		return
 	var restored = StructureConfig.gatherer_hut.instantiate()
 	restored._deserialize(hut._serialize())
 	if restored.worker_ids.size() != 1 or restored.worker_ids[0] != gatherer.id:
@@ -133,16 +131,83 @@ func _run() -> void:
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	if page.get_node("%Worker0").text != "居民 %s" % gatherer.id:
-		push_error("小屋窗口应列出工人")
+	if page.get_node("%Worker0").text != gatherer.display_name():
+		push_error("小屋窗口应列出工人姓名，实际 %s" % page.get_node("%Worker0").text)
+		quit(1)
+		return
+	if page.get_node("%Worker1").text != "空位":
+		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
 		quit(1)
 		return
 	browser.go_back()
 	if not _priority_rebalance_ok(game):
 		quit(1)
 		return
+	if not _reservation_ok(game):
+		quit(1)
+		return
+	if not _no_bush_ok(game):
+		quit(1)
+		return
 	print("gatherer_hut_ok")
 	quit(0)
+
+
+func _bush_occupied_by(game, character_id: int) -> Structure:
+	for structure in game.structure_manager.index_to_structures:
+		if structure and structure.config.id == StructureConfig.TypeId.BUSH and game.structure_manager.occupant_of(structure.id) == character_id:
+			return structure
+	return null
+
+
+func _reservation_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var left = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(left, 90)
+	var right = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(right, 110)
+	var first = game.spawn_resident_at_cell(99)
+	var second = game.spawn_resident_at_cell(101)
+	first.set_process(false)
+	second.set_process(false)
+	_set_hour(game, 12)
+	for _step in 60:
+		first._process(0.5)
+		second._process(0.5)
+		if _bush_occupied_by(game, first.id) and _bush_occupied_by(game, second.id):
+			break
+	var first_bush = _bush_occupied_by(game, first.id)
+	var second_bush = _bush_occupied_by(game, second.id)
+	if first_bush == null or second_bush == null or first_bush == second_bush:
+		push_error("两名采集者不应抢同一棵灌木 %s %s" % [first_bush, second_bush])
+		return false
+	return true
+
+
+func _no_bush_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var bush = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(bush, 90)
+	var first = game.spawn_resident_at_cell(99)
+	var second = game.spawn_resident_at_cell(101)
+	first.set_process(false)
+	second.set_process(false)
+	_set_hour(game, 12)
+	for _step in 12:
+		first._process(0.5)
+		second._process(0.5)
+	var waiting = first if _bush_occupied_by(game, first.id) == null else second
+	if not waiting.visible or waiting.indoors:
+		push_error("无可采灌木时应出屋等待，不应隐身")
+		return false
+	if waiting.current_activity() != "正在等待可采集的灌木":
+		push_error("应显示正在等待可采集的灌木，实际 %s" % waiting.current_activity())
+		return false
+	return true
 
 
 func _priority_math_ok() -> bool:
