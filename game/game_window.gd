@@ -1,5 +1,7 @@
 extends Window
 
+const WindowScreenAnchor := preload("res://game/window_screen_anchor.gd")
+
 signal control_window_open_requested
 signal quit_requested
 signal gatherer_hut_open_requested(hut: GathererHut)
@@ -67,32 +69,12 @@ func compute_docked_global_position() -> Vector2i:
 
 func clamp_horizontal_position(x: int) -> int:
 	var screen := current_screen
-	return clamp_x_to_screen(
+	return WindowScreenAnchor.clamp_x_to_screen(
 		x,
 		DisplayServer.screen_get_position(screen).x,
 		DisplayServer.screen_get_size(screen).x,
 		size.x,
 	)
-
-
-static func clamp_x_to_screen(x: int, screen_x: int, screen_width: int, window_width: int) -> int:
-	if screen_width <= window_width:
-		return screen_x
-	return clampi(x, screen_x, screen_x + screen_width - window_width)
-
-
-# Alt 改宽度时保持底边中心，同时把左右都留在屏幕内，和拖动同一套水平夹取。
-static func anchored_position_on_screen(
-	old_position: Vector2i,
-	old_size: Vector2i,
-	new_size: Vector2i,
-	screen_x: int,
-	screen_width: int,
-) -> Vector2i:
-	var bottom_center_x := float(old_position.x) + float(old_size.x) * 0.5
-	var x := int(round(bottom_center_x - float(new_size.x) * 0.5))
-	var y := old_position.y + old_size.y - new_size.y
-	return Vector2i(clamp_x_to_screen(x, screen_x, screen_width, new_size.x), y)
 
 
 func compute_hidden_below_global_position() -> Vector2i:
@@ -114,23 +96,20 @@ func apply_layout(align_to_bottom: bool = false) -> void:
 	%ViewportContainer.stretch_shrink = scale
 	var hud_scale := clampi(scale, 1, 2)
 	var new_size := Vector2i(width, height)
+	var screen := current_screen
+	var screen_origin_x := DisplayServer.screen_get_position(screen).x
+	var screen_width := DisplayServer.screen_get_size(screen).x
+	var anchored_x := WindowScreenAnchor.anchored_x_on_screen(position.x, size.x, new_size.x, screen_origin_x, screen_width)
 	if suppress_dock_position_in_layout:
 		size = new_size
-		position.x = clamp_horizontal_position(position.x)
+		position.x = anchored_x
 	elif align_to_bottom:
 		position = compute_docked_global_position()
 		size = new_size
 	else:
-		var screen := current_screen
-		var anchored := anchored_position_on_screen(
-			position,
-			size,
-			new_size,
-			DisplayServer.screen_get_position(screen).x,
-			DisplayServer.screen_get_size(screen).x,
-		)
+		var anchored_y := position.y + size.y - new_size.y
 		size = new_size
-		position = anchored
+		position = Vector2i(anchored_x, anchored_y)
 	%GameHud.hud_scale = hud_scale
 	if not align_to_bottom:
 		force_show()
