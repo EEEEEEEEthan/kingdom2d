@@ -2,6 +2,7 @@ extends Window
 
 signal control_window_open_requested
 signal quit_requested
+signal gatherer_hut_open_requested(hut: GathererHut)
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
@@ -48,6 +49,7 @@ func _ready() -> void:
 	%GameHud.sync_pin_from_pined(pined)
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
+	%Game.gatherer_hut_open_requested.connect(gatherer_hut_open_requested.emit)
 	apply_layout(true)
 	visible = true
 

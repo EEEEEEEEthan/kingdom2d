@@ -7,6 +7,7 @@ enum TypeId {
 	SUNKEN_FLOOR_THATCH_HOVEL = 2,
 	SOVEREIGN_BANNER = 3,
 	BUSH = 4,
+	GATHERER_HUT = 5,
 }
 
 static var oak: StructureConfig:
@@ -36,6 +37,15 @@ static var sovereign_banner: StructureConfig:
 			sovereign_banner._scene_path = &"res://game/structures/sovereign_banner.tscn"
 		return sovereign_banner
 
+static var gatherer_hut: StructureConfig:
+	get:
+		if not gatherer_hut:
+			gatherer_hut = StructureConfig.new()
+			gatherer_hut.id = TypeId.GATHERER_HUT
+			gatherer_hut.name = &"采集者小屋"
+			gatherer_hut._scene_path = &"res://game/structures/gatherer_hut.tscn"
+		return gatherer_hut
+
 static var bush: StructureConfig:
 	get:
 		if not bush:
@@ -50,6 +60,7 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	sunken_floor_thatch_hovel.id: sunken_floor_thatch_hovel,
 	sovereign_banner.id: sovereign_banner,
 	bush.id: bush,
+	gatherer_hut.id: gatherer_hut,
 }
 
 var id: TypeId = TypeId.NONE

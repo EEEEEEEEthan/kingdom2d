@@ -5,4 +5,5 @@ enum TypeId {
 	WAIT_DURATION = 1,
 	MOVE_TO_WORLD_X = 2,
 	ENTER_HOME = 3,
+	GATHER_CYCLE = 4,
 }

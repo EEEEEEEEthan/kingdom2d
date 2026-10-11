@@ -20,6 +20,8 @@ static func deserialize(data: Dictionary) -> CharacterAiTask:
 			return CharacterAiMoveToWorldXTask.new(payload)
 		CharacterAiTaskTypeId.TypeId.ENTER_HOME:
 			return CharacterAiEnterHomeTask.new(payload)
+		CharacterAiTaskTypeId.TypeId.GATHER_CYCLE:
+			return CharacterAiGatherCycleTask.new(payload)
 		_:
 			printerr("CharacterAiTask type_id not found: %s" % type_id)
 			return null
