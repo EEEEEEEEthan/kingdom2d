@@ -109,23 +109,23 @@ func occupation_name() -> String:
 
 func current_activity() -> String:
 	if indoors and _is_sleeping():
-		return "睡觉"
+		return "正在睡觉"
 	if indoors:
-		return "在家里"
+		return "正在家里"
 	var top := ai_task_stack.peek()
 	if top == null:
-		return "发呆"
+		return "正在发呆"
 	if top is CharacterAiEnterHomeTask:
-		return "进屋"
+		return "正在进屋"
 	if top is CharacterAiGatherCycleTask:
 		return (top as CharacterAiGatherCycleTask).activity_text()
 	if top is CharacterAiMoveToWorldXTask and ai_task_stack.has_task(CharacterAiEnterHomeTask):
-		return "回家"
+		return "正在回家"
 	if top is CharacterAiWaitDurationTask:
-		return "歇着"
+		return "正在歇着"
 	if top is CharacterAiMoveToWorldXTask:
-		return "闲逛"
-	return "发呆"
+		return "正在闲逛"
+	return "正在发呆"
 
 func _is_sleeping() -> bool:
 	var hour := _get_ai_context().game_time.hour_of_day

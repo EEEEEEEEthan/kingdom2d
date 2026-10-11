@@ -31,7 +31,7 @@ func _run() -> void:
 		return
 	_set_hour(game, 12)
 	character._process(0.05)
-	if character.current_activity() != "闲逛" and character.current_activity() != "歇着":
+	if character.current_activity() != "正在闲逛" and character.current_activity() != "正在歇着":
 		push_error("白天无业应在闲逛或歇着，实际 %s" % character.current_activity())
 		quit(1)
 		return
@@ -42,7 +42,7 @@ func _run() -> void:
 		push_error("有工作地点时应是采集者")
 		quit(1)
 		return
-	if character.current_activity() != "去采集者小屋":
+	if character.current_activity() != "正在去采集者小屋":
 		push_error("开始采集周期应去小屋，实际 %s" % character.current_activity())
 		quit(1)
 		return
@@ -53,12 +53,12 @@ func _run() -> void:
 	character.visible = true
 	character.position.x += 24.0
 	character._process(0.05)
-	if character.current_activity() != "回家":
+	if character.current_activity() != "正在回家":
 		push_error("夜晚在外应回家，实际 %s" % character.current_activity())
 		quit(1)
 		return
 	character.enter_home()
-	if character.current_activity() != "睡觉":
+	if character.current_activity() != "正在睡觉":
 		push_error("夜里在家应睡觉，实际 %s" % character.current_activity())
 		quit(1)
 		return
@@ -66,8 +66,8 @@ func _run() -> void:
 	root.add_child(window)
 	window.open_for(character)
 	await process_frame
-	if window.get_node("%ActivityLabel").text != "正在：睡觉":
-		push_error("窗口应显示睡觉")
+	if window.get_node("%ActivityLabel").text != "正在睡觉":
+		push_error("窗口应显示正在睡觉")
 		quit(1)
 		return
 	_set_hour(game, 12)
@@ -75,8 +75,18 @@ func _run() -> void:
 	character._process(0.05)
 	window._process(0.0)
 	var activity_text: String = window.get_node("%ActivityLabel").text
-	if activity_text == "正在：睡觉":
+	if activity_text == "正在睡觉":
 		push_error("白天窗口应刷新掉睡觉，实际 %s" % activity_text)
+		quit(1)
+		return
+	var gather := CharacterAiGatherCycleTask.new({CharacterAiGatherCycleTask.KEY_PHASE: 2})
+	if gather.activity_text() != "正在采集":
+		push_error("去灌木应显示正在采集，实际 %s" % gather.activity_text())
+		quit(1)
+		return
+	gather = CharacterAiGatherCycleTask.new({CharacterAiGatherCycleTask.KEY_PHASE: 4})
+	if gather.activity_text() != "正在回采集者小屋":
+		push_error("返回应显示正在回采集者小屋，实际 %s" % gather.activity_text())
 		quit(1)
 		return
 	quit(0)

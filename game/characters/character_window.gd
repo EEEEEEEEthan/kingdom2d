@@ -27,7 +27,7 @@ func _sync() -> void:
 	title = _character.display_name()
 	%NameLabel.text = "姓名：%s" % _character.display_name()
 	%JobLabel.text = "职业：%s" % _character.occupation_name()
-	%ActivityLabel.text = "正在：%s" % _character.current_activity()
+	%ActivityLabel.text = _character.current_activity()
 
 
 func _open_near_mouse() -> void:
