@@ -187,13 +187,10 @@ func _screen_bottom_global_y() -> int:
 
 
 func _is_mouse_in_show_trigger(mouse: Vector2i) -> bool:
-	var docked: Vector2i = _game_window.compute_docked_global_position()
-	var window_size := _game_window.size
-	var screen_bottom := _screen_bottom_global_y()
-	var zone := Rect2i(
-		docked.x,
-		screen_bottom - SHOW_TRIGGER_ABOVE_PX,
-		window_size.x,
+	var zone: Rect2i = WindowScreenAnchor.show_trigger_rect(
+		_game_window.position.x,
+		_game_window.size.x,
+		_screen_bottom_global_y(),
 		SHOW_TRIGGER_ABOVE_PX,
 	)
 	return zone.has_point(mouse)

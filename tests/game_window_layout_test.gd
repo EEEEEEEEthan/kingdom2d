@@ -32,5 +32,18 @@ func _initialize() -> void:
 		push_error("铺满后缩小应贴左，实际 %s" % full_width)
 		quit(1)
 		return
+	var trigger := GameWindowScript.show_trigger_rect(1540, 480, 1080, 5)
+	if trigger.position != Vector2i(1540, 1075) or trigger.size != Vector2i(480, 5):
+		push_error("贴右隐藏后唤出条应在窗口正下方底边，实际 %s %s" % [trigger.position, trigger.size])
+		quit(1)
+		return
+	if trigger.has_point(Vector2i(100, 1078)):
+		push_error("屏幕左下不该唤出贴右的窗口")
+		quit(1)
+		return
+	if not trigger.has_point(Vector2i(1600, 1078)):
+		push_error("窗口正下方底边应能唤出")
+		quit(1)
+		return
 	print("game_window_layout_ok")
 	quit(0)
