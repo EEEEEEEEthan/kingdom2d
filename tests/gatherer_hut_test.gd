@@ -25,33 +25,27 @@ func _run() -> void:
 			bush_cell = cell_index
 			break
 		previous_empty = cell_index
+	var gatherer = game.spawn_resident_at_cell(hut_cell - 2)
+	var near = game.spawn_resident_at_cell(hut_cell + 40)
+	var bystander = game.spawn_resident_at_cell(hut_cell + 80)
 	var hut = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(hut, hut_cell)
 	var bush = StructureConfig.bush.instantiate()
 	game.structure_manager.add_structure(bush, bush_cell)
-	var gatherer = game.spawn_resident_at_cell(hut_cell - 8)
-	var bystander = game.spawn_resident_at_cell(32)
+	near.set_process(false)
 	gatherer.set_process(false)
 	bystander.set_process(false)
 	_set_hour(game, 12)
-	if not hut.try_assign_unemployed():
-		push_error("应能安排无职业居民")
+	if hut.worker_ids.size() != 2 or hut.worker_ids[0] != gatherer.id or hut.worker_ids[1] != near.id:
+		push_error("应自动优先安排家最近的居民 %s" % [hut.worker_ids])
 		quit(1)
 		return
-	if gatherer.workplace_structure_id != hut.id:
-		push_error("第一个居民应成为采集者")
+	if gatherer.workplace_structure_id != hut.id or near.workplace_structure_id != hut.id:
+		push_error("前两名最近居民应入职")
 		quit(1)
 		return
-	if not hut.try_assign_unemployed():
-		push_error("第二个空位应还能加人")
-		quit(1)
-		return
-	if bystander.workplace_structure_id != hut.id:
-		push_error("第二个居民应入职")
-		quit(1)
-		return
-	if hut.try_assign_unemployed():
-		push_error("没有空位或没有无职业居民时不应再加人")
+	if bystander.workplace_structure_id != 0:
+		push_error("满员后不应再加人")
 		quit(1)
 		return
 	bystander.workplace_structure_id = 0

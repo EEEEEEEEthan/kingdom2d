@@ -17,18 +17,14 @@ func _deserialize(data: Dictionary) -> void:
 		worker_ids.append(int(worker_id))
 
 
-func try_assign_unemployed() -> bool:
-	if worker_ids.size() >= SLOT_COUNT:
-		return false
-	var manager := _game().character_manager
-	for character in manager.characters.values():
-		if character.workplace_structure_id != 0:
-			continue
-		character.workplace_structure_id = id
-		character.abandon_ai_tasks()
-		worker_ids.append(character.id)
-		return true
-	return false
+func has_open_slot() -> bool:
+	return worker_ids.size() < SLOT_COUNT
+
+
+func assign_worker(character: Character) -> void:
+	character.workplace_structure_id = id
+	character.abandon_ai_tasks()
+	worker_ids.append(character.id)
 
 
 func _game() -> Game:

@@ -40,13 +40,6 @@ func _rebuild() -> void:
 			label.text = "居民 %s" % _hut.worker_ids[slot]
 		else:
 			label.text = "空位"
-			var button := Button.new()
-			button.text = "+"
-			button.pressed.connect(_on_plus_pressed)
-			row.add_child(label)
-			row.add_child(button)
-			_rows.add_child(row)
-			continue
 		row.add_child(label)
 		_rows.add_child(row)
 
@@ -56,13 +49,6 @@ func _signature() -> String:
 	for worker_id in _hut.worker_ids:
 		parts.append(str(worker_id))
 	return "|".join(parts)
-
-
-func _on_plus_pressed() -> void:
-	if _hut and is_instance_valid(_hut):
-		_hut.try_assign_unemployed()
-		_rows.remove_meta("signature")
-		_rebuild()
 
 
 func _open_near_mouse() -> void:

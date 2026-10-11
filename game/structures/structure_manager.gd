@@ -53,6 +53,19 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 	if structure.get_parent() != self:
 		add_child(structure)
 	_register_structure(structure)
+	if structure is GathererHut:
+		var game := _game()
+		if game:
+			game.assign_open_workplaces()
+
+
+func _game() -> Game:
+	var node: Node = self
+	while node:
+		if node is Game:
+			return node
+		node = node.get_parent()
+	return null
 
 
 func _register_structure(structure: Structure) -> void:
