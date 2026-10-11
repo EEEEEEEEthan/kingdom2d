@@ -62,5 +62,13 @@ func play_bounce(on_finished: Callable = Callable()) -> void:
 	%Juice.play_bounce(on_finished)
 
 
+func play_shake() -> void:
+	var tween := create_tween()
+	for _step in 8:
+		tween.tween_property(self, "rotation", 0.14, 0.08)
+		tween.tween_property(self, "rotation", -0.14, 0.08)
+	tween.tween_property(self, "rotation", 0.0, 0.08)
+
+
 func stop_bounce() -> void:
 	%Juice.stop_bounce()

@@ -6,6 +6,7 @@ const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
 const _KEY_HOME_CELL_INDEX = 4
 const _KEY_INDOORS = 5
+const _KEY_WORKPLACE_STRUCTURE_ID = 6
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
@@ -16,6 +17,7 @@ const _WAKE_HOUR = 5
 var id: int
 var home_cell_index := -1
 var indoors := false
+var workplace_structure_id := 0
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
 var ai_task_stack := CharacterAiTaskStack.new()
 
@@ -30,8 +32,19 @@ func _ready() -> void:
 func _process(delta_seconds: float) -> void:
 	_apply_daily_schedule()
 	ai_task_stack.tick(delta_seconds, _get_ai_context())
-	if ai_task_stack.is_empty() and not _is_sleeping():
-		_schedule_idle_wander()
+	if not ai_task_stack.is_empty():
+		return
+	if _is_sleeping():
+		if not indoors:
+			_queue_enter_home()
+		return
+	if workplace_structure_id > 0:
+		_queue_gather_cycle()
+		return
+	_schedule_idle_wander()
+
+func leave_home() -> void:
+	_leave_home()
 
 func enter_home() -> void:
 	position.x = _home_world_x()
@@ -60,6 +73,7 @@ func deserialize(data: Dictionary) -> void:
 	position = Vector2(data[_KEY_POSITION], 0)
 	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
 	indoors = data.get(_KEY_INDOORS, false)
+	workplace_structure_id = data.get(_KEY_WORKPLACE_STRUCTURE_ID, 0)
 	visible = not indoors
 	_schedule_initialized = false
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
@@ -71,6 +85,7 @@ func serialize() -> Dictionary:
 		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
+		_KEY_WORKPLACE_STRUCTURE_ID: workplace_structure_id,
 	}
 
 
@@ -79,6 +94,9 @@ func _get_ai_context() -> CharacterAiContext:
 		_ai_context = CharacterAiContext.new(self)
 	return _ai_context
 
+func is_asleep() -> bool:
+	return _is_sleeping()
+
 func _is_sleeping() -> bool:
 	var hour := _get_ai_context().game_time.hour_of_day
 	return hour >= _SLEEP_START_HOUR or hour < _WAKE_HOUR
@@ -86,6 +104,10 @@ func _is_sleeping() -> bool:
 func _apply_daily_schedule() -> void:
 	var sleeping := _is_sleeping()
 	if _schedule_initialized and sleeping == _schedule_sleeping:
+		return
+	if _is_on_gather_cycle():
+		_schedule_initialized = true
+		_schedule_sleeping = sleeping
 		return
 	_schedule_initialized = true
 	_schedule_sleeping = sleeping
@@ -98,7 +120,15 @@ func _apply_daily_schedule() -> void:
 	else:
 		_leave_home()
 
+func _queue_gather_cycle() -> void:
+	push_ai_task(CharacterAiGatherCycleTask.new({}))
+
+func _is_on_gather_cycle() -> bool:
+	return ai_task_stack.peek() is CharacterAiGatherCycleTask
+
 func _queue_enter_home() -> void:
+	if not indoors:
+		visible = true
 	var enter_task := CharacterAiEnterHomeTask.new({})
 	var move_task := CharacterAiMoveToWorldXTask.new({
 		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: _home_world_x(),

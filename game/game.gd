@@ -103,6 +103,46 @@ func reset_camera() -> void:
 func is_map_center_off_screen() -> bool:
 	return %Camera2D.is_map_center_off_screen()
 
+signal gatherer_hut_open_requested(hut: GathererHut)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton:
+		return
+	var mouse_button := event as InputEventMouseButton
+	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _build_placement_active():
+		return
+	var hut := _gatherer_hut_under_mouse()
+	if not hut:
+		return
+	get_viewport().set_input_as_handled()
+	gatherer_hut_open_requested.emit(hut)
+
+
+func _build_placement_active() -> bool:
+	for child in horizon.get_children():
+		if child is StructureBuildPlacement:
+			return true
+	return false
+
+
+func _gatherer_hut_under_mouse() -> GathererHut:
+	var local: Vector2 = structure_manager.get_global_transform().affine_inverse() * structure_manager.get_global_mouse_position()
+	var cell_index := roundi((local.x - HALF_TILE_SIZE) / float(TILE_SIZE))
+	for offset in range(-1, 2):
+		var index := cell_index + offset
+		if index < 0 or index >= MAP_CELL_COUNT:
+			continue
+		var structure := structure_manager.index_to_structures[index]
+		if not structure is GathererHut:
+			continue
+		var hut_x := float(get_position_by_cell_index(index) + HALF_TILE_SIZE)
+		if absf(local.x - hut_x) <= 8.0:
+			return structure as GathererHut
+	return null
+
+
 func start_build_placement(structure_config: StructureConfig) -> void:
 	horizon.add_child(await StructureBuildPlacement.new(self, structure_config))
 
