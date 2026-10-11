@@ -180,9 +180,9 @@ func _leave_home() -> void:
 	visible = true
 
 func _home_world_x() -> float:
-	return Game.get_position_by_cell_index(_resolved_home_cell_index()) + Game.HALF_TILE_SIZE
+	return Game.get_position_by_cell_index(resolved_home_cell_index()) + Game.HALF_TILE_SIZE
 
-func _resolved_home_cell_index() -> int:
+func resolved_home_cell_index() -> int:
 	if home_cell_index >= 0:
 		return home_cell_index
 	var cell := roundi((position.x - Game.HALF_TILE_SIZE) / float(Game.TILE_SIZE))

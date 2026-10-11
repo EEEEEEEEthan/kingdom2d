@@ -16,6 +16,14 @@ const _SERKEY_DAYS = 4
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
 
+static func find(node: Node) -> Game:
+	var current := node
+	while current:
+		if current is Game:
+			return current
+		current = current.get_parent()
+	return null
+
 var game_time: GameTime = GameTime.new(_GAME_START_DAYS)
 
 var horizon: Node2D:
@@ -187,80 +195,5 @@ func spawn_resident_at_cell(cell_index: int) -> Character:
 	return character
 
 
-# 先按优先级权重算出每个建筑的人数，再减最远的、补最近的。
 func rebalance_workplaces() -> void:
-	var huts_by_tier: Array = [[], [], []]
-	for structure in structure_manager.index_to_structures:
-		if not structure is GathererHut:
-			continue
-		var hut := structure as GathererHut
-		huts_by_tier[hut.priority].append(hut)
-	var demands: Array[int] = []
-	for tier in huts_by_tier.size():
-		var tier_huts: Array = huts_by_tier[tier]
-		tier_huts.sort_custom(func(a: GathererHut, b: GathererHut) -> bool: return a.id < b.id)
-		demands.append(tier_huts.size() * GathererHut.SLOT_COUNT)
-	var tier_counts := GathererHut.allocate_tier_counts(demands, character_manager.characters.size())
-	var targets: Dictionary[int, int] = {}
-	for tier in huts_by_tier.size():
-		var tier_huts: Array = huts_by_tier[tier]
-		var capacities: Array[int] = []
-		capacities.resize(tier_huts.size())
-		capacities.fill(GathererHut.SLOT_COUNT)
-		var shares := GathererHut.spread_evenly(tier_counts[tier], capacities)
-		for index in tier_huts.size():
-			targets[(tier_huts[index] as GathererHut).id] = shares[index]
-	for tier in huts_by_tier:
-		for hut_value in tier:
-			var hut := hut_value as GathererHut
-			while hut.worker_ids.size() > targets[hut.id]:
-				var farthest := _farthest_worker(hut)
-				if farthest == null:
-					break
-				hut.release_worker(farthest)
-	while true:
-		var best_hut: GathererHut = null
-		var best_character: Character = null
-		var best_distance := 0
-		for tier in huts_by_tier:
-			for hut_value in tier:
-				var hut := hut_value as GathererHut
-				if hut.worker_ids.size() >= targets[hut.id]:
-					continue
-				for character in character_manager.characters.values():
-					if character.workplace_structure_id != 0:
-						continue
-					var distance := absi(home_cell_of(character) - hut.cell_index)
-					if best_character != null and distance > best_distance:
-						continue
-					if best_character != null and distance == best_distance and character.id > best_character.id:
-						continue
-					if best_character != null and distance == best_distance and character.id == best_character.id and hut.id > best_hut.id:
-						continue
-					best_hut = hut
-					best_character = character
-					best_distance = distance
-		if best_character == null:
-			return
-		best_hut.assign_worker(best_character)
-
-
-func _farthest_worker(hut: GathererHut) -> Character:
-	var farthest: Character = null
-	var farthest_distance := 0
-	for worker_id in hut.worker_ids:
-		var character: Character = character_manager.characters.get(worker_id)
-		if character == null:
-			continue
-		var distance := absi(home_cell_of(character) - hut.cell_index)
-		if farthest == null or distance > farthest_distance or (distance == farthest_distance and character.id > farthest.id):
-			farthest = character
-			farthest_distance = distance
-	return farthest
-
-
-func home_cell_of(character: Character) -> int:
-	if character.home_cell_index >= 0:
-		return character.home_cell_index
-	var cell := roundi((character.position.x - HALF_TILE_SIZE) / float(TILE_SIZE))
-	return clampi(cell, 0, MAP_CELL_COUNT - 1)
+	WorkplaceStaffing.rebalance(structure_manager.structures, character_manager.characters)

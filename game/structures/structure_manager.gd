@@ -6,6 +6,7 @@ const _KEY_STRUCTURES = 2
 
 var _next_id = 0
 var index_to_structures: Array[Structure] = []
+var structures: Dictionary[int, Structure] = {}
 
 
 func clear() -> void:
@@ -15,35 +16,29 @@ func clear() -> void:
 	_next_id = 0
 	index_to_structures.clear()
 	index_to_structures.resize(Game.MAP_CELL_COUNT)
+	structures.clear()
 
 
 func serialize() -> Dictionary:
-	var structures: Array[Dictionary] = []
-	var result = {
+	var structure_data: Array[Dictionary] = []
+	for structure in structures.values():
+		structure_data.append((structure as Structure).serialize())
+	return {
 		_KEY_NEXT_ID: _next_id,
-		_KEY_STRUCTURES: structures,
+		_KEY_STRUCTURES: structure_data,
 	}
-	for structure_slot in index_to_structures:
-		if not structure_slot:
-			continue
-		var structure = structure_slot as Structure
-		structures.append(structure.serialize())
-	return result
 
 
 func deserialize(data: Dictionary) -> void:
 	_next_id = data[_KEY_NEXT_ID]
-	var structures: Array = data[_KEY_STRUCTURES]
-	for item in structures:
+	var structure_data: Array = data[_KEY_STRUCTURES]
+	for item in structure_data:
 		var structure = Structure.deserialize(item, self)
 		_register_structure(structure)
 
 
 func get_structure_by_id(structure_id: int) -> Structure:
-	for structure in index_to_structures:
-		if structure and structure.id == structure_id:
-			return structure
-	return null
+	return structures.get(structure_id)
 
 
 func add_structure(structure: Structure, cell_index: int) -> void:
@@ -54,24 +49,20 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 		add_child(structure)
 	_register_structure(structure)
 	if structure is GathererHut:
-		var game := _game()
+		var game := Game.find(self)
 		if game:
 			game.rebalance_workplaces()
-
-
-func _game() -> Game:
-	var node: Node = self
-	while node:
-		if node is Game:
-			return node
-		node = node.get_parent()
-	return null
 
 
 func _register_structure(structure: Structure) -> void:
 	if index_to_structures[structure.cell_index]:
 		printerr("建筑重叠!");
 		return
-	index_to_structures[structure.cell_index] = structure
+	var cell_index := structure.cell_index
+	index_to_structures[cell_index] = structure
+	structures[structure.id] = structure
 	await structure.tree_exiting
-	index_to_structures[structure.cell_index] = null
+	if index_to_structures[cell_index] == structure:
+		index_to_structures[cell_index] = null
+	if structures.get(structure.id) == structure:
+		structures.erase(structure.id)
