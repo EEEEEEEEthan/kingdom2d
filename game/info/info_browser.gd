@@ -89,24 +89,20 @@ func _make_page(path: String) -> Control:
 	var parts := path.split("/")
 	match parts[0]:
 		"settings":
-			title = "设置"
 			return SETTINGS_PAGE.instantiate()
 		"resident":
 			var character := _character_by_id(int(parts[1]))
 			if not character:
 				return null
-			title = character.display_name()
 			var page := RESIDENT_PAGE.instantiate()
 			page.bind(character)
 			return page
 		"structure":
 			var structure := _structure_by_id(int(parts[1]))
 			if structure is GathererHut:
-				title = "采集者小屋"
 				var page := GATHERER_HUT_PAGE.instantiate()
 				page.bind(structure)
 				return page
-	title = "Kingdom2D"
 	return null
 
 

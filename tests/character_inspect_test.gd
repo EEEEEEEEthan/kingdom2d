@@ -65,12 +65,20 @@ func _run() -> void:
 	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
 	root.add_child(browser)
 	browser.open_settings()
+	if browser.title != "Kingdom":
+		push_error("浏览器标题应保持 Kingdom，实际 %s" % browser.title)
+		quit(1)
+		return
 	if browser.current_path() != "settings":
 		push_error("打开设置应落到 settings，实际 %s" % browser.current_path())
 		quit(1)
 		return
 	browser.open_resident(character)
 	await process_frame
+	if browser.title != "Kingdom":
+		push_error("打开居民后标题应仍是 Kingdom，实际 %s" % browser.title)
+		quit(1)
+		return
 	if browser.current_path() != "resident/%d" % character.id:
 		push_error("打开居民应落到 resident/id，实际 %s" % browser.current_path())
 		quit(1)
