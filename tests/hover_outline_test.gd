@@ -20,17 +20,27 @@ func _run() -> void:
 	await process_frame
 	var outline = host.get_child(1)
 	outline.set_process(false)
-	outline._process(0.0)
 	var material := sprite.material as ShaderMaterial
+	if material == null:
+		outline._process(0.0)
+		material = sprite.material as ShaderMaterial
 	if material == null or material.shader != _SHADER:
 		push_error("描边应挂 shader")
 		quit(1)
 		return
+	_point_at(sprite)
+	outline.show_outline = false
+	outline._process(0.0)
 	if material.get_shader_parameter("enabled") != 0.0:
-		push_error("未悬停时不应描边")
+		push_error("show_outline 关闭时不应描边")
 		quit(1)
 		return
-	material.set_shader_parameter("enabled", 1.0)
+	outline.show_outline = true
+	outline._process(0.0)
+	if material.get_shader_parameter("enabled") != 1.0:
+		push_error("悬停时应描边")
+		quit(1)
+		return
 	material.set_shader_parameter("region_uv", Vector4(0, 0, 1, 1))
 	var image := await _render(host)
 	DirAccess.make_dir_recursive_absolute("/opt/cursor/artifacts")
@@ -42,6 +52,11 @@ func _run() -> void:
 		return
 	print("hover_outline_ok white=", white)
 	quit(0)
+
+
+func _point_at(sprite: Sprite2D) -> void:
+	var center: Vector2 = sprite.to_global(sprite.get_rect().get_center())
+	sprite.get_viewport().warp_mouse(Vector2i(center))
 
 
 func _solid_texture() -> Texture2D:

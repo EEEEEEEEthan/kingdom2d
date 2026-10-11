@@ -3,18 +3,24 @@ class_name HoverOutline
 
 const _SHADER := preload("res://game/hover_outline.gdshader")
 
+var show_outline := true
 var _materials: Dictionary = {}
 
 
-static func attach(host: Node2D) -> void:
-	host.add_child(preload("res://game/hover_outline.gd").new())
+static func attach(host: Node2D) -> Node:
+	var outline := preload("res://game/hover_outline.gd").new()
+	outline.name = "HoverOutline"
+	host.add_child(outline)
+	if "show_outline" in host:
+		outline.show_outline = host.show_outline
+	return outline
 
 
 func _process(_delta: float) -> void:
 	var host := get_parent() as Node2D
 	if host == null:
 		return
-	var hovered := host.is_visible_in_tree() and _pointer_hits(host)
+	var hovered := show_outline and host.is_visible_in_tree() and _pointer_hits(host)
 	for child in host.get_children():
 		if not child is Sprite2D:
 			continue

@@ -19,6 +19,12 @@ var home_cell_index := -1
 var indoors := false
 var workplace_structure_id := 0
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
+@export var show_outline := true:
+	set(value):
+		show_outline = value
+		var outline := get_node_or_null(^"HoverOutline") as HoverOutline
+		if outline:
+			outline.show_outline = value
 var ai_task_stack := CharacterAiTaskStack.new()
 
 var _ai_context: CharacterAiContext
