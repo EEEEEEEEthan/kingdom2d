@@ -19,6 +19,6 @@ func open_near_mouse() -> void:
 	show()
 	mode = MODE_WINDOWED
 	grab_focus()
-	# show() 会先挂视口再映射窗口，首帧画不出来，看起来是透明的。
-	# 窗口已经显示后再设一次尺寸，视口会重新接到已映射的窗口上。
-	size = window_size
+	# 原生窗口在 show() 里才创建，视口还挂在无效窗口上，首帧是透明的。
+	# 再走一次内容缩放会把视口接到已经映射的窗口，不用改窗口尺寸。
+	content_scale_factor = content_scale_factor
