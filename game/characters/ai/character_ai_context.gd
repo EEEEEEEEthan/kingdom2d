@@ -15,10 +15,10 @@ func _init(owner_character: Character) -> void:
 	character = owner_character
 
 func _resolve_game() -> Game:
-	var node: Node = character.owner
+	var node: Node = character
 	while node:
 		if node is Game:
 			return node
-		node = node.owner
+		node = node.get_parent()
 	assert(false, "Character must live under Game")
 	return null

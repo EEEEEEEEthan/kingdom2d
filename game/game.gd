@@ -109,5 +109,6 @@ func start_build_placement(structure_config: StructureConfig) -> void:
 
 func spawn_resident_at_cell(cell_index: int) -> Character:
 	var character := character_manager.create_character()
+	character.home_cell_index = cell_index
 	character.position.x = get_position_by_cell_index(cell_index) + HALF_TILE_SIZE
 	return character
