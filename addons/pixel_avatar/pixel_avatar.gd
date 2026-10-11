@@ -2,18 +2,19 @@
 extends Control
 class_name PixelAvatar
 
-## Face, hair, eyes, beard, mouth, and body share one atlas.
+## Face, hair, eyes, mouth, and body share one atlas.
+## The mouth cell includes the beard.
 ## Each cell is 16x16. Column count is width / 16. Indices wrap.
-## The six parts are inspector sliders.
+## The five parts are inspector sliders.
 ## Eyes are two 16x8 strips: open on top, closed on the bottom.
 
 const CELL := 16
 const HALF := 8
 const EYE_TOP := 2
 const EYES_PART := 2
-const PART_COUNT := 6
-const PART_NAMES: PackedStringArray = ["face", "hair", "eyes", "beard", "mouth", "body"]
-const _DRAW_ORDER: Array[int] = [5, 0, 1, 2, 3, 4]
+const PART_COUNT := 5
+const PART_NAMES: PackedStringArray = ["face", "hair", "eyes", "mouth", "body"]
+const _DRAW_ORDER: Array[int] = [4, 0, 1, 2, 3]
 const _BLINK_GAP_MIN := 2.2
 const _BLINK_GAP_MAX := 5.0
 const _BLINK_HOLD := 0.12
@@ -35,10 +36,6 @@ const _BLINK_HOLD := 0.12
 @export var eyes := 0:
 	set(value):
 		eyes = _wrap(value)
-		queue_redraw()
-@export var beard := 0:
-	set(value):
-		beard = _wrap(value)
 		queue_redraw()
 @export var mouth := 0:
 	set(value):
@@ -74,8 +71,6 @@ func part_index(part: int) -> int:
 		2:
 			return eyes
 		3:
-			return beard
-		4:
 			return mouth
 		_:
 			return body
@@ -129,7 +124,6 @@ func _refresh() -> void:
 	face = face
 	hair = hair
 	eyes = eyes
-	beard = beard
 	mouth = mouth
 	body = body
 

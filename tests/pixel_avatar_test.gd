@@ -66,8 +66,7 @@ func _run() -> void:
 	avatar.face = 0
 	avatar.hair = 1
 	avatar.eyes = 2
-	avatar.beard = 3
-	avatar.mouth = 0
+	avatar.mouth = 3
 	avatar.body = 1
 	_export_sheet(avatar)
 	print("pixel_avatar_test ok")
