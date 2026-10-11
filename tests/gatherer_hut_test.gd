@@ -109,14 +109,20 @@ func _run() -> void:
 	if not _priority_math_ok():
 		quit(1)
 		return
-	if not _priority_rebalance_ok(game):
+	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
+	root.add_child(browser)
+	browser.open_structure(hut)
+	if browser.current_path() != "structure/%d" % hut.id:
+		push_error("打开小屋应落到 structure/id，实际 %s" % browser.current_path())
 		quit(1)
 		return
-	var window = (load("res://game/structures/gatherer_hut_window.tscn") as PackedScene).instantiate()
-	root.add_child(window)
-	window.open_for(hut)
-	if window.get_node("%Worker0").text != "居民 %s" % gatherer.id:
+	var page = browser.get_node("%PageHost").get_child(0)
+	if page.get_node("%Worker0").text != "居民 %s" % gatherer.id:
 		push_error("小屋窗口应列出工人")
+		quit(1)
+		return
+	browser.go_back()
+	if not _priority_rebalance_ok(game):
 		quit(1)
 		return
 	print("gatherer_hut_ok")
