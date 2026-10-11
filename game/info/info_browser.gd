@@ -98,10 +98,13 @@ func _make_page(path: String) -> Control:
 			page.bind(character)
 			return page
 		"structure":
-			var structure := _structure_by_id(int(parts[1]))
+			var game := _find_game()
+			if not game:
+				return null
+			var structure := game.structure_manager.get_structure_by_id(int(parts[1]))
 			if structure is GathererHut:
 				var page := GATHERER_HUT_PAGE.instantiate()
-				page.bind(structure)
+				page.bind(structure, game.character_manager)
 				return page
 	return null
 
@@ -122,13 +125,6 @@ func _character_by_id(character_id: int) -> Character:
 	if not game:
 		return null
 	return game.character_manager.characters.get(character_id) as Character
-
-
-func _structure_by_id(structure_id: int) -> Structure:
-	var game := _find_game()
-	if not game:
-		return null
-	return game.structure_manager.get_structure_by_id(structure_id)
 
 
 func _find_game() -> Game:
