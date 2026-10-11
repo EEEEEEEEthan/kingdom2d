@@ -12,7 +12,8 @@ if errorlevel 1 exit /b 1
 
 if "%~1"=="" (
     start "" "%engineExe%" --editor --path "%CD%"
-) else (
-    "%engineExe%" %*
+    exit /b 0
 )
+
+"%engineExe%" %*
 exit /b %errorlevel%
