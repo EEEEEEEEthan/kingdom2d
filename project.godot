@@ -40,7 +40,7 @@ movie_writer/disable_vsync=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_editable_texture/plugin.cfg", "res://addons/godot_pull_requests/plugin.cfg", "res://addons/pixel_head/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_editable_texture/plugin.cfg", "res://addons/godot_pull_requests/plugin.cfg")
 
 [gui]
 

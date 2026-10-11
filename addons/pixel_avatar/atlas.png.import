@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ct2khfi5h8ljb"
-path="res://.godot/imported/hair_2.png-0873fc0d118649cd0a78cf4ca21cbdd0.ctex"
+uid="uid://dxx23184u0k6c"
+path="res://.godot/imported/atlas.png-68738198d235e327c80350d3e177450c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/pixel_head/masks/hair_2.png"
-dest_files=["res://.godot/imported/hair_2.png-0873fc0d118649cd0a78cf4ca21cbdd0.ctex"]
+source_file="res://addons/pixel_avatar/atlas.png"
+dest_files=["res://.godot/imported/atlas.png-68738198d235e327c80350d3e177450c.ctex"]
 
 [params]
 
