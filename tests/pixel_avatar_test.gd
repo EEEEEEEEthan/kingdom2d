@@ -1,6 +1,6 @@
 extends SceneTree
 
-## atlas 六行、每格 16。检查器滑条上限随列数变，下标取模。Control 自己画。
+## Six atlas rows, 16px cells. Inspector slider max follows column count. Indices wrap.
 
 
 func _initialize() -> void:
@@ -12,30 +12,30 @@ func _run() -> void:
 	root.add_child(avatar)
 	await process_frame
 	if not avatar is Control or avatar.get_child_count() != 0:
-		push_error("应是没有子节点的 Control")
+		push_error("expected a Control with no children")
 		quit(1)
 		return
-	if not _range_hint_is(avatar, "头发", avatar.max_part_index()):
+	if not _range_hint_is(avatar, "hair", avatar.max_part_index()):
 		quit(1)
 		return
-	avatar.头发 = avatar.variant_count() + 2
-	if avatar.头发 != 2:
-		push_error("取模失败 %s" % avatar.头发)
+	avatar.hair = avatar.variant_count() + 2
+	if avatar.hair != 2:
+		push_error("wrap failed %s" % avatar.hair)
 		quit(1)
 		return
 	if avatar.part_region(1).position != Vector2(2 * PixelAvatar.CELL, PixelAvatar.CELL):
-		push_error("头发区域不对")
+		push_error("hair region mismatch")
 		quit(1)
 		return
 	var open_eyes := avatar.part_region(PixelAvatar.EYES_PART)
 	if open_eyes.size != Vector2(PixelAvatar.CELL, PixelAvatar.HALF) or open_eyes.position.y != PixelAvatar.EYES_PART * PixelAvatar.CELL:
-		push_error("睁眼应是格子上半")
+		push_error("open eyes should be the top half")
 		quit(1)
 		return
 	avatar.blink()
 	var shut_eyes := avatar.part_region(PixelAvatar.EYES_PART)
 	if not avatar.eyes_closed or shut_eyes.position.y != open_eyes.position.y + PixelAvatar.HALF:
-		push_error("闭眼应是格子下半")
+		push_error("closed eyes should be the bottom half")
 		quit(1)
 		return
 	avatar.eyes_closed = false
@@ -43,21 +43,21 @@ func _run() -> void:
 	odd.fill(Color(1, 0, 0, 1))
 	avatar.atlas = ImageTexture.create_from_image(odd)
 	if avatar.variant_count() != 3 or avatar.max_part_index() != 2:
-		push_error("50 宽应只有 3 列，实际 %s" % avatar.variant_count())
+		push_error("width 50 should be 3 columns, got %s" % avatar.variant_count())
 		quit(1)
 		return
-	avatar.脸 = 5
-	if avatar.脸 != 2 or not _range_hint_is(avatar, "脸", 2):
-		push_error("检查器滑条上限或取模不对")
+	avatar.face = 5
+	if avatar.face != 2 or not _range_hint_is(avatar, "face", 2):
+		push_error("inspector range or wrap mismatch")
 		quit(1)
 		return
 	avatar.atlas = load("res://addons/pixel_avatar/atlas.png")
-	avatar.脸 = 0
-	avatar.头发 = 1
-	avatar.眼睛 = 2
-	avatar.胡子 = 3
-	avatar.嘴 = 0
-	avatar.身体 = 1
+	avatar.face = 0
+	avatar.hair = 1
+	avatar.eyes = 2
+	avatar.beard = 3
+	avatar.mouth = 0
+	avatar.body = 1
 	_export_sheet(avatar)
 	print("pixel_avatar_test ok")
 	quit(0)
@@ -68,10 +68,10 @@ func _range_hint_is(avatar: PixelAvatar, prop_name: String, max_index: int) -> b
 		if prop.name != prop_name:
 			continue
 		if prop.hint != PROPERTY_HINT_RANGE or prop.hint_string != "0,%d,1" % max_index:
-			push_error("%s 滑条提示是 %s" % [prop_name, prop.hint_string])
+			push_error("%s range hint is %s" % [prop_name, prop.hint_string])
 			return false
 		return true
-	push_error("没有属性 %s" % prop_name)
+	push_error("missing property %s" % prop_name)
 	return false
 
 
@@ -87,7 +87,7 @@ func _export_sheet(avatar: PixelAvatar) -> void:
 			_blit_avatar(sheet, source, index, closed, scale, row * PixelAvatar.CELL * scale)
 	var error := sheet.save_png("/opt/cursor/artifacts/pixel_avatar_sheet.png")
 	if error != OK:
-		push_error("预览图保存失败 %s" % error)
+		push_error("failed to save preview %s" % error)
 		quit(1)
 
 

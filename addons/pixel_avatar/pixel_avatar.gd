@@ -2,15 +2,16 @@
 extends Control
 class_name PixelAvatar
 
-## 脸、头发、眼睛、胡子、嘴、身体叠在同一张 atlas 上。
-## 每格固定 16×16。列数是贴图宽度除以 16 的整数，下标超出后取模。
-## 六个部位在检查器里用滑条调。
+## Face, hair, eyes, beard, mouth, and body share one atlas.
+## Each cell is 16x16. Column count is width / 16. Indices wrap.
+## The six parts are inspector sliders.
+## Eyes are two 16x8 strips: open on top, closed on the bottom.
 
 const CELL := 16
 const HALF := 8
 const EYES_PART := 2
 const PART_COUNT := 6
-const PART_NAMES: PackedStringArray = ["脸", "头发", "眼睛", "胡子", "嘴", "身体"]
+const PART_NAMES: PackedStringArray = ["face", "hair", "eyes", "beard", "mouth", "body"]
 const _DRAW_ORDER: Array[int] = [5, 0, 1, 2, 3, 4]
 const _BLINK_GAP_MIN := 2.2
 const _BLINK_GAP_MAX := 5.0
@@ -22,29 +23,29 @@ const _BLINK_HOLD := 0.12
 		_refresh()
 		notify_property_list_changed()
 
-@export var 脸 := 0:
+@export var face := 0:
 	set(value):
-		脸 = _wrap(value)
+		face = _wrap(value)
 		queue_redraw()
-@export var 头发 := 0:
+@export var hair := 0:
 	set(value):
-		头发 = _wrap(value)
+		hair = _wrap(value)
 		queue_redraw()
-@export var 眼睛 := 0:
+@export var eyes := 0:
 	set(value):
-		眼睛 = _wrap(value)
+		eyes = _wrap(value)
 		queue_redraw()
-@export var 胡子 := 0:
+@export var beard := 0:
 	set(value):
-		胡子 = _wrap(value)
+		beard = _wrap(value)
 		queue_redraw()
-@export var 嘴 := 0:
+@export var mouth := 0:
 	set(value):
-		嘴 = _wrap(value)
+		mouth = _wrap(value)
 		queue_redraw()
-@export var 身体 := 0:
+@export var body := 0:
 	set(value):
-		身体 = _wrap(value)
+		body = _wrap(value)
 		queue_redraw()
 
 var eyes_closed := false
@@ -66,17 +67,17 @@ func max_part_index() -> int:
 func part_index(part: int) -> int:
 	match part:
 		0:
-			return 脸
+			return face
 		1:
-			return 头发
+			return hair
 		2:
-			return 眼睛
+			return eyes
 		3:
-			return 胡子
+			return beard
 		4:
-			return 嘴
+			return mouth
 		_:
-			return 身体
+			return body
 
 
 func part_region(part: int) -> Rect2:
@@ -126,12 +127,12 @@ func _process(delta: float) -> void:
 
 
 func _refresh() -> void:
-	脸 = 脸
-	头发 = 头发
-	眼睛 = 眼睛
-	胡子 = 胡子
-	嘴 = 嘴
-	身体 = 身体
+	face = face
+	hair = hair
+	eyes = eyes
+	beard = beard
+	mouth = mouth
+	body = body
 
 
 func _draw() -> void:
