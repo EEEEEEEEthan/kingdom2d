@@ -25,33 +25,27 @@ func _run() -> void:
 			bush_cell = cell_index
 			break
 		previous_empty = cell_index
+	var gatherer = game.spawn_resident_at_cell(hut_cell - 2)
+	var near = game.spawn_resident_at_cell(hut_cell + 40)
+	var bystander = game.spawn_resident_at_cell(hut_cell + 80)
 	var hut = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(hut, hut_cell)
 	var bush = StructureConfig.bush.instantiate()
 	game.structure_manager.add_structure(bush, bush_cell)
-	var gatherer = game.spawn_resident_at_cell(hut_cell - 8)
-	var bystander = game.spawn_resident_at_cell(32)
+	near.set_process(false)
 	gatherer.set_process(false)
 	bystander.set_process(false)
 	_set_hour(game, 12)
-	if not hut.try_assign_unemployed():
-		push_error("应能安排无职业居民")
+	if hut.worker_ids.size() != 2 or hut.worker_ids[0] != gatherer.id or hut.worker_ids[1] != near.id:
+		push_error("应自动优先安排家最近的居民 %s" % [hut.worker_ids])
 		quit(1)
 		return
-	if gatherer.workplace_structure_id != hut.id:
-		push_error("第一个居民应成为采集者")
+	if gatherer.workplace_structure_id != hut.id or near.workplace_structure_id != hut.id:
+		push_error("前两名最近居民应入职")
 		quit(1)
 		return
-	if not hut.try_assign_unemployed():
-		push_error("第二个空位应还能加人")
-		quit(1)
-		return
-	if bystander.workplace_structure_id != hut.id:
-		push_error("第二个居民应入职")
-		quit(1)
-		return
-	if hut.try_assign_unemployed():
-		push_error("没有空位或没有无职业居民时不应再加人")
+	if bystander.workplace_structure_id != 0:
+		push_error("满员后不应再加人")
 		quit(1)
 		return
 	bystander.workplace_structure_id = 0
@@ -112,8 +106,60 @@ func _run() -> void:
 		push_error("员工列表应存档")
 		quit(1)
 		return
+	if not _priority_math_ok():
+		quit(1)
+		return
+	if not _priority_rebalance_ok(game):
+		quit(1)
+		return
 	print("gatherer_hut_ok")
 	quit(0)
+
+
+func _priority_math_ok() -> bool:
+	var counts = GathererHut.allocate_tier_counts([50, 0, 10], 40)
+	if counts != [30, 0, 10]:
+		push_error("40 人应按权重落到低优先 30、高优先 10，实际 %s" % [counts])
+		return false
+	var shares = GathererHut.spread_evenly(30, [10, 10, 10])
+	if shares != [10, 10, 10]:
+		push_error("30 人应均匀分到三栋普通建筑，实际 %s" % [shares])
+		return false
+	return true
+
+
+func _priority_rebalance_ok(game) -> bool:
+	game._clear()
+	var very = StructureConfig.gatherer_hut.instantiate()
+	very.priority = GathererHut.Priority.HIGH
+	game.structure_manager.add_structure(very, 0)
+	var normal = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(normal, 100)
+	var at_very = game.spawn_resident_at_cell(0)
+	var beside_very = game.spawn_resident_at_cell(1)
+	var at_normal = game.spawn_resident_at_cell(100)
+	at_very.set_process(false)
+	beside_very.set_process(false)
+	at_normal.set_process(false)
+	for resident in [at_very, beside_very, at_normal]:
+		resident.workplace_structure_id = 0
+	very.worker_ids.clear()
+	normal.worker_ids.clear()
+	game.rebalance_workplaces()
+	if very.worker_ids.size() != 2 or normal.worker_ids.size() != 1:
+		push_error("高优先应占 2 人、普通占 1 人 %s %s" % [very.worker_ids, normal.worker_ids])
+		return false
+	if at_normal.workplace_structure_id != normal.id or beside_very.workplace_structure_id != very.id:
+		push_error("家近的建筑应留下对应居民")
+		return false
+	very.assign_worker(at_normal)
+	normal.worker_ids.clear()
+	at_normal.workplace_structure_id = very.id
+	game.rebalance_workplaces()
+	if very.worker_ids.has(at_normal.id) or normal.worker_ids.size() != 1:
+		push_error("超编应先辞家最远的人")
+		return false
+	return true
 
 
 func _set_hour(game, hour: int) -> void:
