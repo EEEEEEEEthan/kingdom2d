@@ -25,7 +25,11 @@ func _process(_delta: float) -> void:
 
 func _sync() -> void:
 	title = _character.display_name()
-	%IdentityLabel.text = "%s，%s" % [_character.display_name(), _character.occupation_name()]
+	var job := _character.occupation_name()
+	if job.is_empty():
+		%IdentityLabel.text = _character.display_name()
+	else:
+		%IdentityLabel.text = "%s，%s" % [_character.display_name(), job]
 	%ActivityLabel.text = _character.current_activity()
 
 

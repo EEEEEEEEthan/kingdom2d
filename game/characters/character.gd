@@ -105,7 +105,7 @@ func display_name() -> String:
 func occupation_name() -> String:
 	if workplace_structure_id > 0:
 		return "采集者"
-	return "无业"
+	return ""
 
 func current_activity() -> String:
 	if indoors and _is_sleeping():

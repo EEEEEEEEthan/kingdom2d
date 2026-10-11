@@ -25,8 +25,8 @@ func _run() -> void:
 		push_error("id 1 姓名应为阿禾，实际 %s" % character.display_name())
 		quit(1)
 		return
-	if character.occupation_name() != "无业":
-		push_error("未分配工作时应无业")
+	if not character.occupation_name().is_empty():
+		push_error("未分配工作时职业应留空")
 		quit(1)
 		return
 	_set_hour(game, 12)
@@ -66,10 +66,18 @@ func _run() -> void:
 	root.add_child(window)
 	window.open_for(character)
 	await process_frame
-	if window.get_node("%IdentityLabel").text != "阿禾，无业":
-		push_error("窗口应显示姓名和职业，实际 %s" % window.get_node("%IdentityLabel").text)
+	if window.get_node("%IdentityLabel").text != "阿禾":
+		push_error("无业只显示姓名，实际 %s" % window.get_node("%IdentityLabel").text)
 		quit(1)
 		return
+	character.workplace_structure_id = 1
+	window._process(0.0)
+	if window.get_node("%IdentityLabel").text != "阿禾，采集者":
+		push_error("有职业应跟在姓名后面，实际 %s" % window.get_node("%IdentityLabel").text)
+		quit(1)
+		return
+	character.workplace_structure_id = 0
+	window._process(0.0)
 	if window.get_node("%ActivityLabel").text != "正在睡觉":
 		push_error("窗口应显示正在睡觉")
 		quit(1)
