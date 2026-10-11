@@ -9,7 +9,7 @@ class_name PixelAvatar
 
 const CELL := 16
 const HALF := 8
-const EYE_TOP := 4
+const EYE_TOP := 2
 const EYES_PART := 2
 const PART_COUNT := 6
 const PART_NAMES: PackedStringArray = ["face", "hair", "eyes", "beard", "mouth", "body"]
