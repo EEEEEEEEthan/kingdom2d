@@ -107,9 +107,7 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(CELL, CELL)
 	if size.x < 1.0 or size.y < 1.0:
 		size = Vector2(CELL, CELL)
-	if Engine.is_editor_hint():
-		set_process(false)
-		return
+	set_process(true)
 	_gap_left = randf_range(_BLINK_GAP_MIN, _BLINK_GAP_MAX)
 
 

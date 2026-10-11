@@ -39,6 +39,17 @@ func _run() -> void:
 		quit(1)
 		return
 	avatar.eyes_closed = false
+	avatar._gap_left = 0.0
+	avatar._process(0.01)
+	if not avatar.eyes_closed:
+		push_error("blink did not close the eyes")
+		quit(1)
+		return
+	avatar._process(PixelAvatar._BLINK_HOLD + 0.01)
+	if avatar.eyes_closed:
+		push_error("blink did not reopen")
+		quit(1)
+		return
 	var odd := Image.create(50, PixelAvatar.CELL * PixelAvatar.PART_COUNT, false, Image.FORMAT_RGBA8)
 	odd.fill(Color(1, 0, 0, 1))
 	avatar.atlas = ImageTexture.create_from_image(odd)
