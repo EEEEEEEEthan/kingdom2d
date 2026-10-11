@@ -66,6 +66,10 @@ func _run() -> void:
 	root.add_child(window)
 	window.open_for(character)
 	await process_frame
+	if window.get_node("%IdentityLabel").text != "阿禾，无业":
+		push_error("窗口应显示姓名和职业，实际 %s" % window.get_node("%IdentityLabel").text)
+		quit(1)
+		return
 	if window.get_node("%ActivityLabel").text != "正在睡觉":
 		push_error("窗口应显示正在睡觉")
 		quit(1)

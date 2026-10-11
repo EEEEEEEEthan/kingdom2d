@@ -15,7 +15,7 @@ canvas_item_default_texture_filter = 0
 oversampling_override = 1.0
 title = "居民"
 position = Vector2i(80, 48)
-size = Vector2i(220, 120)
+size = Vector2i(180, 88)
 visible = false
 always_on_top = true
 content_scale_mode = 1
@@ -46,15 +46,10 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="NameLabel" type="Label" parent="Margin/Rows"]
+[node name="IdentityLabel" type="Label" parent="Margin/Rows"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "姓名："
-
-[node name="JobLabel" type="Label" parent="Margin/Rows"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "职业："
+text = "阿禾，采集者"
 
 [node name="ActivityLabel" type="Label" parent="Margin/Rows"]
 unique_name_in_owner = true

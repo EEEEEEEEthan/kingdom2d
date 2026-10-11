@@ -25,8 +25,7 @@ func _process(_delta: float) -> void:
 
 func _sync() -> void:
 	title = _character.display_name()
-	%NameLabel.text = "姓名：%s" % _character.display_name()
-	%JobLabel.text = "职业：%s" % _character.occupation_name()
+	%IdentityLabel.text = "%s，%s" % [_character.display_name(), _character.occupation_name()]
 	%ActivityLabel.text = _character.current_activity()
 
 
