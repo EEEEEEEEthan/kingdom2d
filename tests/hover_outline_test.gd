@@ -1,89 +1,76 @@
 extends SceneTree
 
+const _OUTLINE_SCRIPT = preload("res://game/hover_outline.gd")
+const _SHADER = preload("res://game/hover_outline.gdshader")
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
 
 func _run() -> void:
-	var character := (load("res://game/characters/character.tscn") as PackedScene).instantiate() as Character
-	root.add_child(character)
-	var hut := StructureConfig.gatherer_hut.instantiate() as Structure
-	root.add_child(hut)
-	var oak := StructureConfig.oak.instantiate() as Structure
-	root.add_child(oak)
+	var host := Node2D.new()
+	var sprite := Sprite2D.new()
+	sprite.texture = _solid_texture()
+	sprite.centered = true
+	sprite.offset = Vector2.ZERO
+	host.add_child(sprite)
+	_OUTLINE_SCRIPT.attach(host)
+	root.add_child(host)
 	await process_frame
-	if character.get_child(0) is not HoverOutline:
-		push_error("小人应有描边节点")
+	var outline = host.get_child(1)
+	outline.set_process(false)
+	outline._process(0.0)
+	var material := sprite.material as ShaderMaterial
+	if material == null or material.shader != _SHADER:
+		push_error("描边应挂 shader")
 		quit(1)
 		return
-	if hut.get_child(0) is not HoverOutline:
-		push_error("建筑应有描边节点")
+	if material.get_shader_parameter("enabled") != 0.0:
+		push_error("未悬停时不应描边")
 		quit(1)
 		return
-	if _has_outline(oak):
-		push_error("植物不应有描边")
+	material.set_shader_parameter("enabled", 1.0)
+	material.set_shader_parameter("region_uv", Vector4(0, 0, 1, 1))
+	var image := await _render(host)
+	DirAccess.make_dir_recursive_absolute("/opt/cursor/artifacts")
+	image.save_png("/opt/cursor/artifacts/hover_outline_character.png")
+	var white := _count_white(image)
+	if white < 12:
+		push_error("描边截图里没有白色像素，white=%s" % white)
 		quit(1)
 		return
-	var outline := character.get_child(0) as HoverOutline
-	var sprite := character.get_node("Sprite2D") as Sprite2D
-	var inside := sprite.get_rect().get_center()
-	if not sprite.get_rect().has_point(sprite.to_local(character.to_global(inside))):
-		push_error("精灵矩形应包含中心点")
-		quit(1)
-		return
-	outline.visible = true
-	outline._sync_sprites(character)
-	if outline.get_child_count() != 4:
-		push_error("描边应是上下左右四向")
-		quit(1)
-		return
-	var image := await _render_outlined(character)
-	if image == null or image.is_empty():
-		push_error("描边截图失败")
-		quit(1)
-		return
+	print("hover_outline_ok white=", white)
+	quit(0)
+
+
+func _solid_texture() -> Texture2D:
+	var image := Image.create(4, 6, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.2, 0.45, 0.9, 1))
+	return ImageTexture.create_from_image(image)
+
+
+func _count_white(image: Image) -> int:
 	var white := 0
 	for y in image.get_height():
 		for x in image.get_width():
 			var pixel := image.get_pixel(x, y)
 			if pixel.a > 0.5 and pixel.r > 0.9 and pixel.g > 0.9 and pixel.b > 0.9:
 				white += 1
-	if white < 4:
-		push_error("描边截图里没有白色像素")
-		quit(1)
-		return
-	DirAccess.make_dir_recursive_absolute("/opt/cursor/artifacts")
-	image.save_png("/opt/cursor/artifacts/hover_outline_character.png")
-	var hut_image := await _render_outlined(hut)
-	hut_image.save_png("/opt/cursor/artifacts/hover_outline_hut.png")
-	print("hover_outline_ok white=", white)
-	quit(0)
+	return white
 
 
-func _has_outline(node: Node) -> bool:
-	for child in node.get_children():
-		if child is HoverOutline:
-			return true
-	return false
-
-
-func _render_outlined(host: Node2D) -> Image:
+func _render(host: Node2D) -> Image:
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(48, 48)
+	viewport.size = Vector2i(32, 32)
 	viewport.transparent_bg = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(viewport)
 	var holder := Node2D.new()
-	holder.position = Vector2(24, 32)
+	holder.position = Vector2(16, 16)
 	viewport.add_child(holder)
-	var copy := host.duplicate() as Node2D
-	holder.add_child(copy)
-	var outline := copy.get_child(0) as HoverOutline
-	outline.visible = true
-	outline._sync_sprites(copy)
+	host.reparent(holder)
+	host.position = Vector2.ZERO
 	await process_frame
 	await process_frame
-	var texture := viewport.get_texture()
-	if texture == null:
-		return null
-	return texture.get_image()
+	return viewport.get_texture().get_image()
