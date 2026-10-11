@@ -62,7 +62,7 @@ func _assert_parts(head: PixelHead) -> void:
 func _assert_color_is_independent() -> void:
 	var female := PixelHead.create(0, 0, 0, 0, 0, 0)
 	var male_a := PixelHead.create(1, 0, 0, 0, 0, 0)
-	var male_b := PixelHead.create(1, 2, 0, 0, 0, 0)
+	var male_b := PixelHead.create(1, 1, 0, 0, 0, 0)
 	root.add_child(female)
 	root.add_child(male_a)
 	root.add_child(male_b)
@@ -74,6 +74,11 @@ func _assert_color_is_independent() -> void:
 		quit(1)
 	if _count_diff(male_image, other_image) == 0:
 		push_error("两款男性头发一样")
+		quit(1)
+	var dyed := PixelHead.create(0, 0, 2, 0, 0, 0)
+	root.add_child(dyed)
+	if _count_diff(female_image, dyed.build_image()) == 0:
+		push_error("换发色没有变化")
 		quit(1)
 
 
