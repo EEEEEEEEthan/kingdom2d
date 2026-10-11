@@ -24,7 +24,6 @@ atlas = ExtResource("2_theme")
 region = Rect2(50, 17, 12, 13)
 
 [node name="InfoBrowser" type="Window"]
-transparent_bg = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
@@ -34,7 +33,6 @@ title = "Kingdom"
 position = Vector2i(100, 36)
 size = Vector2i(280, 360)
 borderless = true
-transparent = true
 visible = false
 always_on_top = true
 content_scale_mode = 1

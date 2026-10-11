@@ -12,8 +12,8 @@ func _run() -> void:
 		push_error("信息浏览器应无系统边框")
 		quit(1)
 		return
-	if not browser.transparent:
-		push_error("信息浏览器应允许透明")
+	if browser.transparent or browser.transparent_bg:
+		push_error("信息浏览器应不透明，否则会闪一下后消失")
 		quit(1)
 		return
 	if browser.get_node_or_null("%CloseButton") == null:
