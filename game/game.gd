@@ -79,7 +79,7 @@ func load_game() -> void:
 	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}))
 	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
 	game_time.all_days = data.get(_SERKEY_DAYS, _GAME_START_DAYS)
-	assign_open_workplaces()
+	rebalance_workplaces()
 
 func save_game() -> void:
 	print("save_game")
@@ -152,41 +152,83 @@ func spawn_resident_at_cell(cell_index: int) -> Character:
 	var character := character_manager.create_character()
 	character.home_cell_index = cell_index
 	character.position.x = get_position_by_cell_index(cell_index) + HALF_TILE_SIZE
-	assign_open_workplaces()
+	rebalance_workplaces()
 	return character
 
 
-# 每个空位挑家离该建筑最近的无职业居民。多个建筑同时有空位时，先填距离最短的一对。
-func assign_open_workplaces() -> void:
+# 先按优先级权重算出每个建筑的人数，再减最远的、补最近的。
+func rebalance_workplaces() -> void:
+	var huts_by_tier: Array = [[], [], []]
+	for structure in structure_manager.index_to_structures:
+		if not structure is GathererHut:
+			continue
+		var hut := structure as GathererHut
+		huts_by_tier[hut.priority].append(hut)
+	var demands: Array[int] = []
+	for tier in huts_by_tier.size():
+		var tier_huts: Array = huts_by_tier[tier]
+		tier_huts.sort_custom(func(a: GathererHut, b: GathererHut) -> bool: return a.id < b.id)
+		demands.append(tier_huts.size() * GathererHut.SLOT_COUNT)
+	var tier_counts := GathererHut.allocate_tier_counts(demands, character_manager.characters.size())
+	var targets: Dictionary[int, int] = {}
+	for tier in huts_by_tier.size():
+		var tier_huts: Array = huts_by_tier[tier]
+		var capacities: Array[int] = []
+		capacities.resize(tier_huts.size())
+		capacities.fill(GathererHut.SLOT_COUNT)
+		var shares := GathererHut.spread_evenly(tier_counts[tier], capacities)
+		for index in tier_huts.size():
+			targets[(tier_huts[index] as GathererHut).id] = shares[index]
+	for tier in huts_by_tier:
+		for hut_value in tier:
+			var hut := hut_value as GathererHut
+			while hut.worker_ids.size() > targets[hut.id]:
+				var farthest := _farthest_worker(hut)
+				if farthest == null:
+					break
+				hut.release_worker(farthest)
 	while true:
 		var best_hut: GathererHut = null
 		var best_character: Character = null
 		var best_distance := 0
-		for structure in structure_manager.index_to_structures:
-			if not structure is GathererHut:
-				continue
-			var hut := structure as GathererHut
-			if not hut.has_open_slot():
-				continue
-			for character in character_manager.characters.values():
-				if character.workplace_structure_id != 0:
+		for tier in huts_by_tier:
+			for hut_value in tier:
+				var hut := hut_value as GathererHut
+				if hut.worker_ids.size() >= targets[hut.id]:
 					continue
-				var distance := absi(_character_home_cell(character) - hut.cell_index)
-				if best_character != null and distance > best_distance:
-					continue
-				if best_character != null and distance == best_distance and character.id > best_character.id:
-					continue
-				if best_character != null and distance == best_distance and character.id == best_character.id and hut.id > best_hut.id:
-					continue
-				best_hut = hut
-				best_character = character
-				best_distance = distance
+				for character in character_manager.characters.values():
+					if character.workplace_structure_id != 0:
+						continue
+					var distance := absi(home_cell_of(character) - hut.cell_index)
+					if best_character != null and distance > best_distance:
+						continue
+					if best_character != null and distance == best_distance and character.id > best_character.id:
+						continue
+					if best_character != null and distance == best_distance and character.id == best_character.id and hut.id > best_hut.id:
+						continue
+					best_hut = hut
+					best_character = character
+					best_distance = distance
 		if best_character == null:
 			return
 		best_hut.assign_worker(best_character)
 
 
-func _character_home_cell(character: Character) -> int:
+func _farthest_worker(hut: GathererHut) -> Character:
+	var farthest: Character = null
+	var farthest_distance := 0
+	for worker_id in hut.worker_ids:
+		var character: Character = character_manager.characters.get(worker_id)
+		if character == null:
+			continue
+		var distance := absi(home_cell_of(character) - hut.cell_index)
+		if farthest == null or distance > farthest_distance or (distance == farthest_distance and character.id > farthest.id):
+			farthest = character
+			farthest_distance = distance
+	return farthest
+
+
+func home_cell_of(character: Character) -> int:
 	if character.home_cell_index >= 0:
 		return character.home_cell_index
 	var cell := roundi((character.position.x - HALF_TILE_SIZE) / float(TILE_SIZE))

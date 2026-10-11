@@ -56,7 +56,7 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 	if structure is GathererHut:
 		var game := _game()
 		if game:
-			game.assign_open_workplaces()
+			game.rebalance_workplaces()
 
 
 func _game() -> Game:

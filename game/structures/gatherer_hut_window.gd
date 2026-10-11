@@ -31,6 +31,12 @@ func _rebuild() -> void:
 	_rows.set_meta("signature", signature)
 	for child in _rows.get_children():
 		child.queue_free()
+	for tier in GathererHut.PRIORITY_NAMES.size():
+		var button := Button.new()
+		button.text = GathererHut.PRIORITY_NAMES[tier]
+		button.disabled = _hut.priority == tier
+		button.pressed.connect(_on_priority_pressed.bind(tier))
+		_rows.add_child(button)
 	for slot in GathererHut.SLOT_COUNT:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -45,10 +51,18 @@ func _rebuild() -> void:
 
 
 func _signature() -> String:
-	var parts: PackedStringArray = []
+	var parts: PackedStringArray = [str(_hut.priority)]
 	for worker_id in _hut.worker_ids:
 		parts.append(str(worker_id))
 	return "|".join(parts)
+
+
+func _on_priority_pressed(tier: int) -> void:
+	if not _hut or not is_instance_valid(_hut):
+		return
+	_hut.change_priority(tier)
+	_rows.remove_meta("signature")
+	_rebuild()
 
 
 func _open_near_mouse() -> void:

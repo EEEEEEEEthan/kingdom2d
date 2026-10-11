@@ -106,8 +106,55 @@ func _run() -> void:
 		push_error("员工列表应存档")
 		quit(1)
 		return
+	if not _priority_math_ok():
+		quit(1)
+		return
+	if not _priority_rebalance_ok(game):
+		quit(1)
+		return
 	print("gatherer_hut_ok")
 	quit(0)
+
+
+func _priority_math_ok() -> bool:
+	var counts = GathererHut.allocate_tier_counts([10, 0, 50], 40)
+	if counts != [10, 0, 30]:
+		push_error("40 人应按权重落到非常优先 10、普通 30，实际 %s" % [counts])
+		return false
+	var shares = GathererHut.spread_evenly(30, [10, 10, 10])
+	if shares != [10, 10, 10]:
+		push_error("30 人应均匀分到三栋普通建筑，实际 %s" % [shares])
+		return false
+	return true
+
+
+func _priority_rebalance_ok(game) -> bool:
+	game._clear()
+	var very = StructureConfig.gatherer_hut.instantiate()
+	very.priority = GathererHut.Priority.VERY_HIGH
+	game.structure_manager.add_structure(very, 0)
+	var normal = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(normal, 100)
+	var at_very = game.spawn_resident_at_cell(0)
+	var beside_very = game.spawn_resident_at_cell(1)
+	var at_normal = game.spawn_resident_at_cell(100)
+	at_very.set_process(false)
+	beside_very.set_process(false)
+	at_normal.set_process(false)
+	if very.worker_ids.size() != 2 or normal.worker_ids.size() != 1:
+		push_error("非常优先应占 2 人、普通占 1 人 %s %s" % [very.worker_ids, normal.worker_ids])
+		return false
+	if at_normal.workplace_structure_id != normal.id or beside_very.workplace_structure_id != very.id:
+		push_error("家近的建筑应留下对应居民")
+		return false
+	very.assign_worker(at_normal)
+	normal.worker_ids.clear()
+	at_normal.workplace_structure_id = very.id
+	game.rebalance_workplaces()
+	if very.worker_ids.has(at_normal.id) or normal.worker_ids.size() != 1:
+		push_error("超编应先辞家最远的人")
+		return false
+	return true
 
 
 func _set_hour(game, hour: int) -> void:
