@@ -112,6 +112,13 @@ func _run() -> void:
 	if not _priority_rebalance_ok(game):
 		quit(1)
 		return
+	var window = (load("res://game/structures/gatherer_hut_window.tscn") as PackedScene).instantiate()
+	root.add_child(window)
+	window.open_for(hut)
+	if window.get_node("%Worker0").text != "居民 %s" % gatherer.id:
+		push_error("小屋窗口应列出工人")
+		quit(1)
+		return
 	print("gatherer_hut_ok")
 	quit(0)
 
