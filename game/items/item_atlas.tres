@@ -1,0 +1,9 @@
+[gd_resource type="Texture2D" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/godot_editable_texture/editable_texture.gd" id="1_tex"]
+
+[resource]
+resource_name = "item_atlas"
+script = ExtResource("1_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAY0lEQVR4nGNgQAMznwb8z9pn8B9dHAWAFIAUYpNjhDFuhidjVaC+ci5YDROyIrUVc8AYGdyEyrEgC96KSMEw8fLt82CaCZeVyIrACmFuwKcI7kZ0xciKQs6dQ3gGWTE2RSQBAFHiLxUMHseFAAAAAElFTkSuQmCC"
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"

@@ -7,6 +7,7 @@ const _KEY_AI_TASK_STACK = 3
 const _KEY_HOME_CELL_INDEX = 4
 const _KEY_INDOORS = 5
 const _KEY_WORKPLACE_STRUCTURE_ID = 6
+const _KEY_CARRIED_ITEMS = 7
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
@@ -16,6 +17,7 @@ var id: int
 var home_cell_index := -1
 var indoors := false
 var workplace_structure_id := 0
+var carried_items := ItemContainer.new()
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
 @export var show_outline := true:
 	set(value):
@@ -79,6 +81,7 @@ func deserialize(data: Dictionary) -> void:
 	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
 	indoors = data.get(_KEY_INDOORS, false)
 	workplace_structure_id = data.get(_KEY_WORKPLACE_STRUCTURE_ID, 0)
+	carried_items = ItemContainer.deserialize(data.get(_KEY_CARRIED_ITEMS, {}))
 	visible = not indoors
 	_schedule_initialized = false
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
@@ -91,6 +94,7 @@ func serialize() -> Dictionary:
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
 		_KEY_WORKPLACE_STRUCTURE_ID: workplace_structure_id,
+		_KEY_CARRIED_ITEMS: carried_items.serialize(),
 	}
 
 

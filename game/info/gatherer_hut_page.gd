@@ -2,10 +2,25 @@ extends Control
 
 var _hut: GathererHut
 var _characters: CharacterManager
+var _item_labels: Dictionary[int, Label] = {}
 
 
 func _ready() -> void:
 	%PrioritySlider.value_changed.connect(_on_priority_slider)
+	for item_id in ItemConfig.configs_by_id:
+		var config := ItemConfig.configs_by_id[item_id]
+		var row := HBoxContainer.new()
+		var icon := TextureRect.new()
+		icon.texture = config.icon
+		icon.custom_minimum_size = config.icon.get_size()
+		icon.stretch_mode = TextureRect.STRETCH_KEEP
+		row.add_child(icon)
+		var label := Label.new()
+		row.add_child(label)
+		%Items.add_child(row)
+		_item_labels[item_id] = label
+	if _hut:
+		_sync()
 
 
 func bind(hut: GathererHut, characters: CharacterManager) -> void:
@@ -34,6 +49,14 @@ func _sync() -> void:
 	for slot in GathererHut.SLOT_COUNT:
 		var label := get_node("%%Worker%d" % slot) as Label
 		label.text = _worker_label(slot)
+	var has_items := false
+	for item_id in _item_labels:
+		var count := _hut.container.count_of(item_id)
+		(_item_labels[item_id].get_parent() as Control).visible = count > 0
+		if count > 0:
+			_item_labels[item_id].text = "×%d" % count
+			has_items = true
+	%ContainerEmpty.visible = not has_items
 
 
 func _worker_label(slot: int) -> String:
