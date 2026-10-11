@@ -82,7 +82,7 @@ func _run() -> void:
 		quit(1)
 		return
 	var bush_id = bush.id
-	_set_hour(game, 20)
+	_set_hour(game, 19)
 	gatherer._process(0.2)
 	if gatherer.indoors or not is_equal_approx(gatherer.position.x, bush_x):
 		push_error("采集途中到点也不应回家")
@@ -92,8 +92,24 @@ func _run() -> void:
 		gatherer._process(0.5)
 		if gatherer.indoors:
 			break
+	if gatherer.indoors or not gatherer.visible:
+		push_error("休息段一轮结束后应留在屋外")
+		quit(1)
+		return
+	gatherer.abandon_ai_tasks()
+	gatherer._process(0.05)
+	var rest_activity: String = gatherer.current_activity()
+	if rest_activity != "正在闲逛" and rest_activity != "正在歇着":
+		push_error("休息段应留在屋外，实际 %s" % rest_activity)
+		quit(1)
+		return
+	_set_hour(game, 23)
+	for _step in 400:
+		gatherer._process(0.5)
+		if gatherer.indoors:
+			break
 	if not gatherer.indoors:
-		push_error("一轮结束后应回家")
+		push_error("睡眠段一轮结束后应回家")
 		quit(1)
 		return
 	if game.structure_manager.get_structure_by_id(bush_id) != bush:
@@ -176,4 +192,4 @@ func _priority_rebalance_ok(game) -> bool:
 
 
 func _set_hour(game, hour: int) -> void:
-	game.game_time.all_days = 8.0 + float(hour) / 24.0
+	game.game_time.all_days = 8.0 + (float(hour) + 0.5) / 24.0

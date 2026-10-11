@@ -46,7 +46,7 @@ func _run() -> void:
 		push_error("开始采集周期应去小屋，实际 %s" % character.current_activity())
 		quit(1)
 		return
-	_set_hour(game, 21)
+	_set_hour(game, 23)
 	character.abandon_ai_tasks()
 	character.workplace_structure_id = 0
 	character.indoors = false
@@ -134,4 +134,4 @@ func _run() -> void:
 
 
 func _set_hour(game, hour: int) -> void:
-	game.game_time.all_days = float(hour) / 24.0
+	game.game_time.all_days = (float(hour) + 0.5) / 24.0

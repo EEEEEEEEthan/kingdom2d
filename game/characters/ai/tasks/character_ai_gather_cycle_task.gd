@@ -54,7 +54,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				return Status.RUNNING
 			_bush_id = _pick_bush_id(context, hut)
 			if _bush_id == 0:
-				if character.is_asleep():
+				if context.day_time_period != GameTime.DayTimePeriod.WORK:
 					character.visible = true
 					return Status.SUCCEEDED
 				return Status.RUNNING
