@@ -1,78 +1,47 @@
 extends Window
 
 var _hut: GathererHut
-var _rows: VBoxContainer
 
 
 func _ready() -> void:
 	visible = false
 	close_requested.connect(hide)
-	_rows = %Rows
+	%PrioritySlider.value_changed.connect(_on_priority_slider)
 
 
 func open_for(hut: GathererHut) -> void:
 	_hut = hut
-	_rebuild()
+	_sync()
 	_open_near_mouse()
 
 
 func _process(_delta: float) -> void:
-	if visible and _hut and is_instance_valid(_hut):
-		_rebuild()
-
-
-func _rebuild() -> void:
+	if not visible:
+		return
 	if not _hut or not is_instance_valid(_hut):
 		hide()
 		return
-	var signature := _signature()
-	if _rows.has_meta("signature") and _rows.get_meta("signature") == signature:
-		return
-	_rows.set_meta("signature", signature)
-	for child in _rows.get_children():
-		child.queue_free()
-	var priority_label := Label.new()
-	priority_label.text = GathererHut.PRIORITY_NAMES[_hut.priority]
-	_rows.add_child(priority_label)
-	var slider := HSlider.new()
-	slider.min_value = 0
-	slider.max_value = GathererHut.Priority.NORMAL
-	slider.step = 1
-	slider.tick_count = GathererHut.PRIORITY_NAMES.size()
-	slider.ticks_on_borders = true
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.custom_minimum_size = Vector2(0, 16)
-	# 左端是普通，右端是非常优先。
-	slider.set_value_no_signal(GathererHut.Priority.NORMAL - _hut.priority)
-	slider.value_changed.connect(_on_priority_slider)
-	_rows.add_child(slider)
+	_sync()
+
+
+func _sync() -> void:
+	var slider := %PrioritySlider as HSlider
+	if int(slider.value) != _hut.priority:
+		slider.set_value_no_signal(_hut.priority)
+	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
 	for slot in GathererHut.SLOT_COUNT:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		var label := Label.new()
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var label := get_node("%Worker%d" % slot) as Label
 		if slot < _hut.worker_ids.size():
 			label.text = "居民 %s" % _hut.worker_ids[slot]
 		else:
 			label.text = "空位"
-		row.add_child(label)
-		_rows.add_child(row)
-
-
-func _signature() -> String:
-	var parts: PackedStringArray = [str(_hut.priority)]
-	for worker_id in _hut.worker_ids:
-		parts.append(str(worker_id))
-	return "|".join(parts)
 
 
 func _on_priority_slider(value: float) -> void:
 	if not _hut or not is_instance_valid(_hut):
 		return
-	_hut.change_priority(GathererHut.Priority.NORMAL - int(value))
-	if _rows.has_meta("signature"):
-		_rows.remove_meta("signature")
-	_rebuild()
+	_hut.change_priority(int(value))
+	_sync()
 
 
 func _open_near_mouse() -> void:
