@@ -41,7 +41,7 @@ func change_priority(value: int) -> void:
 	if priority == value:
 		return
 	priority = value
-	var game := _game()
+	var game := Game.find(self)
 	if game:
 		game.rebalance_workplaces()
 
@@ -121,12 +121,3 @@ static func spread_evenly(total: int, capacities: Array) -> Array:
 		if not progressed:
 			break
 	return shares
-
-
-func _game() -> Game:
-	var node: Node = self
-	while node:
-		if node is Game:
-			return node
-		node = node.get_parent()
-	return null

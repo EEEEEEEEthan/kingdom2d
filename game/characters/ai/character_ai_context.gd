@@ -18,10 +18,6 @@ func _init(owner_character: Character) -> void:
 	character = owner_character
 
 func _resolve_game() -> Game:
-	var node: Node = character
-	while node:
-		if node is Game:
-			return node
-		node = node.get_parent()
-	assert(false, "Character must live under Game")
-	return null
+	var game := Game.find(character)
+	assert(game != null, "Character must live under Game")
+	return game
