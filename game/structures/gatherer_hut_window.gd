@@ -31,12 +31,21 @@ func _rebuild() -> void:
 	_rows.set_meta("signature", signature)
 	for child in _rows.get_children():
 		child.queue_free()
-	for tier in GathererHut.PRIORITY_NAMES.size():
-		var button := Button.new()
-		button.text = GathererHut.PRIORITY_NAMES[tier]
-		button.disabled = _hut.priority == tier
-		button.pressed.connect(_on_priority_pressed.bind(tier))
-		_rows.add_child(button)
+	var priority_label := Label.new()
+	priority_label.text = GathererHut.PRIORITY_NAMES[_hut.priority]
+	_rows.add_child(priority_label)
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = GathererHut.Priority.NORMAL
+	slider.step = 1
+	slider.tick_count = GathererHut.PRIORITY_NAMES.size()
+	slider.ticks_on_borders = true
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.custom_minimum_size = Vector2(0, 16)
+	# 左端是普通，右端是非常优先。
+	slider.set_value_no_signal(GathererHut.Priority.NORMAL - _hut.priority)
+	slider.value_changed.connect(_on_priority_slider)
+	_rows.add_child(slider)
 	for slot in GathererHut.SLOT_COUNT:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -57,11 +66,12 @@ func _signature() -> String:
 	return "|".join(parts)
 
 
-func _on_priority_pressed(tier: int) -> void:
+func _on_priority_slider(value: float) -> void:
 	if not _hut or not is_instance_valid(_hut):
 		return
-	_hut.change_priority(tier)
-	_rows.remove_meta("signature")
+	_hut.change_priority(GathererHut.Priority.NORMAL - int(value))
+	if _rows.has_meta("signature"):
+		_rows.remove_meta("signature")
 	_rebuild()
 
 
