@@ -27,6 +27,18 @@ func _run() -> void:
 		push_error("头发区域不对")
 		quit(1)
 		return
+	var open_eyes := avatar.part_region(PixelAvatar.EYES_PART)
+	if open_eyes.size != Vector2(PixelAvatar.CELL, PixelAvatar.HALF) or open_eyes.position.y != PixelAvatar.EYES_PART * PixelAvatar.CELL:
+		push_error("睁眼应是格子上半")
+		quit(1)
+		return
+	avatar.blink()
+	var shut_eyes := avatar.part_region(PixelAvatar.EYES_PART)
+	if not avatar.eyes_closed or shut_eyes.position.y != open_eyes.position.y + PixelAvatar.HALF:
+		push_error("闭眼应是格子下半")
+		quit(1)
+		return
+	avatar.eyes_closed = false
 	var odd := Image.create(50, PixelAvatar.CELL * PixelAvatar.PART_COUNT, false, Image.FORMAT_RGBA8)
 	odd.fill(Color(1, 0, 0, 1))
 	avatar.atlas = ImageTexture.create_from_image(odd)
@@ -66,20 +78,33 @@ func _range_hint_is(avatar: PixelAvatar, prop_name: String, max_index: int) -> b
 func _export_sheet(avatar: PixelAvatar) -> void:
 	var scale := 8
 	var count := avatar.variant_count()
-	var sheet := Image.create(PixelAvatar.CELL * scale * count, PixelAvatar.CELL * scale, false, Image.FORMAT_RGBA8)
+	var sheet := Image.create(PixelAvatar.CELL * scale * count, PixelAvatar.CELL * scale * 2, false, Image.FORMAT_RGBA8)
 	sheet.fill(Color8(34, 32, 52))
 	var source := avatar.atlas.get_image()
-	for index in count:
-		for part in PixelAvatar._DRAW_ORDER:
-			var from := Rect2i(index * PixelAvatar.CELL, part * PixelAvatar.CELL, PixelAvatar.CELL, PixelAvatar.CELL)
-			var cell := source.get_region(from)
-			for y in PixelAvatar.CELL:
-				for x in PixelAvatar.CELL:
-					var pixel := cell.get_pixel(x, y)
-					if pixel.a <= 0.0:
-						continue
-					sheet.fill_rect(Rect2i((index * PixelAvatar.CELL + x) * scale, y * scale, scale, scale), pixel)
+	for row in 2:
+		var closed := row == 1
+		for index in count:
+			_blit_avatar(sheet, source, index, closed, scale, row * PixelAvatar.CELL * scale)
 	var error := sheet.save_png("/opt/cursor/artifacts/pixel_avatar_sheet.png")
 	if error != OK:
 		push_error("预览图保存失败 %s" % error)
 		quit(1)
+
+
+func _blit_avatar(sheet: Image, source: Image, index: int, closed: bool, scale: int, origin_y: int) -> void:
+	for part in PixelAvatar._DRAW_ORDER:
+		var region_y := part * PixelAvatar.CELL
+		var region_h := PixelAvatar.CELL
+		var dest_y := 0
+		if part == PixelAvatar.EYES_PART:
+			region_h = PixelAvatar.HALF
+			if closed:
+				region_y += PixelAvatar.HALF
+		var cell := source.get_region(Rect2i(index * PixelAvatar.CELL, region_y, PixelAvatar.CELL, region_h))
+		for y in region_h:
+			for x in PixelAvatar.CELL:
+				var pixel := cell.get_pixel(x, y)
+				if pixel.a <= 0.0:
+					continue
+				var py := origin_y + (dest_y + y) * scale
+				sheet.fill_rect(Rect2i((index * PixelAvatar.CELL + x) * scale, py, scale, scale), pixel)
