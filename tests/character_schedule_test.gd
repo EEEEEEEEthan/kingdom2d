@@ -23,10 +23,10 @@ func _run() -> void:
 		return
 	var home_x = character.position.x
 	character.position.x = home_x + 24.0
-	_set_hour(game, 20)
+	_set_hour(game, 22)
 	character._process(0.05)
 	if is_equal_approx(character.position.x, home_x):
-		push_error("20:00 应先走向门口")
+		push_error("22:00 应先走向门口")
 		quit(1)
 		return
 	character._process(10.0)
@@ -45,10 +45,10 @@ func _run() -> void:
 		push_error("4:00 仍应在房间里")
 		quit(1)
 		return
-	_set_hour(game, 5)
+	_set_hour(game, 6)
 	character._process(0.05)
 	if character.indoors or not character.visible:
-		push_error("5:00 应出门")
+		push_error("6:00 应出门")
 		quit(1)
 		return
 	if not is_equal_approx(character.position.x, home_x):
@@ -75,4 +75,4 @@ func _run() -> void:
 
 
 func _set_hour(game, hour: int) -> void:
-	game.game_time.all_days = 8.0 + float(hour) / 24.0
+	game.game_time.all_days = 8.0 + (float(hour) + 0.5) / 24.0

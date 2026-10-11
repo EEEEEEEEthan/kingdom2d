@@ -89,7 +89,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				return Status.SUCCEEDED
 		5:
 			character.visible = true
-			if character.is_asleep():
+			if context.day_time_period != GameTime.DayTimePeriod.WORK:
 				return Status.SUCCEEDED
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _NO_BUSH_WAIT_SECONDS:
