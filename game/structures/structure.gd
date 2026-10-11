@@ -7,9 +7,11 @@ const _KEY_INSTANCE_ID = 2
 const _KEY_DATA = 3
 const _KEY_CELL_INDEX = 4
 const _KEY_HP = 5
+const _KEY_CONTAINER = 6
 
 var config: StructureConfig
 var id: int
+var container := ItemContainer.new()
 var cell_index: int:
 	get:
 		return cell_index
@@ -42,6 +44,7 @@ static func deserialize(data: Dictionary, parent: Node) -> Structure:
 	structure.id = data[_KEY_INSTANCE_ID]
 	structure.cell_index = data[_KEY_CELL_INDEX]
 	structure.hp = data[_KEY_HP]
+	structure.container = ItemContainer.deserialize(data.get(_KEY_CONTAINER, {}))
 	structure._deserialize(data[_KEY_DATA])
 	return structure
 
@@ -55,6 +58,7 @@ func serialize() -> Dictionary:
 		_KEY_DATA: _serialize(),
 		_KEY_CELL_INDEX: cell_index,
 		_KEY_HP: hp,
+		_KEY_CONTAINER: container.serialize(),
 	}
 
 func _serialize() -> Dictionary:

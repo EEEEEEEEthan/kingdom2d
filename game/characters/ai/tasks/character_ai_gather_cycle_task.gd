@@ -9,6 +9,8 @@ const KEY_BUSH_ID = 3
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_BUSH_WAIT_SECONDS := 2.0
+const _HARVEST_ITEM_ID := ItemConfig.TypeId.BERRY
+const _HARVEST_ITEM_COUNT := 1
 
 var _phase := 0
 var _elapsed_seconds := 0.0
@@ -82,10 +84,12 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		3:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds >= _SHAKE_SECONDS:
+				character.carried_items.add(_HARVEST_ITEM_ID, _HARVEST_ITEM_COUNT)
 				_phase = 4
 		4:
 			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
 				character.visible = false
+				character.carried_items.transfer_all_to(hut.container)
 				return Status.SUCCEEDED
 		5:
 			character.visible = true
