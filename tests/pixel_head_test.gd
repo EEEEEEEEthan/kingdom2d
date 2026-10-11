@@ -11,6 +11,7 @@ func _init() -> void:
 	_assert_parts_are_colored()
 	_assert_canvas_size()
 	_assert_reference_pixels()
+	_assert_male_reference_pixels()
 	var open_head := PixelHead.create(0, 2, 2, 1, 0, 0)
 	var closed_head := PixelHead.create(1, 3, 3, 0, 1, 3)
 	root.add_child(open_head)
@@ -105,6 +106,43 @@ func _assert_reference_pixels() -> void:
 	if mismatch != 0:
 		push_error("和参考图像素不一致 %d" % mismatch)
 		quit(1)
+	_assert_covered(got, ref)
+
+
+func _assert_male_reference_pixels() -> void:
+	var head := PixelHead.create(1, 0, 0, 0, 0, 0)
+	root.add_child(head)
+	var got := head.build_image()
+	var ref := PixelHead._MALE_REFERENCE.get_image()
+	var mismatch := 0
+	for y in PixelHead.SIZE:
+		for x in PixelHead.SIZE:
+			var pixel := got.get_pixel(x, y)
+			if pixel.a <= 0.0:
+				continue
+			var expect := ref.get_pixel(x, y)
+			if pixel.r8 != expect.r8 or pixel.g8 != expect.g8 or pixel.b8 != expect.b8:
+				mismatch += 1
+	if mismatch != 0:
+		push_error("和男性模板像素不一致 %d" % mismatch)
+		quit(1)
+	_assert_covered(got, ref)
+
+
+func _assert_covered(got: Image, ref: Image) -> void:
+	var missing := 0
+	for y in ref.get_height():
+		for x in ref.get_width():
+			var expect := ref.get_pixel(x, y)
+			if expect.a <= 0.0:
+				continue
+			var pixel := got.get_pixel(x, y)
+			if pixel.a <= 0.0 or pixel.r8 != expect.r8 or pixel.g8 != expect.g8 or pixel.b8 != expect.b8:
+				missing += 1
+	if missing != 0:
+		push_error("模板像素没画全 %d" % missing)
+		quit(1)
+		return
 
 
 func _export_sheet(open_head: PixelHead, closed_head: PixelHead) -> void:

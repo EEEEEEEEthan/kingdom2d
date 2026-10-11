@@ -77,6 +77,7 @@ const _REF_PUPIL: Texture2D = preload("res://addons/pixel_head/masks/ref_pupil.p
 const _REF_EYE_HI: Texture2D = preload("res://addons/pixel_head/masks/ref_eye_hi.png")
 const _REF_OUTLINE: Texture2D = preload("res://addons/pixel_head/masks/ref_outline.png")
 const _REFERENCE: Texture2D = preload("res://addons/pixel_head/reference.png")
+const _MALE_REFERENCE: Texture2D = preload("res://addons/pixel_head/male_reference.png")
 const _FEMALE_SKIN: Texture2D = preload("res://addons/pixel_head/parts/female_skin.png")
 const _FEMALE_SKIN_LIGHT: Texture2D = preload("res://addons/pixel_head/parts/female_skin_light.png")
 const _FEMALE_BLUSH: Texture2D = preload("res://addons/pixel_head/parts/female_blush.png")
