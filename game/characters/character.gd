@@ -11,8 +11,6 @@ const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
 const _IDLE_WANDER_RADIUS_PIXELS = 32.0
-const _SLEEP_START_HOUR = 20
-const _WAKE_HOUR = 5
 
 var id: int
 var home_cell_index := -1
@@ -45,7 +43,7 @@ func _process(delta_seconds: float) -> void:
 		if not indoors:
 			_queue_enter_home()
 		return
-	if workplace_structure_id > 0:
+	if workplace_structure_id > 0 and _is_work_time():
 		_queue_gather_cycle()
 		return
 	_schedule_idle_wander()
@@ -101,13 +99,80 @@ func _get_ai_context() -> CharacterAiContext:
 		_ai_context = CharacterAiContext.new(self)
 	return _ai_context
 
-func is_asleep() -> bool:
-	return _is_sleeping()
+const _GIVEN_NAMES := [
+	"Aldric",
+	"Baldwin",
+	"Cedric",
+	"Dunstan",
+	"Edmund",
+	"Godfrey",
+	"Guy",
+	"Henry",
+	"Humphrey",
+	"Leofric",
+	"Miles",
+	"Osric",
+	"Ralph",
+	"Roger",
+	"Simon",
+	"Walter",
+	"Wulfric",
+	"Bernard",
+	"Cuthbert",
+	"Gilbert",
+	"Beatrice",
+	"Edith",
+	"Eleanor",
+	"Godiva",
+	"Hilda",
+	"Isolde",
+	"Joan",
+	"Matilda",
+	"Maud",
+	"Rowena",
+	"Winifred",
+	"Cecily",
+]
+const _SURNAMES := [
+	"Ashford",
+	"Baker",
+	"Blackwood",
+	"Carpenter",
+	"Carter",
+	"Cooper",
+	"Crowley",
+	"Dunmore",
+	"Eldridge",
+	"Fairfax",
+	"Fletcher",
+	"Grimsby",
+	"Holloway",
+	"Ironwood",
+	"Kingsley",
+	"Lockwood",
+	"Marsh",
+	"Mason",
+	"Mercer",
+	"Norwood",
+	"Oakley",
+	"Pemberton",
+	"Ravenscroft",
+	"Smith",
+	"Stonemoor",
+	"Tanner",
+	"Thorne",
+	"Underhill",
+	"Vance",
+	"Weaver",
+	"Whitmore",
+	"Wright",
+]
 
-const _GIVEN_NAMES := ["禾", "山", "石", "溪", "木", "麦", "舟", "灯"]
-
+# 姓名由「名 + 姓」组合而来，id 与组合一一对应，储备 32×32 保证不重名。
 func display_name() -> String:
-	return "阿%s" % _GIVEN_NAMES[posmod(id - 1, _GIVEN_NAMES.size())]
+	var given_count := _GIVEN_NAMES.size()
+	var index := posmod(id - 1, given_count * _SURNAMES.size())
+	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]
 
 func occupation_name() -> String:
 	if workplace_structure_id > 0:
@@ -135,8 +200,10 @@ func current_activity() -> String:
 	return "正在发呆"
 
 func _is_sleeping() -> bool:
-	var hour := _get_ai_context().game_time.hour_of_day
-	return hour >= _SLEEP_START_HOUR or hour < _WAKE_HOUR
+	return _get_ai_context().day_time_period == GameTime.DayTimePeriod.SLEEP
+
+func _is_work_time() -> bool:
+	return _get_ai_context().day_time_period == GameTime.DayTimePeriod.WORK
 
 func _apply_daily_schedule() -> void:
 	var sleeping := _is_sleeping()

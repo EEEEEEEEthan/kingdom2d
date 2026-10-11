@@ -1,14 +1,16 @@
 extends Control
 
 var _hut: GathererHut
+var _characters: CharacterManager
 
 
 func _ready() -> void:
 	%PrioritySlider.value_changed.connect(_on_priority_slider)
 
 
-func bind(hut: GathererHut) -> void:
+func bind(hut: GathererHut, characters: CharacterManager) -> void:
 	_hut = hut
+	_characters = characters
 	_sync()
 
 
@@ -31,10 +33,16 @@ func _sync() -> void:
 	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
 	for slot in GathererHut.SLOT_COUNT:
 		var label := get_node("%%Worker%d" % slot) as Label
-		if slot < _hut.worker_ids.size():
-			label.text = "居民 %s" % _hut.worker_ids[slot]
-		else:
-			label.text = "空位"
+		label.text = _worker_label(slot)
+
+
+func _worker_label(slot: int) -> String:
+	if slot >= _hut.worker_ids.size():
+		return "空位"
+	var character: Character = _characters.characters.get(_hut.worker_ids[slot])
+	if character == null:
+		return "空位"
+	return character.display_name()
 
 
 func _on_priority_slider(value: float) -> void:

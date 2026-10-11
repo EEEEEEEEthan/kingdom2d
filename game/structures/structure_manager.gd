@@ -3,10 +3,12 @@ class_name StructureManager
 
 const _KEY_NEXT_ID = 1
 const _KEY_STRUCTURES = 2
+const _KEY_OCCUPANTS = 3
 
 var _next_id = 0
 var index_to_structures: Array[Structure] = []
 var structures: Dictionary[int, Structure] = {}
+var _occupant_by_structure_id: Dictionary[int, int] = {}
 
 
 func clear() -> void:
@@ -17,6 +19,7 @@ func clear() -> void:
 	index_to_structures.clear()
 	index_to_structures.resize(Game.MAP_CELL_COUNT)
 	structures.clear()
+	_occupant_by_structure_id.clear()
 
 
 func serialize() -> Dictionary:
@@ -26,6 +29,7 @@ func serialize() -> Dictionary:
 	return {
 		_KEY_NEXT_ID: _next_id,
 		_KEY_STRUCTURES: structure_data,
+		_KEY_OCCUPANTS: _occupant_by_structure_id,
 	}
 
 
@@ -35,6 +39,22 @@ func deserialize(data: Dictionary) -> void:
 	for item in structure_data:
 		var structure = Structure.deserialize(item, self)
 		_register_structure(structure)
+	_occupant_by_structure_id.clear()
+	var occupants: Dictionary = data.get(_KEY_OCCUPANTS, {})
+	for structure_id in occupants:
+		_occupant_by_structure_id[int(structure_id)] = int(occupants[structure_id])
+
+
+## by_character_id 传 0 表示解除占用。
+func mark_occupied(structure_id: int, by_character_id: int) -> void:
+	if by_character_id == 0:
+		_occupant_by_structure_id.erase(structure_id)
+	else:
+		_occupant_by_structure_id[structure_id] = by_character_id
+
+
+func occupant_of(structure_id: int) -> int:
+	return _occupant_by_structure_id.get(structure_id, 0)
 
 
 func get_structure_by_id(structure_id: int) -> Structure:

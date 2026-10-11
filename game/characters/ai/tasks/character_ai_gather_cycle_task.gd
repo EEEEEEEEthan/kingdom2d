@@ -8,6 +8,7 @@ const KEY_ELAPSED_SECONDS = 2
 const KEY_BUSH_ID = 3
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
+const _NO_BUSH_WAIT_SECONDS := 2.0
 
 var _phase := 0
 var _elapsed_seconds := 0.0
@@ -29,6 +30,8 @@ func activity_text() -> String:
 			return "正在采集者小屋"
 		2, 3:
 			return "正在采集"
+		5:
+			return "正在等待可采集的灌木"
 		_:
 			return "正在回采集者小屋"
 
@@ -40,6 +43,12 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		return Status.FAILED
 	if character.indoors:
 		character.leave_home()
+	var pick_and_mark := func() -> bool:
+		_bush_id = _pick_bush_id(context)
+		if _bush_id == 0:
+			return false
+		context.structure_manager().mark_occupied(_bush_id, character.id)
+		return true
 	match _phase:
 		0:
 			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
@@ -52,17 +61,18 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _INSIDE_SECONDS:
 				return Status.RUNNING
-			_bush_id = _pick_bush_id(context, hut)
-			if _bush_id == 0:
-				if character.is_asleep():
-					character.visible = true
-					return Status.SUCCEEDED
+			if not pick_and_mark.call():
+				character.visible = true
+				_phase = 5
+				_elapsed_seconds = 0.0
 				return Status.RUNNING
 			character.visible = true
 			_phase = 2
 		2:
 			var bush := _bush(context)
 			if not bush:
+				context.structure_manager().mark_occupied(_bush_id, 0)
+				_bush_id = 0
 				_phase = 1
 				return Status.RUNNING
 			if character.advance_toward_world_x(delta_seconds, _world_x(bush)):
@@ -77,11 +87,25 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
 				character.visible = false
 				return Status.SUCCEEDED
+		5:
+			character.visible = true
+			if context.day_time_period != GameTime.DayTimePeriod.WORK:
+				return Status.SUCCEEDED
+			_elapsed_seconds += delta_seconds
+			if _elapsed_seconds < _NO_BUSH_WAIT_SECONDS:
+				return Status.RUNNING
+			if not pick_and_mark.call():
+				_elapsed_seconds = 0.0
+				return Status.RUNNING
+			_phase = 2
 	return Status.RUNNING
 
 func on_exit(context: CharacterAiContext) -> void:
 	if context.character.visible == false and not context.character.indoors:
 		context.character.visible = true
+	if _bush_id != 0:
+		context.structure_manager().mark_occupied(_bush_id, 0)
+		_bush_id = 0
 
 func _serialize_payload() -> Dictionary:
 	return {
@@ -90,18 +114,26 @@ func _serialize_payload() -> Dictionary:
 		KEY_BUSH_ID: _bush_id,
 	}
 
-func _hut(context: CharacterAiContext) -> GathererHut:
+static func _hut(context: CharacterAiContext) -> GathererHut:
 	var structure := context.structure_manager().get_structure_by_id(context.character.workplace_structure_id)
 	return structure as GathererHut
 
 func _bush(context: CharacterAiContext) -> Structure:
 	return context.structure_manager().get_structure_by_id(_bush_id)
 
-func _pick_bush_id(context: CharacterAiContext, hut: GathererHut) -> int:
+static func _pick_bush_id(context: CharacterAiContext) -> int:
+	var structure_manager := context.structure_manager()
+	var hut := _hut(context)
+	if not hut:
+		return 0
+	var character_id := context.character.id
 	var nearest: Structure
 	var nearest_distance := 0
-	for structure in context.structure_manager().index_to_structures:
+	for structure in structure_manager.index_to_structures:
 		if not structure or structure.config.id != StructureConfig.TypeId.BUSH:
+			continue
+		var occupant_id := structure_manager.occupant_of(structure.id)
+		if occupant_id != 0 and occupant_id != character_id:
 			continue
 		var distance := absi(structure.cell_index - hut.cell_index)
 		if not nearest or distance < nearest_distance:
