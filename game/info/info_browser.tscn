@@ -2,12 +2,29 @@
 
 [ext_resource type="Script" path="res://game/info/info_browser.gd" id="1_browser"]
 [ext_resource type="Texture2D" path="res://theme.png" id="2_theme"]
+[ext_resource type="Script" path="res://game/info/window_title_drag.gd" id="3_drag"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_bg"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_theme")
-region = Rect2(5, 5, 6, 6)
+region = Rect2(1, 1, 14, 14)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_frame"]
+texture = SubResource("AtlasTexture_frame")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close"]
+atlas = ExtResource("2_theme")
+region = Rect2(50, 1, 12, 13)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_close_pressed"]
+atlas = ExtResource("2_theme")
+region = Rect2(50, 17, 12, 13)
 
 [node name="InfoBrowser" type="Window"]
+transparent_bg = true
 snap_2d_transforms_to_pixel = true
 snap_2d_vertices_to_pixel = true
 anisotropic_filtering_level = 0
@@ -16,6 +33,8 @@ oversampling_override = 1.0
 title = "Kingdom"
 position = Vector2i(100, 36)
 size = Vector2i(280, 360)
+borderless = true
+transparent = true
 visible = false
 always_on_top = true
 content_scale_mode = 1
@@ -23,21 +42,44 @@ content_scale_stretch = 1
 content_scale_factor = 2.0
 script = ExtResource("1_browser")
 
-[node name="TextureRect" type="TextureRect" parent="."]
+[node name="Frame" type="Panel" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = SubResource("AtlasTexture_bg")
+theme_override_styles/panel = SubResource("StyleBoxTexture_frame")
+
+[node name="TitleBar" type="HBoxContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 2.0
+offset_right = -4.0
+offset_bottom = 16.0
+grow_horizontal = 2
+theme_override_constants/separation = 2
+script = ExtResource("3_drag")
+
+[node name="Title" type="Label" parent="TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "Kingdom"
+
+[node name="CloseButton" type="TextureButton" parent="TitleBar"]
+unique_name_in_owner = true
+layout_mode = 2
+texture_normal = SubResource("AtlasTexture_close")
+texture_pressed = SubResource("AtlasTexture_close_pressed")
 
 [node name="Margin" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = 6.0
+offset_top = 18.0
 offset_right = -8.0
 offset_bottom = -6.0
 grow_horizontal = 2

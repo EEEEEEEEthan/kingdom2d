@@ -58,10 +58,25 @@ layout_mode = 2
 size_flags_vertical = 10
 text = "重置地图"
 
-[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="."]
+[node name="ResetConfirm" type="VBoxContainer" parent="VBoxContainer"]
 unique_name_in_owner = true
-title = "重置地图"
-initial_position = 2
-size = Vector2i(412, 160)
-ok_button_text = "删除"
-dialog_text = "确定要删除当前地图吗？此操作不可撤销。"
+visible = false
+layout_mode = 2
+
+[node name="ConfirmLabel" type="Label" parent="VBoxContainer/ResetConfirm"]
+layout_mode = 2
+text = "确定删除当前地图？不可撤销。"
+autowrap_mode = 3
+
+[node name="ConfirmButtons" type="HBoxContainer" parent="VBoxContainer/ResetConfirm"]
+layout_mode = 2
+
+[node name="ResetDelete" type="Button" parent="VBoxContainer/ResetConfirm/ConfirmButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "删除"
+
+[node name="ResetCancel" type="Button" parent="VBoxContainer/ResetConfirm/ConfirmButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "取消"

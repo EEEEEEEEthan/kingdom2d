@@ -13,8 +13,9 @@ func _ready() -> void:
 	Settings.game_width_ratio_changed.connect(_on_settings_game_width_ratio_changed)
 	%WidthSlider.value_changed.connect(_on_width_slider)
 	%ResetGame.pressed.connect(_on_reset_pressed)
-	%ResetConfirmDialog.visible = false
-	%ResetConfirmDialog.confirmed.connect(_on_reset_confirmed)
+	%ResetConfirm.visible = false
+	%ResetDelete.pressed.connect(_on_reset_confirmed)
+	%ResetCancel.pressed.connect(_on_reset_cancel)
 
 
 func _on_settings_display_scale_changed(new_scale: int) -> void:
@@ -43,8 +44,13 @@ func _on_width_slider(new_value: float) -> void:
 
 
 func _on_reset_pressed() -> void:
-	%ResetConfirmDialog.popup_centered()
+	%ResetConfirm.visible = true
+
+
+func _on_reset_cancel() -> void:
+	%ResetConfirm.visible = false
 
 
 func _on_reset_confirmed() -> void:
+	%ResetConfirm.visible = false
 	reset_game_requested.emit()

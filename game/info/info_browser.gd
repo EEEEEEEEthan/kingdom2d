@@ -13,6 +13,7 @@ var _index := -1
 func _ready() -> void:
 	visible = false
 	close_requested.connect(hide)
+	%CloseButton.pressed.connect(hide)
 	%BackButton.pressed.connect(go_back)
 	%ForwardButton.pressed.connect(go_forward)
 
