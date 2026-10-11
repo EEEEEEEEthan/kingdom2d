@@ -11,6 +11,7 @@ const _KEY_TERRAIN_TYPE = 1
 
 const TERRAIN_SET := 0
 const GROUND_ROW_Y := -1
+const VIEW_LAYER_STEP := 32.0
 
 var _terrain_type: TerrainType = TerrainType.Land
 
@@ -35,11 +36,16 @@ var _sprites: Array:
 			await ready
 		var cnt = len(_sprites)
 		for i in cnt:
-			var y = remap(value, 0, 1, (cnt - i) * 32, 0)
 			var node = _sprites[i]
 			var pos = node.position
-			pos.y = y
+			pos.y = layer_drop_y(cnt - i, value)
 			_sprites[i].position = pos
+
+func layer_drop_y(steps_from_front: int, height: float) -> float:
+	return remap(height, 0.0, 1.0, steps_from_front * VIEW_LAYER_STEP, 0.0)
+
+func celestial_drop_y(height: float) -> float:
+	return layer_drop_y(len(_sprites) + 1, height)
 
 func serialize() -> Dictionary:
 	return {
