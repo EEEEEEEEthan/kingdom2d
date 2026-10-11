@@ -24,6 +24,12 @@ var active: bool:
 		return id > 0
 
 var hp: int
+@export var show_outline := true:
+	set(value):
+		show_outline = value
+		var outline := get_node_or_null(^"HoverOutline") as HoverOutline
+		if outline:
+			outline.show_outline = value
 
 static func deserialize(data: Dictionary, parent: Node) -> Structure:
 	var type_id := data[_KEY_TYPE_ID] as StructureConfig.TypeId
@@ -53,6 +59,12 @@ func serialize() -> Dictionary:
 
 func _serialize() -> Dictionary:
 	return {}
+
+func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
+	HoverOutline.attach(self)
+
 
 func _on_cell_index_updated() -> void:
 	pass
