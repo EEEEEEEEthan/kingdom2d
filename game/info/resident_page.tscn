@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/info/resident_page.gd" id="1_resident"]
+
+[node name="ResidentPage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_resident")
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="IdentityLabel" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "阿禾，采集者"
+
+[node name="ActivityLabel" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "正在："

@@ -62,31 +62,60 @@ func _run() -> void:
 		push_error("夜里在家应睡觉，实际 %s" % character.current_activity())
 		quit(1)
 		return
-	var window = (load("res://game/characters/character_window.tscn") as PackedScene).instantiate()
-	root.add_child(window)
-	window.open_for(character)
+	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
+	root.add_child(browser)
+	browser.open_settings()
+	if browser.title != "Kingdom":
+		push_error("浏览器标题应保持 Kingdom，实际 %s" % browser.title)
+		quit(1)
+		return
+	if browser.current_path() != "settings":
+		push_error("打开设置应落到 settings，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	browser.open_resident(character)
 	await process_frame
-	if window.get_node("%IdentityLabel").text != "阿禾":
-		push_error("无业只显示姓名，实际 %s" % window.get_node("%IdentityLabel").text)
+	if browser.title != "Kingdom":
+		push_error("打开居民后标题应仍是 Kingdom，实际 %s" % browser.title)
+		quit(1)
+		return
+	if browser.current_path() != "resident/%d" % character.id:
+		push_error("打开居民应落到 resident/id，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	var page = browser.get_node("%PageHost").get_child(0)
+	if page.get_node("%IdentityLabel").text != "阿禾":
+		push_error("无业只显示姓名，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
 	character.workplace_structure_id = 1
-	window._process(0.0)
-	if window.get_node("%IdentityLabel").text != "阿禾，采集者":
-		push_error("有职业应跟在姓名后面，实际 %s" % window.get_node("%IdentityLabel").text)
+	page._process(0.0)
+	if page.get_node("%IdentityLabel").text != "阿禾，采集者":
+		push_error("有职业应跟在姓名后面，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
 	character.workplace_structure_id = 0
-	window._process(0.0)
-	if window.get_node("%ActivityLabel").text != "正在睡觉":
+	page._process(0.0)
+	if page.get_node("%ActivityLabel").text != "正在睡觉":
 		push_error("窗口应显示正在睡觉")
 		quit(1)
 		return
+	browser.go_back()
+	if browser.current_path() != "settings":
+		push_error("后退应回到设置")
+		quit(1)
+		return
+	browser.go_forward()
+	if browser.current_path() != "resident/%d" % character.id:
+		push_error("前进应回到居民")
+		quit(1)
+		return
+	page = browser.get_node("%PageHost").get_child(0)
 	_set_hour(game, 12)
 	character.leave_home()
 	character._process(0.05)
-	window._process(0.0)
-	var activity_text: String = window.get_node("%ActivityLabel").text
+	page._process(0.0)
+	var activity_text: String = page.get_node("%ActivityLabel").text
 	if activity_text == "正在睡觉":
 		push_error("白天窗口应刷新掉睡觉，实际 %s" % activity_text)
 		quit(1)
