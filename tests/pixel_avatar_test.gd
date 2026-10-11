@@ -3,9 +3,14 @@ extends SceneTree
 ## atlas 六行、每格 16，下标按列数取模，六个滑条改部位。
 
 
-func _init() -> void:
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	var avatar := PixelAvatar.new()
 	root.add_child(avatar)
+	await process_frame
 	if avatar.get_child_count() < 2:
 		push_error("缺少部位节点或滑条")
 		quit(1)

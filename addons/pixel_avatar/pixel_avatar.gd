@@ -39,7 +39,7 @@ func set_part_index(part: int, value: int) -> void:
 		_sliders[part].set_value_no_signal(part_index[part])
 
 
-func _ready() -> void:
+func _init() -> void:
 	_ensure_nodes()
 	_refresh()
 
