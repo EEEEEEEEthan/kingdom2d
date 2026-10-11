@@ -21,6 +21,19 @@ func _init(save_payload: Dictionary) -> void:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
 
+func activity_text() -> String:
+	match _phase:
+		0:
+			return "去采集者小屋"
+		1:
+			return "在采集者小屋"
+		2:
+			return "去灌木"
+		3:
+			return "采集"
+		_:
+			return "回采集者小屋"
+
 func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 	var character := context.character
 	var hut := _hut(context)

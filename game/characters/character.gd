@@ -97,6 +97,36 @@ func _get_ai_context() -> CharacterAiContext:
 func is_asleep() -> bool:
 	return _is_sleeping()
 
+const _GIVEN_NAMES := ["禾", "山", "石", "溪", "木", "麦", "舟", "灯"]
+
+func display_name() -> String:
+	return "阿%s" % _GIVEN_NAMES[posmod(id - 1, _GIVEN_NAMES.size())]
+
+func occupation_name() -> String:
+	if workplace_structure_id > 0:
+		return "采集者"
+	return "无业"
+
+func current_activity() -> String:
+	if indoors and _is_sleeping():
+		return "睡觉"
+	if indoors:
+		return "在家里"
+	var top := ai_task_stack.peek()
+	if top == null:
+		return "发呆"
+	if top is CharacterAiEnterHomeTask:
+		return "进屋"
+	if top is CharacterAiGatherCycleTask:
+		return (top as CharacterAiGatherCycleTask).activity_text()
+	if top is CharacterAiMoveToWorldXTask and ai_task_stack.has_task(CharacterAiEnterHomeTask):
+		return "回家"
+	if top is CharacterAiWaitDurationTask:
+		return "歇着"
+	if top is CharacterAiMoveToWorldXTask:
+		return "闲逛"
+	return "发呆"
+
 func _is_sleeping() -> bool:
 	var hour := _get_ai_context().game_time.hour_of_day
 	return hour >= _SLEEP_START_HOUR or hour < _WAKE_HOUR

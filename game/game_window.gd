@@ -5,6 +5,7 @@ const WindowScreenAnchor := preload("res://game/window_screen_anchor.gd")
 signal control_window_open_requested
 signal quit_requested
 signal gatherer_hut_open_requested(hut: GathererHut)
+signal character_open_requested(character: Character)
 
 const BASE_HEIGHT := 64
 const MAX_WIDTH := 4096
@@ -52,6 +53,7 @@ func _ready() -> void:
 	%GameHud.control_window_open_requested.connect(control_window_open_requested.emit)
 	%GameHud.quit_requested.connect(quit_requested.emit)
 	%Game.gatherer_hut_open_requested.connect(gatherer_hut_open_requested.emit)
+	%Game.character_open_requested.connect(character_open_requested.emit)
 	apply_layout(true)
 	visible = true
 
