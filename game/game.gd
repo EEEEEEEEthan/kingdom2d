@@ -12,6 +12,7 @@ const _SERKEY_STRUCTURE_MANAGER = 1
 const _SERKEY_CHARACTER_MANAGER = 2
 const _SERKEY_TERRAIN = 3
 const _SERKEY_DAYS = 4
+const _SERKEY_EMPLOYMENT = 5
 
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
@@ -40,6 +41,8 @@ var terrain: Terrain:
 	get:
 		if not terrain: terrain = %Terrain
 		return terrain
+
+var employment := WorkplaceIndex.new()
 
 var character_manager: CharacterManager:
 	get:
@@ -87,6 +90,15 @@ func load_game() -> void:
 	terrain.deserialize(data.get(_SERKEY_TERRAIN, {}))
 	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}))
 	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
+	if data.has(_SERKEY_EMPLOYMENT):
+		employment.deserialize(data[_SERKEY_EMPLOYMENT])
+	else:
+		employment.import_legacy(
+			data.get(_SERKEY_STRUCTURE_MANAGER, {}),
+			data.get(_SERKEY_CHARACTER_MANAGER, {}),
+			character_manager.characters,
+			structure_manager.structures
+		)
 	game_time.all_days = data.get(_SERKEY_DAYS, _GAME_START_DAYS)
 	rebalance_workplaces()
 
@@ -97,12 +109,14 @@ func save_game() -> void:
 		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
 		_SERKEY_CHARACTER_MANAGER: character_manager.serialize(),
 		_SERKEY_TERRAIN: terrain.serialize(),
-		_SERKEY_DAYS: game_time.all_days
+		_SERKEY_DAYS: game_time.all_days,
+		_SERKEY_EMPLOYMENT: employment.serialize(),
 	}
 	file.store_var(data)
 
 func _clear() -> void:
 	game_time.all_days = 0
+	employment.clear()
 	structure_manager.clear()
 	character_manager.clear()
 	terrain.clear()
@@ -177,4 +191,4 @@ func spawn_resident_at_cell(cell_index: int) -> Character:
 
 
 func rebalance_workplaces() -> void:
-	WorkplaceStaffing.rebalance(structure_manager.structures, character_manager.characters)
+	WorkplaceStaffing.rebalance(structure_manager.structures, character_manager.characters, employment)

@@ -37,20 +37,20 @@ func _run() -> void:
 	gatherer.set_process(false)
 	bystander.set_process(false)
 	_set_hour(game, 12)
-	if hut.worker_ids.size() != 2 or hut.worker_ids[0] != gatherer.id or hut.worker_ids[1] != near.id:
-		push_error("应自动优先安排家最近的居民 %s" % [hut.worker_ids])
+	var workers: Array[int] = game.employment.workers_of(hut.id)
+	if workers.size() != 2 or workers[0] != gatherer.id or workers[1] != near.id:
+		push_error("应自动优先安排家最近的居民 %s" % [workers])
 		quit(1)
 		return
-	if gatherer.workplace_structure_id != hut.id or near.workplace_structure_id != hut.id:
+	if gatherer.workplace_structure_id() != hut.id or near.workplace_structure_id() != hut.id:
 		push_error("前两名最近居民应入职")
 		quit(1)
 		return
-	if bystander.workplace_structure_id != 0:
+	if bystander.workplace_structure_id() != 0:
 		push_error("满员后不应再加人")
 		quit(1)
 		return
-	bystander.workplace_structure_id = 0
-	hut.worker_ids.resize(1)
+	game.employment.release(near.id)
 	var hut_x = Game.get_position_by_cell_index(hut_cell) + Game.HALF_TILE_SIZE
 	var saw_hut := false
 	var bush_x := 0.0
@@ -113,9 +113,10 @@ func _run() -> void:
 		push_error("一轮结束后应释放灌木")
 		quit(1)
 		return
-	var restored = StructureConfig.gatherer_hut.instantiate()
-	restored._deserialize(hut._serialize())
-	if restored.worker_ids.size() != 1 or restored.worker_ids[0] != gatherer.id:
+	var restored := WorkplaceIndex.new()
+	restored.deserialize(game.employment.serialize())
+	var restored_workers := restored.workers_of(hut.id)
+	if restored_workers.size() != 1 or restored_workers[0] != gatherer.id:
 		push_error("员工列表应存档")
 		quit(1)
 		return
@@ -309,7 +310,8 @@ func _haul_ok(game) -> bool:
 		gatherer._process(0.5)
 		if gatherer.current_activity() == "正在把浆果送到仓库" and not is_equal_approx(gatherer.position.x, Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE):
 			break
-	hut.release_worker(gatherer)
+	game.employment.release(gatherer.id)
+	gatherer.abandon_ai_tasks()
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
 		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
 		return false
@@ -341,22 +343,19 @@ func _priority_rebalance_ok(game) -> bool:
 	at_very.set_process(false)
 	beside_very.set_process(false)
 	at_normal.set_process(false)
-	for resident in [at_very, beside_very, at_normal]:
-		resident.workplace_structure_id = 0
-	very.worker_ids.clear()
-	normal.worker_ids.clear()
+	game.employment.clear()
 	game.rebalance_workplaces()
-	if very.worker_ids.size() != 2 or normal.worker_ids.size() != 1:
-		push_error("高优先应占 2 人、普通占 1 人 %s %s" % [very.worker_ids, normal.worker_ids])
+	var very_workers: Array[int] = game.employment.workers_of(very.id)
+	var normal_workers: Array[int] = game.employment.workers_of(normal.id)
+	if very_workers.size() != 2 or normal_workers.size() != 1:
+		push_error("高优先应占 2 人、普通占 1 人 %s %s" % [very_workers, normal_workers])
 		return false
-	if at_normal.workplace_structure_id != normal.id or beside_very.workplace_structure_id != very.id:
+	if at_normal.workplace_structure_id() != normal.id or beside_very.workplace_structure_id() != very.id:
 		push_error("家近的建筑应留下对应居民")
 		return false
-	very.assign_worker(at_normal)
-	normal.worker_ids.clear()
-	at_normal.workplace_structure_id = very.id
+	game.employment.assign(at_normal.id, very.id)
 	game.rebalance_workplaces()
-	if very.worker_ids.has(at_normal.id) or normal.worker_ids.size() != 1:
+	if game.employment.workers_of(very.id).has(at_normal.id) or game.employment.count_of(normal.id) != 1:
 		push_error("超编应先辞家最远的人")
 		return false
 	var warehouse = StructureConfig.warehouse.instantiate()
@@ -364,8 +363,48 @@ func _priority_rebalance_ok(game) -> bool:
 	var manager = game.spawn_resident_at_cell(200)
 	warehouse.assign_manager(manager)
 	game.rebalance_workplaces()
-	if very.worker_ids.size() != 2 or normal.worker_ids.size() != 1:
-		push_error("仓库管理员不应占用采集名额 %s %s" % [very.worker_ids, normal.worker_ids])
+	if game.employment.count_of(very.id) != 2 or game.employment.count_of(normal.id) != 1:
+		push_error("仓库管理员不应占用采集名额 %s %s" % [game.employment.workers_of(very.id), game.employment.workers_of(normal.id)])
+		return false
+	if manager.workplace_structure_id() != warehouse.id:
+		push_error("仓库管理员应留在仓库")
+		return false
+	if not _dangling_ids_ok(game):
+		return false
+	return true
+
+
+func _dangling_ids_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 40)
+	var resident = game.spawn_resident_at_cell(40)
+	resident.set_process(false)
+	game.employment.assign(999, hut.id)
+	game.employment.assign(resident.id, 99999)
+	game.rebalance_workplaces()
+	if game.employment.workplace_of(999) != 0 or game.employment.workplace_of(resident.id) == 99999:
+		push_error("对不上的岗位关系应在编制前清掉")
+		return false
+	if game.employment.workers_of(hut.id) != [resident.id]:
+		push_error("清掉失效关系后空位应重新分配 %s" % [game.employment.workers_of(hut.id)])
+		return false
+	var legacy_structures := {
+		StructureManager._KEY_STRUCTURES: [{
+			Structure._KEY_INSTANCE_ID: hut.id,
+			Structure._KEY_DATA: {GathererHut._KEY_WORKER_IDS: [resident.id, 404]},
+		}],
+	}
+	var legacy_characters := {
+		CharacterManager._KEY_CHARACTERS: [
+			{Character._KEY_ID: resident.id, Character._KEY_WORKPLACE_STRUCTURE_ID: hut.id},
+			{Character._KEY_ID: 7, Character._KEY_WORKPLACE_STRUCTURE_ID: 12345},
+		],
+	}
+	var imported := WorkplaceIndex.new()
+	imported.import_legacy(legacy_structures, legacy_characters, game.character_manager.characters, game.structure_manager.structures)
+	if imported.workers_of(hut.id) != [resident.id] or imported.workplace_of(7) != 0:
+		push_error("旧档只应留下对得上的关系 %s" % [imported.workers_of(hut.id)])
 		return false
 	return true
 

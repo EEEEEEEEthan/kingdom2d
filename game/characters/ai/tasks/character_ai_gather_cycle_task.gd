@@ -50,7 +50,7 @@ func activity_text() -> String:
 func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 	var character := context.character
 	if _hut_id == 0:
-		_hut_id = character.workplace_structure_id
+		_hut_id = character.workplace_structure_id()
 	var hut := _hut(context)
 	if not hut:
 		character.visible = true
@@ -175,7 +175,7 @@ func _serialize_payload() -> Dictionary:
 	}
 
 func _hut(context: CharacterAiContext) -> GathererHut:
-	var structure_id := _hut_id if _hut_id != 0 else context.character.workplace_structure_id
+	var structure_id := _hut_id if _hut_id != 0 else context.character.workplace_structure_id()
 	var structure := context.structure_manager().get_structure_by_id(structure_id)
 	return structure as GathererHut
 

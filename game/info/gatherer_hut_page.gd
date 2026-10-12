@@ -70,8 +70,10 @@ func _sync() -> void:
 
 func _revision_key() -> String:
 	var parts: PackedStringArray = [str(_hut.priority)]
-	for worker_id in _hut.worker_ids:
-		parts.append(str(worker_id))
+	var game := Game.find(_hut)
+	if game:
+		for worker_id in game.employment.workers_of(_hut.id):
+			parts.append(str(worker_id))
 	parts.append("#")
 	for item_id in _item_labels:
 		var count := _hut.container.count_of(item_id)
@@ -94,9 +96,13 @@ func _sync_worker(slot: int) -> void:
 
 
 func _worker(slot: int) -> Character:
-	if slot >= _hut.worker_ids.size():
+	var game := Game.find(_hut)
+	if game == null:
 		return null
-	return _characters.characters.get(_hut.worker_ids[slot]) as Character
+	var workers := game.employment.workers_of(_hut.id)
+	if slot >= workers.size():
+		return null
+	return _characters.characters.get(workers[slot]) as Character
 
 
 func _on_worker_pressed(slot: int) -> void:

@@ -118,3 +118,6 @@ func _register_structure(structure: Structure) -> void:
 		structures.erase(structure.id)
 	var bucket: Array = _structures_by_type.get(type_id, [])
 	bucket.erase(structure)
+	var game := Game.find(self)
+	if game:
+		game.employment.release_structure(structure.id)

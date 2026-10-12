@@ -16,22 +16,17 @@ const _KEY_WORKER_IDS := 1
 const _KEY_PRIORITY := 2
 const _KEY_PRIORITY_ORDER := 3
 
-var worker_ids: Array[int] = []
 var priority := Priority.NORMAL
 
 
 func _serialize() -> Dictionary:
 	return {
-		_KEY_WORKER_IDS: worker_ids,
 		_KEY_PRIORITY: priority,
 		_KEY_PRIORITY_ORDER: 1,
 	}
 
 
 func _deserialize(data: Dictionary) -> void:
-	worker_ids.clear()
-	for worker_id in data.get(_KEY_WORKER_IDS, []):
-		worker_ids.append(int(worker_id))
 	var stored := int(data.get(_KEY_PRIORITY, Priority.HIGH))
 	if int(data.get(_KEY_PRIORITY_ORDER, 0)) == 0:
 		priority = Priority.HIGH - stored
@@ -67,18 +62,6 @@ func change_priority(value: int) -> void:
 	var game := Game.find(self)
 	if game:
 		game.rebalance_workplaces()
-
-
-func assign_worker(character: Character) -> void:
-	character.workplace_structure_id = id
-	character.abandon_ai_tasks()
-	worker_ids.append(character.id)
-
-
-func release_worker(character: Character) -> void:
-	character.workplace_structure_id = 0
-	character.abandon_ai_tasks()
-	worker_ids.erase(character.id)
 
 
 # demands 下标是 Priority。先按需求×权重分人，超额从高优先依次流到普通、低优先。

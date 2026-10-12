@@ -6,7 +6,7 @@ const _KEY_POSITION = 2
 const _KEY_AI_TASK_STACK = 3
 const _KEY_HOME_CELL_INDEX = 4
 const _KEY_INDOORS = 5
-const _KEY_WORKPLACE_STRUCTURE_ID = 6
+const _KEY_WORKPLACE_STRUCTURE_ID = 6 # 旧档字段，关系已改由 WorkplaceIndex 保存
 const _KEY_CARRIED_ITEMS = 7
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
@@ -16,7 +16,6 @@ const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 var id: int
 var home_cell_index := -1
 var indoors := false
-var workplace_structure_id := 0
 var carried_items := ItemContainer.new()
 @export var move_speed_pixels_per_second := DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND
 @export var show_outline := true:
@@ -45,7 +44,7 @@ func _process(delta_seconds: float) -> void:
 		if not indoors:
 			_queue_enter_home()
 		return
-	if _is_work_time() and workplace_structure_id > 0 and not _workplace() is Warehouse:
+	if _is_work_time() and workplace_structure_id() > 0 and not _workplace() is Warehouse:
 		_queue_gather_cycle()
 		return
 	_schedule_idle_wander()
@@ -80,7 +79,6 @@ func deserialize(data: Dictionary) -> void:
 	position = Vector2(data[_KEY_POSITION], 0)
 	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
 	indoors = data.get(_KEY_INDOORS, false)
-	workplace_structure_id = data.get(_KEY_WORKPLACE_STRUCTURE_ID, 0)
 	carried_items = ItemContainer.deserialize(data.get(_KEY_CARRIED_ITEMS, {}))
 	visible = not indoors
 	_schedule_initialized = false
@@ -93,7 +91,6 @@ func serialize() -> Dictionary:
 		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
-		_KEY_WORKPLACE_STRUCTURE_ID: workplace_structure_id,
 		_KEY_CARRIED_ITEMS: carried_items.serialize(),
 	}
 
@@ -178,10 +175,17 @@ func display_name() -> String:
 	var index := posmod(id - 1, given_count * _SURNAMES.size())
 	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]
 
+func workplace_structure_id() -> int:
+	var game := Game.find(self)
+	if game == null:
+		return 0
+	return game.employment.workplace_of(id)
+
+
 func occupation_name() -> String:
 	if _workplace() is Warehouse:
 		return "仓库管理员"
-	if workplace_structure_id > 0:
+	if workplace_structure_id() > 0:
 		return "采集者"
 	return ""
 
@@ -231,12 +235,13 @@ func _apply_daily_schedule() -> void:
 		_leave_home()
 
 func _workplace() -> Structure:
-	if workplace_structure_id <= 0:
+	var structure_id := workplace_structure_id()
+	if structure_id <= 0:
 		return null
 	var game := Game.find(self)
 	if not game:
 		return null
-	return game.structure_manager.get_structure_by_id(workplace_structure_id)
+	return game.structure_manager.get_structure_by_id(structure_id)
 
 
 func _queue_gather_cycle() -> void:
