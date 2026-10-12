@@ -9,6 +9,7 @@ const ATLAS_PATH := &"res://game/items/item_atlas.tres"
 enum TypeId {
 	NONE = 0,
 	BERRY = 1,
+	LOG = 2,
 }
 
 static var berry: ItemConfig:
@@ -20,8 +21,18 @@ static var berry: ItemConfig:
 			berry._atlas_index = 0
 		return berry
 
+static var log: ItemConfig:
+	get:
+		if not log:
+			log = ItemConfig.new()
+			log.id = TypeId.LOG
+			log.name = &"原木"
+			log._atlas_index = 1
+		return log
+
 static var configs_by_id: Dictionary[TypeId, ItemConfig] = {
 	berry.id: berry,
+	log.id: log,
 }
 
 var id: TypeId = TypeId.NONE

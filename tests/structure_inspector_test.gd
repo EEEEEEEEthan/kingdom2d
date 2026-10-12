@@ -89,6 +89,7 @@ func _run() -> void:
 	for row in stock.get_node("%Items").get_children():
 		if row.visible and row.get_node_or_null("Policy"):
 			policy = row.get_node("Policy")
+			break
 	if policy == null or policy.get_item_text(policy.selected) != "接收":
 		push_error("仓库每项应有存储策略，默认接收")
 		quit(1)

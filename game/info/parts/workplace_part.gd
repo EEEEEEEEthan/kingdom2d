@@ -77,13 +77,15 @@ func _sync_worker(slot: int) -> void:
 func _slot_count() -> int:
 	if _structure is GathererHut:
 		return GathererHut.SLOT_COUNT
+	if _structure is LumberCamp:
+		return LumberCamp.SLOT_COUNT
 	if _structure is Warehouse:
 		return Warehouse.SLOT_COUNT
 	return 0
 
 
 func _row_count() -> int:
-	return maxi(GathererHut.SLOT_COUNT, Warehouse.SLOT_COUNT)
+	return maxi(GathererHut.SLOT_COUNT, maxi(LumberCamp.SLOT_COUNT, Warehouse.SLOT_COUNT))
 
 
 func _worker(slot: int) -> Character:

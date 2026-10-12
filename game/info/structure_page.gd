@@ -17,7 +17,7 @@ func bind(structure: Structure, characters: CharacterManager) -> void:
 	var title := Label.new()
 	title.text = String(structure.config.name)
 	%Rows.add_child(title)
-	if structure is GathererHut or structure is Warehouse:
+	if structure is GathererHut or structure is LumberCamp or structure is Warehouse:
 		var workplace := WORKPLACE_PART.instantiate()
 		workplace.name = "Workplace"
 		%Rows.add_child(workplace)
@@ -41,4 +41,4 @@ func alive() -> bool:
 
 
 func _shows_inventory(structure: Structure) -> bool:
-	return structure is GathererHut or structure is Warehouse or Food.is_dwelling(structure)
+	return structure is GathererHut or structure is LumberCamp or structure is Warehouse or Food.is_dwelling(structure)

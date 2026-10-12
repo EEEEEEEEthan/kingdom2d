@@ -51,6 +51,8 @@ func _sync() -> void:
 func _title() -> String:
 	if _structure is GathererHut:
 		return "容器 %d/%d" % [_structure.berry_count(), GathererHut.BERRY_CAPACITY]
+	if _structure is LumberCamp:
+		return "容器 %d/%d" % [(_structure as LumberCamp).log_count(), LumberCamp.LOG_CAPACITY]
 	if Food.is_dwelling(_structure):
 		return "库存 %d/%d" % [Food.stored(_structure), Food.HOME_CAPACITY]
 	return "库存"

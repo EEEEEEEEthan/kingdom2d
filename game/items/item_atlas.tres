@@ -5,5 +5,5 @@
 [resource]
 resource_name = "item_atlas"
 script = ExtResource("1_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAY0lEQVR4nGNgQAMznwb8z9pn8B9dHAWAFIAUYpNjhDFuhidjVaC+ci5YDROyIrUVc8AYGdyEyrEgC96KSMEw8fLt82CaCZeVyIrACmFuwKcI7kZ0xciKQs6dQ3gGWTE2RSQBAFHiLxUMHseFAAAAAElFTkSuQmCC"
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAAaklEQVR42mNgQAMznwb8z9pn8J+BGgBkEMhAqhh2Mzz5PzaMri7BQeU/NozVMBjAZaiDhsz/axsKUDBeA7HhNUZG/2GGfbk0B6eBcEMJGUaygbgMhRkGM5AkL6Mbis0wkiIF2VB8hg0IAADr2efLY9p1ywAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
