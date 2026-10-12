@@ -8,7 +8,7 @@
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("3_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAWElEQVR4nGNgGDKAkYGBgcFLT+I/KZq2XXrByALjGCgIEaXpwoN3DAwMDAxMuE19xbDt0iucBuDUSAjg1dhSpkGexpquG+RpxAfgoQoLLRiQ4mPBKk4xAAD5UBRg+ca4jwAAAABJRU5ErkJggg=="
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAW0lEQVR42mNgGDRgg4XBfxAmWdOKAgcwJlrzkSUJ/3tyLFAwSIxkTQQ1g5x1ad80vBikBkVTlZ/Wf2I1gtSiaETGIGchY3R5FGciY3T/ocuDNRkoiPwnB5OdQAAzS7cNM01ZEAAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_warehouse"]

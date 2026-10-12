@@ -19,6 +19,26 @@ func _run() -> void:
 		push_error("开局居民应是仓库管理员，实际 %s" % manager.occupation_name())
 		quit(1)
 		return
+	var center := Game.MAP_CELL_COUNT / 2
+	var home: Structure = game.structure_manager.index_to_structures[center + 1]
+	if home == null or home.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+		push_error("开局住房应是半穴茅舍")
+		quit(1)
+		return
+	var depot: Structure = game.structure_manager.index_to_structures[center - 1]
+	var depot_texture := (depot.get_node("Sprite2D") as Sprite2D).texture
+	var image := depot_texture.get_image()
+	var top_opaque := 0
+	var bottom_opaque := 0
+	for x in image.get_width():
+		if image.get_pixel(x, 1).a > 0.5:
+			top_opaque += 1
+		if image.get_pixel(x, image.get_height() - 2).a > 0.5:
+			bottom_opaque += 1
+	if top_opaque != 0 or bottom_opaque < image.get_width() - 2:
+		push_error("仓库应是贴地物料堆，实际顶行 %s 底行 %s" % [top_opaque, bottom_opaque])
+		quit(1)
+		return
 	var cell_index := -1
 	for index in Game.MAP_CELL_COUNT:
 		if not game.structure_manager.index_to_structures[index]:

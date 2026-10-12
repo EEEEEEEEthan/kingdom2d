@@ -9,7 +9,6 @@ enum TypeId {
 	BUSH = 4,
 	GATHERER_HUT = 5,
 	WAREHOUSE = 6,
-	REFUGEE_SHELTER = 7,
 }
 
 static var oak: StructureConfig:
@@ -57,15 +56,6 @@ static var warehouse: StructureConfig:
 			warehouse._scene_path = &"res://game/structures/warehouse.tscn"
 		return warehouse
 
-static var refugee_shelter: StructureConfig:
-	get:
-		if not refugee_shelter:
-			refugee_shelter = StructureConfig.new()
-			refugee_shelter.id = TypeId.REFUGEE_SHELTER
-			refugee_shelter.name = &"难民棚"
-			refugee_shelter._scene_path = &"res://game/structures/refugee_shelter.tscn"
-		return refugee_shelter
-
 static var bush: StructureConfig:
 	get:
 		if not bush:
@@ -82,7 +72,6 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	bush.id: bush,
 	gatherer_hut.id: gatherer_hut,
 	warehouse.id: warehouse,
-	refugee_shelter.id: refugee_shelter,
 }
 
 var id: TypeId = TypeId.NONE
