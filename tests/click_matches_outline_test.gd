@@ -59,7 +59,7 @@ func _run() -> void:
 	var hut_body := _opaque_local(hut_sprite)
 	var hut_beside := hut_sprite.get_rect().position + Vector2(hut_sprite.get_rect().size.x + 4.0, hut_sprite.get_rect().size.y * 0.5)
 	await _point(hut_sprite, hut_body)
-	if game._gatherer_hut_under_mouse() != hut or _OUTLINE.hovered_host() != hut:
+	if game._structure_under_mouse() != hut or _OUTLINE.hovered_host() != hut:
 		push_error("不透明小屋应同时描边并点选")
 		quit(1)
 		return
@@ -70,7 +70,7 @@ func _run() -> void:
 		return
 	opened_hut[0] = null
 	await _point(hut_sprite, hut_beside)
-	if game._gatherer_hut_under_mouse() != null:
+	if game._structure_under_mouse() != null:
 		push_error("小屋旁边空地不该打开小屋窗")
 		quit(1)
 		return

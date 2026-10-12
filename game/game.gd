@@ -114,6 +114,7 @@ func is_map_center_off_screen() -> bool:
 	return %Camera2D.is_map_center_off_screen()
 
 signal gatherer_hut_open_requested(hut: GathererHut)
+signal home_open_requested(home: Structure)
 signal character_open_requested(character: Character)
 
 func _input(event: InputEvent) -> void:
@@ -138,11 +139,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _build_placement_active():
 		return
-	var hut := _gatherer_hut_under_mouse()
-	if not hut:
+	var structure := _structure_under_mouse()
+	if structure is GathererHut:
+		get_viewport().set_input_as_handled()
+		gatherer_hut_open_requested.emit(structure)
 		return
-	get_viewport().set_input_as_handled()
-	gatherer_hut_open_requested.emit(hut)
+	if structure and structure.config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+		get_viewport().set_input_as_handled()
+		home_open_requested.emit(structure)
 
 
 func _build_placement_active() -> bool:
@@ -156,8 +160,8 @@ func _character_under_mouse() -> Character:
 	return HoverOutline.hovered_host() as Character
 
 
-func _gatherer_hut_under_mouse() -> GathererHut:
-	return HoverOutline.hovered_host() as GathererHut
+func _structure_under_mouse() -> Structure:
+	return HoverOutline.hovered_host() as Structure
 
 
 func start_build_placement(structure_config: StructureConfig) -> void:

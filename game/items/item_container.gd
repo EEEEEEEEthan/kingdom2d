@@ -14,6 +14,13 @@ func add(item_id: int, amount: int = 1) -> void:
 	_counts[item_id] = count_of(item_id) + amount
 
 
+func set_count(item_id: int, amount: int) -> void:
+	if amount <= 0:
+		_counts.erase(item_id)
+		return
+	_counts[item_id] = amount
+
+
 func count_of(item_id: int) -> int:
 	return _counts.get(item_id, 0)
 

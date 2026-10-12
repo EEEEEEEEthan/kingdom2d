@@ -5,9 +5,11 @@ signal reset_game_requested
 const SETTINGS_PAGE := preload("res://game/info/settings_page.tscn")
 const RESIDENT_PAGE := preload("res://game/info/resident_page.tscn")
 const GATHERER_HUT_PAGE := preload("res://game/info/gatherer_hut_page.tscn")
+const HOME_PAGE := preload("res://game/info/home_page.tscn")
 
 var _history: Array[String] = []
 var _index := -1
+var _game: Game
 
 
 func _ready() -> void:
@@ -27,6 +29,10 @@ func open_resident(character: Character) -> void:
 
 func open_structure(hut: GathererHut) -> void:
 	_open("structure/%d" % hut.id)
+
+
+func open_home(home: Structure) -> void:
+	_open("home/%d" % home.id)
 
 
 func go_back() -> void:
@@ -75,12 +81,15 @@ func _show_current() -> void:
 	var path := current_path()
 	%PathLabel.text = path
 	for child in %PageHost.get_children():
-		child.free()
+		%PageHost.remove_child(child)
+		child.queue_free()
 	var page := _make_page(path)
 	if page:
 		%PageHost.add_child(page)
 		if page.has_signal("reset_game_requested"):
 			page.reset_game_requested.connect(reset_game_requested.emit)
+		if page.has_signal("character_open_requested"):
+			page.character_open_requested.connect(open_resident)
 	_sync_nav_buttons()
 	show()
 
@@ -106,6 +115,16 @@ func _make_page(path: String) -> Control:
 				var page := GATHERER_HUT_PAGE.instantiate()
 				page.bind(structure, game.character_manager)
 				return page
+		"home":
+			var game := _find_game()
+			if not game:
+				return null
+			var home := game.structure_manager.get_structure_by_id(int(parts[1]))
+			if home == null:
+				return null
+			var page := HOME_PAGE.instantiate()
+			page.bind(home, game.character_manager)
+			return page
 	return null
 
 
@@ -128,19 +147,23 @@ func _character_by_id(character_id: int) -> Character:
 
 
 func _find_game() -> Game:
-	var tree := get_tree()
-	if not tree:
+	if is_instance_valid(_game):
+		return _game
+	_game = Game.find(self)
+	if _game:
+		return _game
+	var parent := get_parent()
+	if parent == null:
 		return null
-	return _find_game_in(tree.root)
-
-
-func _find_game_in(node: Node) -> Game:
-	if node is Game:
-		return node
-	for child in node.get_children():
-		var found := _find_game_in(child)
-		if found:
-			return found
+	for child in parent.get_children():
+		if child is Game:
+			_game = child
+			return _game
+		if child is Window:
+			var named := child.get_node_or_null("%Game")
+			if named is Game:
+				_game = named
+				return _game
 	return null
 
 
