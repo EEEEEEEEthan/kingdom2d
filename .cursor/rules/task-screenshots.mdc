@@ -1,0 +1,22 @@
+---
+description: 任务完成后在聊天贴测试关键截图
+alwaysApply: true
+---
+
+# 测试截图
+
+任务做完、准备收尾前，在聊天里贴本次测试的关键截图。纯文档或规则改动没有可运行界面时，说明没有可截的界面，并贴验证命令的结果摘要。
+
+## 要贴什么
+
+- 主路径跑通的一帧（操作前后各一帧，能看出变化）
+- 这次改动碰到的失败态或空态，各一帧
+- 截图必须来自本次实际运行，不复用旧图
+
+## 例子
+
+```
+验证：打开建造面板，放下房屋，存档后重进仍在。
+![建造完成](/opt/cursor/artifacts/screenshots/build-done.png)
+![读档后](/opt/cursor/artifacts/screenshots/load-still-there.png)
+```
