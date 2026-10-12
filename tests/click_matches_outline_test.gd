@@ -39,6 +39,11 @@ func _run() -> void:
 		quit(1)
 		return
 	_click(game)
+	if opened_character[0] != null:
+		push_error("按下时不该打开角色窗")
+		quit(1)
+		return
+	_release(game)
 	if opened_character[0] != character:
 		push_error("点在能描边的角色上应打开角色窗")
 		quit(1)
@@ -50,6 +55,7 @@ func _run() -> void:
 		quit(1)
 		return
 	_click(game)
+	_release(game)
 	if opened_character[0] != null:
 		push_error("空地点击不该打开角色窗")
 		quit(1)
@@ -64,6 +70,11 @@ func _run() -> void:
 		quit(1)
 		return
 	_click(game)
+	if opened_hut[0] != null:
+		push_error("按下时不该打开小屋窗")
+		quit(1)
+		return
+	_release(game)
 	if opened_hut[0] != hut:
 		push_error("点在能描边的采集小屋上应打开小屋窗")
 		quit(1)
@@ -72,6 +83,25 @@ func _run() -> void:
 	await _point(hut_sprite, hut_beside)
 	if game._structure_under_mouse() != null:
 		push_error("小屋旁边空地不该打开小屋窗")
+		quit(1)
+		return
+	_click(game)
+	_release(game)
+	if opened_hut[0] != null:
+		push_error("空地点击不该打开小屋窗")
+		quit(1)
+		return
+	await _point(hut_sprite, hut_body)
+	_click(game)
+	var drag := InputEventMouseMotion.new()
+	var dragged: Vector2 = game.get_viewport().get_mouse_position() + Vector2(24, 0)
+	drag.position = dragged
+	drag.global_position = dragged
+	Input.parse_input_event(drag)
+	await process_frame
+	_release_at(game, dragged)
+	if opened_hut[0] != null:
+		push_error("拖拽松开不该打开小屋窗")
 		quit(1)
 		return
 	print("click_matches_outline_ok")
@@ -102,10 +132,20 @@ func _point(sprite: Sprite2D, local: Vector2) -> void:
 
 
 func _click(game: Node) -> void:
+	_button(game, true, game.get_viewport().get_mouse_position())
+
+
+func _release(game: Node) -> void:
+	_release_at(game, game.get_viewport().get_mouse_position())
+
+
+func _release_at(game: Node, position: Vector2) -> void:
+	_button(game, false, position)
+
+
+func _button(game: Node, pressed: bool, position: Vector2) -> void:
 	var event := InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
-	event.pressed = true
-	event.position = game.get_viewport().get_mouse_position()
+	event.pressed = pressed
+	event.position = position
 	game._input(event)
-	if not event.is_echo():
-		game._unhandled_input(event)
