@@ -1,16 +1,43 @@
 extends Structure
 class_name Warehouse
 
-const _KEY_MANAGER_ID := 1
+enum StoragePolicy {
+	ACCEPT,
+	WITHDRAW_ONLY,
+	REFUSE,
+}
+
+const POLICY_NAMES := ["接收", "只出不进", "不接收"]
+const _KEY_POLICIES := 1
+
+var _policies: Dictionary[int, int] = {}
 
 
 func _serialize() -> Dictionary:
-	return {}
+	var pairs: Array = []
+	for item_id in _policies:
+		pairs.append([item_id, _policies[item_id]])
+	return {_KEY_POLICIES: pairs}
 
 
-func _deserialize(_data: Dictionary) -> void:
+func _deserialize(data: Dictionary) -> void:
+	_policies.clear()
+	for pair in data.get(_KEY_POLICIES, []):
+		_policies[int(pair[0])] = int(pair[1])
 	_watch_container()
 	_apply_fill()
+
+
+func policy_of(item_id: int) -> int:
+	return _policies.get(item_id, StoragePolicy.ACCEPT)
+
+
+func set_storage_policy(item_id: int, policy: int) -> void:
+	_policies[item_id] = policy
+
+
+func accepts_deposit(item_id: int) -> bool:
+	return policy_of(item_id) == StoragePolicy.ACCEPT
 
 
 func _ready() -> void:

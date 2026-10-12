@@ -131,26 +131,27 @@ func _run() -> void:
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	if page.get_node("%Worker0").text != gatherer.display_name():
-		push_error("小屋窗口应列出工人姓名，实际 %s" % page.get_node("%Worker0").text)
+	var workplace = page.get_node("Rows/Workplace")
+	if workplace.get_node("%Worker0").text != gatherer.display_name():
+		push_error("小屋窗口应列出工人姓名，实际 %s" % workplace.get_node("%Worker0").text)
 		quit(1)
 		return
-	if page.get_node("%Worker1").text != "空位":
-		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
+	if workplace.get_node("%Worker1").text != "空位":
+		push_error("空位应显示空位，实际 %s" % workplace.get_node("%Worker1").text)
 		quit(1)
 		return
-	var worker_avatar := page.get_node("%WorkerAvatar0") as PixelAvatar
+	var worker_avatar := workplace.get_node("%WorkerAvatar0") as PixelAvatar
 	var expected_avatar := PixelAvatar.new()
 	expected_avatar.apply_id(gatherer.id)
 	if not worker_avatar.visible or worker_avatar.face != expected_avatar.face or worker_avatar.hair != expected_avatar.hair:
 		push_error("在岗工人应显示自己的头像")
 		quit(1)
 		return
-	if page.get_node("%WorkerAvatar1").visible:
+	if workplace.get_node("%WorkerAvatar1").visible:
 		push_error("空位不应带头像")
 		quit(1)
 		return
-	page.get_node("%Worker0").pressed.emit()
+	workplace.get_node("%Worker0").pressed.emit()
 	await process_frame
 	if browser.current_path() != "resident/%d" % gatherer.id:
 		push_error("点工人应跳到居民，实际 %s" % browser.current_path())
