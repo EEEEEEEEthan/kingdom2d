@@ -100,6 +100,7 @@ script = SubResource("GDScript_display_scale_wheel")
 [connection signal="character_open_requested" from="GameWindow" to="InfoBrowser" method="open_resident"]
 [connection signal="control_window_open_requested" from="GameWindow" to="InfoBrowser" method="open_settings"]
 [connection signal="gatherer_hut_open_requested" from="GameWindow" to="InfoBrowser" method="open_structure"]
+[connection signal="lumber_camp_open_requested" from="GameWindow" to="InfoBrowser" method="open_lumber_camp"]
 [connection signal="home_open_requested" from="GameWindow" to="InfoBrowser" method="open_home"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="InfoBrowser" to="GameWindow" method="reset_game"]

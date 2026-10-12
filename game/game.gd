@@ -137,6 +137,7 @@ func is_map_center_off_screen() -> bool:
 	return %Camera2D.is_map_center_off_screen()
 
 signal gatherer_hut_open_requested(hut: GathererHut)
+signal lumber_camp_open_requested(camp: LumberCamp)
 signal home_open_requested(home: Structure)
 signal character_open_requested(character: Character)
 
@@ -172,6 +173,10 @@ func _input(event: InputEvent) -> void:
 	if structure is GathererHut:
 		get_viewport().set_input_as_handled()
 		gatherer_hut_open_requested.emit(structure)
+		return
+	if structure is LumberCamp:
+		get_viewport().set_input_as_handled()
+		lumber_camp_open_requested.emit(structure)
 		return
 	if structure and structure.config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		get_viewport().set_input_as_handled()

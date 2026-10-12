@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/info/lumber_camp_page.gd" id="1_camp"]
+[ext_resource type="Script" path="res://addons/pixel_avatar/pixel_avatar.gd" id="2_avatar"]
+
+[node name="LumberCampPage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_camp")
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="PriorityLabel" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "普通"
+
+[node name="PrioritySlider" type="HSlider" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 16)
+min_value = 0.0
+max_value = 2.0
+step = 1.0
+value = 1.0
+tick_count = 3
+ticks_on_borders = true
+
+[node name="WorkerRow0" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WorkerAvatar0" type="Control" parent="Rows/WorkerRow0"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("2_avatar")
+
+[node name="Worker0" type="LinkButton" parent="Rows/WorkerRow0"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "空位"
+
+[node name="WorkerRow1" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WorkerAvatar1" type="Control" parent="Rows/WorkerRow1"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("2_avatar")
+
+[node name="Worker1" type="LinkButton" parent="Rows/WorkerRow1"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "空位"
+
+[node name="ContainerTitle" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "容器 0/10"
+
+[node name="Items" type="VBoxContainer" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ContainerEmpty" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "空"

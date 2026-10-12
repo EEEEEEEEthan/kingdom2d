@@ -7,4 +7,5 @@ enum TypeId {
 	ENTER_HOME = 3,
 	GATHER_CYCLE = 4,
 	FETCH_FOOD = 5,
+	LOG_CYCLE = 6,
 }

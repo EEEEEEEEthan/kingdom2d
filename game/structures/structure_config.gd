@@ -9,6 +9,8 @@ enum TypeId {
 	BUSH = 4,
 	GATHERER_HUT = 5,
 	WAREHOUSE = 6,
+	# 7 是旧档难民棚，见 Structure._LEGACY_REFUGEE_SHELTER。
+	LUMBER_CAMP = 8,
 }
 
 static var oak: StructureConfig:
@@ -56,6 +58,15 @@ static var warehouse: StructureConfig:
 			warehouse._scene_path = &"res://game/structures/warehouse.tscn"
 		return warehouse
 
+static var lumber_camp: StructureConfig:
+	get:
+		if not lumber_camp:
+			lumber_camp = StructureConfig.new()
+			lumber_camp.id = TypeId.LUMBER_CAMP
+			lumber_camp.name = &"伐木营地"
+			lumber_camp._scene_path = &"res://game/structures/lumber_camp.tscn"
+		return lumber_camp
+
 static var bush: StructureConfig:
 	get:
 		if not bush:
@@ -72,6 +83,7 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	bush.id: bush,
 	gatherer_hut.id: gatherer_hut,
 	warehouse.id: warehouse,
+	lumber_camp.id: lumber_camp,
 }
 
 var id: TypeId = TypeId.NONE
