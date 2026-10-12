@@ -16,6 +16,7 @@ var _game: Game
 func _ready() -> void:
 	visible = false
 	close_requested.connect(hide)
+	visibility_changed.connect(_notify_inspect_focus)
 	%BackButton.pressed.connect(go_back)
 	%ForwardButton.pressed.connect(go_forward)
 
@@ -97,6 +98,30 @@ func _show_current() -> void:
 			page.character_open_requested.connect(open_resident)
 	_sync_nav_buttons()
 	show()
+	_notify_inspect_focus()
+
+
+func inspect_target() -> Node2D:
+	if not visible:
+		return null
+	var parts := current_path().split("/")
+	if parts.size() < 2:
+		return null
+	var game := _find_game()
+	if game == null:
+		return null
+	match parts[0]:
+		"resident":
+			return game.character_manager.characters.get(int(parts[1])) as Character
+		"structure", "home":
+			return game.structure_manager.get_structure_by_id(int(parts[1]))
+	return null
+
+
+func _notify_inspect_focus() -> void:
+	var game := _find_game()
+	if game:
+		game.set_inspect_focus(inspect_target())
 
 
 func _make_page(path: String) -> Control:

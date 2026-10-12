@@ -121,6 +121,11 @@ func _clear() -> void:
 	character_manager.clear()
 	terrain.clear()
 
+func set_inspect_focus(target: Node2D) -> void:
+	%Camera2D.follow(target)
+	HoverOutline.pin(target)
+
+
 func reset_camera() -> void:
 	%Camera2D.reset_to_center()
 
@@ -132,27 +137,33 @@ signal warehouse_open_requested(warehouse: Warehouse)
 signal home_open_requested(home: Structure)
 signal character_open_requested(character: Character)
 
+const _CLICK_DRAG_THRESHOLD_PX := 4.0
+
+var _left_press_position := Vector2.ZERO
+var _left_press_pending := false
+
 func _input(event: InputEvent) -> void:
 	if not event is InputEventMouseButton:
 		return
 	var mouse_button := event as InputEventMouseButton
-	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
+	if mouse_button.button_index != MOUSE_BUTTON_LEFT:
 		return
 	if _build_placement_active():
+		_left_press_pending = false
+		return
+	if mouse_button.pressed:
+		_left_press_pending = true
+		_left_press_position = mouse_button.position
+		return
+	if not _left_press_pending:
+		return
+	_left_press_pending = false
+	if mouse_button.position.distance_to(_left_press_position) > _CLICK_DRAG_THRESHOLD_PX:
 		return
 	var character := _character_under_mouse()
-	if not character:
-		return
-	get_viewport().set_input_as_handled()
-	character_open_requested.emit(character)
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not event is InputEventMouseButton:
-		return
-	var mouse_button := event as InputEventMouseButton
-	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
-		return
-	if _build_placement_active():
+	if character:
+		get_viewport().set_input_as_handled()
+		character_open_requested.emit(character)
 		return
 	var structure := _structure_under_mouse()
 	if structure is GathererHut:

@@ -91,6 +91,20 @@ func blink() -> void:
 	queue_redraw()
 
 
+## 同一 id 永远是同一张脸。
+func apply_id(character_id: int) -> void:
+	face = _pick(character_id, 1)
+	hair = _pick(character_id, 2)
+	eyes = _pick(character_id, 3)
+	mouth = _pick(character_id, 4)
+	body = _pick(character_id, 5)
+
+
+func _pick(character_id: int, salt: int) -> int:
+	var mixed := (character_id * 0x9E3779B1) & 0xFFFFFFFF
+	return posmod(mixed >> (salt * 5), variant_count())
+
+
 func _validate_property(property: Dictionary) -> void:
 	if property.name in PART_NAMES:
 		property.hint = PROPERTY_HINT_RANGE
@@ -100,9 +114,10 @@ func _validate_property(property: Dictionary) -> void:
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 	texture_filter = TEXTURE_FILTER_NEAREST
-	custom_minimum_size = Vector2(CELL, CELL)
+	if custom_minimum_size.x < 1.0 or custom_minimum_size.y < 1.0:
+		custom_minimum_size = Vector2(CELL, CELL)
 	if size.x < 1.0 or size.y < 1.0:
-		size = Vector2(CELL, CELL)
+		size = custom_minimum_size
 	set_process(true)
 	_gap_left = randf_range(_BLINK_GAP_MIN, _BLINK_GAP_MAX)
 
