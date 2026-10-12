@@ -88,9 +88,8 @@ script = ExtResource("1_main")
 unique_name_in_owner = true
 anisotropic_filtering_level = 0
 
-[node name="InfoBrowser" parent="." instance=ExtResource("2_info_browser")]
+[node name="InfoBrowser" parent="." unique_id=530371493 instance=ExtResource("2_info_browser")]
 unique_name_in_owner = true
-visible = false
 
 [node name="Tray" parent="." unique_id=369295403 instance=ExtResource("3_tray")]
 unique_name_in_owner = true
@@ -98,10 +97,10 @@ unique_name_in_owner = true
 [node name="DisplayScaleWheelController" type="Node" parent="." unique_id=93423411]
 script = SubResource("GDScript_display_scale_wheel")
 
+[connection signal="character_open_requested" from="GameWindow" to="InfoBrowser" method="open_resident"]
 [connection signal="control_window_open_requested" from="GameWindow" to="InfoBrowser" method="open_settings"]
 [connection signal="gatherer_hut_open_requested" from="GameWindow" to="InfoBrowser" method="open_structure"]
 [connection signal="home_open_requested" from="GameWindow" to="InfoBrowser" method="open_home"]
-[connection signal="character_open_requested" from="GameWindow" to="InfoBrowser" method="open_resident"]
 [connection signal="quit_requested" from="GameWindow" to="." method="request_quit"]
 [connection signal="reset_game_requested" from="InfoBrowser" to="GameWindow" method="reset_game"]
 [connection signal="control_window_open_requested" from="Tray" to="InfoBrowser" method="open_settings"]
