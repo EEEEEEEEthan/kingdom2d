@@ -108,6 +108,16 @@ func _run() -> void:
 		push_error("仓库优先级应进存档")
 		quit(1)
 		return
+	var hauled := ItemContainer.new()
+	if warehouse.withdraw_berries(hauled, 1) != 0:
+		push_error("不接收时不能取出")
+		quit(1)
+		return
+	warehouse.set_storage_policy(ItemConfig.TypeId.BERRY, Warehouse.StoragePolicy.WITHDRAW_ONLY)
+	if warehouse.accepts_deposit(ItemConfig.TypeId.BERRY) or warehouse.withdraw_berries(hauled, 1) != 1:
+		push_error("只出不进应能取出、不能存入")
+		quit(1)
+		return
 	saved.free()
 	browser.open_structure(home)
 	await process_frame

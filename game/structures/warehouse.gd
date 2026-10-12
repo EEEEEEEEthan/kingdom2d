@@ -47,6 +47,10 @@ func accepts_deposit(item_id: int) -> bool:
 	return policy_of(item_id) == StoragePolicy.ACCEPT
 
 
+func accepts_withdraw(item_id: int) -> bool:
+	return policy_of(item_id) != StoragePolicy.REFUSE
+
+
 func _ready() -> void:
 	super._ready()
 	_watch_container()
@@ -69,6 +73,8 @@ func berry_count() -> int:
 
 
 func withdraw_berries(target: ItemContainer, amount: int) -> int:
+	if not accepts_withdraw(ItemConfig.TypeId.BERRY):
+		return 0
 	var moved := container.take(ItemConfig.TypeId.BERRY, amount)
 	if moved > 0:
 		target.add(ItemConfig.TypeId.BERRY, moved)
