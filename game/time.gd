@@ -15,9 +15,7 @@ enum Seasons{
 }
 
 enum DayTimePeriod {
-	MORNING_MARKET,
 	WORK,
-	REST,
 	SLEEP,
 }
 
@@ -34,9 +32,7 @@ enum MoonPhase {
 
 const MOON_PHASE_COUNT := 8
 
-const _HOUR_MORNING_MARKET_START = 6
-const _HOUR_WORK_START = 7
-const _HOUR_REST_START = 19
+const _HOUR_WORK_START = 6
 const _HOUR_SLEEP_START = 22
 
 var all_days
@@ -93,12 +89,8 @@ var season: Seasons:
 		return  Seasons.SPRING
 
 static func get_day_time_period_for_hour(hour_of_day: int) -> DayTimePeriod:
-	if hour_of_day >= _HOUR_MORNING_MARKET_START and hour_of_day < _HOUR_WORK_START:
-		return DayTimePeriod.MORNING_MARKET
-	if hour_of_day >= _HOUR_WORK_START and hour_of_day < _HOUR_REST_START:
+	if hour_of_day >= _HOUR_WORK_START and hour_of_day < _HOUR_SLEEP_START:
 		return DayTimePeriod.WORK
-	if hour_of_day >= _HOUR_REST_START and hour_of_day < _HOUR_SLEEP_START:
-		return DayTimePeriod.REST
 	return DayTimePeriod.SLEEP
 
 

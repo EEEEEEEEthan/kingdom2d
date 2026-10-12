@@ -84,17 +84,16 @@ func _run() -> void:
 		return
 	for _step in 400:
 		gatherer._process(0.5)
-		if gatherer.indoors:
+		if hut.container.count_of(ItemConfig.TypeId.BERRY) > 0:
 			break
 	if gatherer.indoors or not gatherer.visible:
-		push_error("休息段一轮结束后应留在屋外")
+		push_error("工作段一轮结束后应留在屋外")
 		quit(1)
 		return
-	gatherer.abandon_ai_tasks()
 	gatherer._process(0.05)
-	var rest_activity: String = gatherer.current_activity()
-	if rest_activity != "正在闲逛" and rest_activity != "正在歇着":
-		push_error("休息段应留在屋外，实际 %s" % rest_activity)
+	var top = gatherer.ai_task_stack.peek()
+	if not top is CharacterAiGatherCycleTask:
+		push_error("工作段一轮结束后应继续采集")
 		quit(1)
 		return
 	_set_hour(game, 23)
