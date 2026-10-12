@@ -120,9 +120,10 @@ func _once_per_day(game) -> bool:
 	if Food.stored(home) != 5:
 		push_error("第一顿应剩 5，实际 %s" % Food.stored(home))
 		return false
+	game.game_time.all_days = 9.0 + 4.5 / 24.0
 	character._process(0.05)
 	if Food.stored(home) != 5:
-		push_error("同一天不应再吃，实际 %s" % Food.stored(home))
+		push_error("过了午夜不应再吃，实际 %s" % Food.stored(home))
 		return false
 	var data = character.serialize()
 	await _clear_cell(game, 151)
@@ -131,7 +132,19 @@ func _once_per_day(game) -> bool:
 	restored.deserialize(data)
 	restored._process(0.05)
 	if Food.stored(home) != 5:
-		push_error("读档后同一天不应再吃，实际 %s" % Food.stored(home))
+		push_error("读档后同一夜不应再吃，实际 %s" % Food.stored(home))
+		return false
+	game.game_time.all_days = 9.0 + 12.5 / 24.0
+	restored.workplace_structure_id = 0
+	restored.abandon_ai_tasks()
+	for structure in game.structure_manager.structures.values():
+		if structure is Warehouse:
+			structure.container.set_count(ItemConfig.TypeId.BERRY, 0)
+	restored._process(0.05)
+	game.game_time.all_days = 9.0 + 22.5 / 24.0
+	restored._process(0.05)
+	if Food.stored(home) != 0:
+		push_error("下一晚应再吃 5，实际 %s" % Food.stored(home))
 		return false
 	return true
 

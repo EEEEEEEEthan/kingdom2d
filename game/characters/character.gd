@@ -264,11 +264,19 @@ func _is_on_food_errand() -> bool:
 
 
 func _needs_food_today() -> bool:
-	return _food_day != int(_get_ai_context().game_time.all_days)
+	return _food_day != _food_cycle_index()
+
+
+func _food_cycle_index() -> int:
+	var game_time := _get_ai_context().game_time
+	var day_index := int(game_time.all_days)
+	if game_time.hour_of_day < 6:
+		return day_index - 1
+	return day_index
 
 
 func _queue_food_errand() -> void:
-	_food_day = int(_get_ai_context().game_time.all_days)
+	_food_day = _food_cycle_index()
 	push_ai_task(CharacterAiFetchFoodTask.new({}))
 
 func _queue_enter_home() -> void:
