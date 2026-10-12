@@ -17,7 +17,7 @@ func bind(structure: Structure, characters: CharacterManager) -> void:
 	var title := Label.new()
 	title.text = String(structure.config.name)
 	%Rows.add_child(title)
-	if structure is GathererHut:
+	if structure is GathererHut or structure is Warehouse:
 		var workplace := WORKPLACE_PART.instantiate()
 		workplace.name = "Workplace"
 		%Rows.add_child(workplace)

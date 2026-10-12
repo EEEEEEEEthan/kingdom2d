@@ -14,6 +14,7 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	game._clear()
+	await process_frame
 	var oak = StructureConfig.oak.instantiate()
 	var bush = StructureConfig.bush.instantiate()
 	var hut = StructureConfig.gatherer_hut.instantiate()
@@ -26,6 +27,9 @@ func _run() -> void:
 	game.structure_manager.add_structure(warehouse, 18)
 	home.container.add(ItemConfig.TypeId.BERRY, 3)
 	warehouse.container.add(ItemConfig.TypeId.BERRY, 4)
+	var manager = game.spawn_resident_at_cell(18)
+	manager.set_process(false)
+	warehouse.assign_manager(manager)
 	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
 	root.add_child(browser)
 	for structure in [oak, bush, hut, home, warehouse]:
@@ -65,7 +69,22 @@ func _run() -> void:
 		return
 	browser.open_structure(warehouse)
 	await process_frame
-	var stock = browser.get_node("%PageHost").get_child(0).get_node("Rows/Inventory")
+	var warehouse_page = browser.get_node("%PageHost").get_child(0)
+	var workplace = warehouse_page.get_node("Rows/Workplace")
+	if workplace.get_node("%Worker0").text != manager.display_name():
+		push_error("仓库管理员应出现在工人列表，实际 %s" % workplace.get_node("%Worker0").text)
+		quit(1)
+		return
+	if workplace.get_node("WorkerRow1").visible:
+		push_error("仓库只有一个工人位")
+		quit(1)
+		return
+	workplace.get_node("%PrioritySlider").value = GathererHut.Priority.HIGH
+	if warehouse.priority != GathererHut.Priority.HIGH:
+		push_error("仓库优先级滑条应写回")
+		quit(1)
+		return
+	var stock = warehouse_page.get_node("Rows/Inventory")
 	var policy: OptionButton = null
 	for row in stock.get_node("%Items").get_children():
 		if row.visible and row.get_node_or_null("Policy"):
@@ -83,6 +102,10 @@ func _run() -> void:
 	var saved := Structure.deserialize(warehouse.serialize(), game)
 	if (saved as Warehouse).policy_of(ItemConfig.TypeId.BERRY) != Warehouse.StoragePolicy.REFUSE:
 		push_error("存储策略应进存档")
+		quit(1)
+		return
+	if (saved as Warehouse).priority != GathererHut.Priority.HIGH:
+		push_error("仓库优先级应进存档")
 		quit(1)
 		return
 	saved.free()

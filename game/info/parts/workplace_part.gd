@@ -2,22 +2,22 @@ extends VBoxContainer
 
 signal character_open_requested(character: Character)
 
-var _hut: GathererHut
+var _structure: Structure
 var _characters: CharacterManager
 var _revision := ""
 
 
 func _ready() -> void:
 	%PrioritySlider.value_changed.connect(_on_priority_slider)
-	for slot in GathererHut.SLOT_COUNT:
+	for slot in _row_count():
 		var link := get_node("%%Worker%d" % slot) as LinkButton
 		link.pressed.connect(_on_worker_pressed.bind(slot))
-	if _hut:
+	if _structure:
 		_sync()
 
 
-func bind(hut: GathererHut, characters: CharacterManager) -> void:
-	_hut = hut
+func bind(structure: Structure, characters: CharacterManager) -> void:
+	_structure = structure
 	_characters = characters
 	_sync()
 
@@ -25,7 +25,7 @@ func bind(hut: GathererHut, characters: CharacterManager) -> void:
 func _process(_delta: float) -> void:
 	if not is_inside_tree() or not get_window().visible:
 		return
-	if not _hut or not is_instance_valid(_hut):
+	if not _structure or not is_instance_valid(_structure):
 		return
 	if _revision_key() == _revision:
 		return
@@ -36,19 +36,23 @@ func _sync() -> void:
 	if not is_node_ready():
 		return
 	var slider := %PrioritySlider as HSlider
-	if int(slider.value) != _hut.priority:
-		slider.set_value_no_signal(_hut.priority)
-	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
-	for slot in GathererHut.SLOT_COUNT:
-		_sync_worker(slot)
+	var priority := int(_structure.get("priority"))
+	if int(slider.value) != priority:
+		slider.set_value_no_signal(priority)
+	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[priority]
+	for slot in _row_count():
+		var row := get_node("WorkerRow%d" % slot) as Control
+		row.visible = slot < _slot_count()
+		if row.visible:
+			_sync_worker(slot)
 	_revision = _revision_key()
 
 
 func _revision_key() -> String:
-	var parts: PackedStringArray = [str(_hut.priority)]
-	var game := Game.find(_hut)
+	var parts: PackedStringArray = [str(_structure.get("priority"))]
+	var game := Game.find(_structure)
 	if game:
-		for worker_id in game.employment.workers_of(_hut.id):
+		for worker_id in game.employment.workers_of(_structure.id):
 			parts.append(str(worker_id))
 	return "|".join(parts)
 
@@ -70,11 +74,23 @@ func _sync_worker(slot: int) -> void:
 	link.set_meta("character_id", character.id)
 
 
+func _slot_count() -> int:
+	if _structure is GathererHut:
+		return GathererHut.SLOT_COUNT
+	if _structure is Warehouse:
+		return Warehouse.SLOT_COUNT
+	return 0
+
+
+func _row_count() -> int:
+	return maxi(GathererHut.SLOT_COUNT, Warehouse.SLOT_COUNT)
+
+
 func _worker(slot: int) -> Character:
-	var game := Game.find(_hut)
+	var game := Game.find(_structure)
 	if game == null:
 		return null
-	var workers := game.employment.workers_of(_hut.id)
+	var workers := game.employment.workers_of(_structure.id)
 	if slot >= workers.size():
 		return null
 	return _characters.characters.get(workers[slot]) as Character
@@ -88,7 +104,7 @@ func _on_worker_pressed(slot: int) -> void:
 
 
 func _on_priority_slider(value: float) -> void:
-	if not _hut or not is_instance_valid(_hut):
+	if not _structure or not is_instance_valid(_structure):
 		return
-	_hut.change_priority(int(value))
+	_structure.call("change_priority", int(value))
 	_sync()
