@@ -5,16 +5,12 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	load("res://game/game.gd")
-	load("res://game/game_builder.gd")
-	var game = (load("res://game/game.tscn") as PackedScene).instantiate()
-	root.add_child(game)
+	var manager := StructureManager.new()
+	root.add_child(manager)
 	await process_frame
-	game._clear()
-	await process_frame
-	var manager := game.structure_manager as StructureManager
+	manager.clear()
 	var cell := 3
-	var first := StructureConfig.bush.instantiate() as Structure
+	var first := Structure.new()
 	if manager.add_structure(first, cell, true) != StructureManager.AddError.OK:
 		push_error("空格子 dry_run 应为 OK")
 		quit(1)
@@ -34,7 +30,7 @@ func _run() -> void:
 	var child_count := manager.get_child_count()
 	var structure_count := manager.structures.size()
 	var assigned_id := first.id
-	var overlap := StructureConfig.bush.instantiate() as Structure
+	var overlap := Structure.new()
 	if manager.add_structure(overlap, cell, true) != StructureManager.AddError.CELL_OCCUPIED:
 		push_error("占用格 dry_run 应为 CELL_OCCUPIED")
 		quit(1)
@@ -55,7 +51,7 @@ func _run() -> void:
 		push_error("原建筑应仍在格子上")
 		quit(1)
 		return
-	var outside := StructureConfig.bush.instantiate() as Structure
+	var outside := Structure.new()
 	if manager.add_structure(outside, -1) != StructureManager.AddError.CELL_OUT_OF_RANGE:
 		push_error("负下标应为 CELL_OUT_OF_RANGE")
 		quit(1)
@@ -66,6 +62,11 @@ func _run() -> void:
 		return
 	if outside.get_parent() != null or outside.id != 0:
 		push_error("越界不应挂节点或分配 id")
+		quit(1)
+		return
+	var next := Structure.new()
+	if manager.add_structure(next, cell + 1) != StructureManager.AddError.OK or next.id != assigned_id + 1:
+		push_error("失败不应消耗 id")
 		quit(1)
 		return
 	quit(0)
