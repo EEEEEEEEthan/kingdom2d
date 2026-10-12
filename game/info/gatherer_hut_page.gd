@@ -85,11 +85,15 @@ func _revision_key() -> String:
 func _sync_worker(slot: int) -> void:
 	var link := get_node("%%Worker%d" % slot) as LinkButton
 	var character := _worker(slot)
+	var avatar := get_node("%%WorkerAvatar%d" % slot) as PixelAvatar
 	if character == null:
+		avatar.visible = false
 		link.text = "空位"
 		link.disabled = true
 		link.remove_meta("character_id")
 		return
+	avatar.visible = true
+	avatar.apply_id(character.id)
 	link.text = character.display_name()
 	link.disabled = false
 	link.set_meta("character_id", character.id)

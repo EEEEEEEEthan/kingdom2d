@@ -88,6 +88,17 @@ func _run() -> void:
 		push_error("无业只显示姓名，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
+	var portrait := page.get_node("%Avatar") as PixelAvatar
+	portrait.apply_id(0)
+	if portrait.face == _avatar_part(character.id, 1) and portrait.hair == _avatar_part(character.id, 2):
+		push_error("人物页头像应在同步后换成这个人")
+		quit(1)
+		return
+	page._process(0.0)
+	if portrait.face != _avatar_part(character.id, 1) or portrait.body != _avatar_part(character.id, 5):
+		push_error("人物页头像应跟 id 走")
+		quit(1)
+		return
 	game.employment.assign(character.id, 1)
 	page._process(0.0)
 	if page.get_node("%IdentityLabel").text != "Aldric Ashford，采集者":
@@ -135,3 +146,9 @@ func _run() -> void:
 
 func _set_hour(game, hour: int) -> void:
 	game.game_time.all_days = (float(hour) + 0.5) / 24.0
+
+
+func _avatar_part(character_id: int, salt: int) -> int:
+	var avatar := PixelAvatar.new()
+	var mixed := posmod(character_id * 1103515245 + salt * 12345, 2147483647)
+	return posmod(mixed, avatar.variant_count())

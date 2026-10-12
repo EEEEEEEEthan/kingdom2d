@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://game/info/gatherer_hut_page.gd" id="1_hut"]
+[ext_resource type="Script" path="res://addons/pixel_avatar/pixel_avatar.gd" id="2_avatar"]
 
 [node name="GathererHutPage" type="Control"]
 layout_mode = 3
@@ -37,13 +38,33 @@ value = 1.0
 tick_count = 3
 ticks_on_borders = true
 
-[node name="Worker0" type="LinkButton" parent="Rows"]
+[node name="WorkerRow0" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WorkerAvatar0" type="Control" parent="Rows/WorkerRow0"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("2_avatar")
+
+[node name="Worker0" type="LinkButton" parent="Rows/WorkerRow0"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 text = "空位"
 
-[node name="Worker1" type="LinkButton" parent="Rows"]
+[node name="WorkerRow1" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WorkerAvatar1" type="Control" parent="Rows/WorkerRow1"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("2_avatar")
+
+[node name="Worker1" type="LinkButton" parent="Rows/WorkerRow1"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0

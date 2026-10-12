@@ -63,6 +63,19 @@ func _run() -> void:
 		quit(1)
 		return
 	avatar.atlas = load("res://addons/pixel_avatar/atlas.png")
+	avatar.apply_id(1)
+	var first_face := avatar.face
+	var first_hair := avatar.hair
+	avatar.apply_id(2)
+	if avatar.face == first_face and avatar.hair == first_hair and avatar.body == first_face:
+		push_error("不同 id 应换一张脸")
+		quit(1)
+		return
+	avatar.apply_id(1)
+	if avatar.face != first_face or avatar.hair != first_hair:
+		push_error("同一 id 头像应稳定")
+		quit(1)
+		return
 	avatar.face = 0
 	avatar.hair = 1
 	avatar.eyes = 2

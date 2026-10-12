@@ -21,6 +21,8 @@ func alive() -> bool:
 
 
 func _sync() -> void:
+	var avatar := %Avatar as PixelAvatar
+	avatar.apply_id(_character.id)
 	var job := _character.occupation_name()
 	if job.is_empty():
 		%IdentityLabel.text = _character.display_name()

@@ -91,6 +91,20 @@ func blink() -> void:
 	queue_redraw()
 
 
+## 同一 id 永远是同一张脸。
+func apply_id(character_id: int) -> void:
+	face = _pick(character_id, 1)
+	hair = _pick(character_id, 2)
+	eyes = _pick(character_id, 3)
+	mouth = _pick(character_id, 4)
+	body = _pick(character_id, 5)
+
+
+func _pick(character_id: int, salt: int) -> int:
+	var mixed := posmod(character_id * 1103515245 + salt * 12345, 2147483647)
+	return posmod(mixed, variant_count())
+
+
 func _validate_property(property: Dictionary) -> void:
 	if property.name in PART_NAMES:
 		property.hint = PROPERTY_HINT_RANGE
