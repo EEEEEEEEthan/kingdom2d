@@ -86,6 +86,10 @@ func _show_outline(active: bool) -> void:
 		_ghosts[extra].visible = false
 
 
+static func hovered_host() -> Node2D:
+	return _pick_winner()
+
+
 static func _pick_winner() -> Node2D:
 	var viewport: Viewport = null
 	if not _outlines.is_empty():

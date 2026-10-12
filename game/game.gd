@@ -153,34 +153,11 @@ func _build_placement_active() -> bool:
 
 
 func _character_under_mouse() -> Character:
-	var local: Vector2 = character_manager.get_global_transform().affine_inverse() * character_manager.get_global_mouse_position()
-	var nearest: Character = null
-	var nearest_distance := 6.0
-	for character in character_manager.characters.values():
-		if not character.visible:
-			continue
-		var distance := local.distance_to(character.position + Vector2(0, -3))
-		if distance > nearest_distance:
-			continue
-		nearest = character
-		nearest_distance = distance
-	return nearest
+	return HoverOutline.hovered_host() as Character
 
 
 func _gatherer_hut_under_mouse() -> GathererHut:
-	var local: Vector2 = structure_manager.get_global_transform().affine_inverse() * structure_manager.get_global_mouse_position()
-	var cell_index := roundi((local.x - HALF_TILE_SIZE) / float(TILE_SIZE))
-	for offset in range(-1, 2):
-		var index := cell_index + offset
-		if index < 0 or index >= MAP_CELL_COUNT:
-			continue
-		var structure := structure_manager.index_to_structures[index]
-		if not structure is GathererHut:
-			continue
-		var hut_x := float(get_position_by_cell_index(index) + HALF_TILE_SIZE)
-		if absf(local.x - hut_x) <= 8.0:
-			return structure as GathererHut
-	return null
+	return HoverOutline.hovered_host() as GathererHut
 
 
 func start_build_placement(structure_config: StructureConfig) -> void:
