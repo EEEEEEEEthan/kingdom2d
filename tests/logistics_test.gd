@@ -117,7 +117,7 @@ func _structure_container_round_trip(game, hut) -> bool:
 
 func _page_shows_berry(browser) -> bool:
 	var page = browser.get_node("%PageHost").get_child(0)
-	var items = page.get_node("%Items")
+	var items = page.get_node("Rows/Inventory").get_node("%Items")
 	for row in items.get_children():
 		if not row.visible:
 			continue

@@ -90,14 +90,14 @@ func _run() -> void:
 	housemate.home_cell_index = cell_index
 	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
 	root.add_child(browser)
-	browser.open_home(home)
+	browser.open_structure(home)
 	await process_frame
-	if browser.current_path() != "home/%d" % home.id:
-		push_error("打开家应落到 home/id，实际 %s" % browser.current_path())
+	if browser.current_path() != "structure/%d" % home.id:
+		push_error("打开家应落到 structure/id，实际 %s" % browser.current_path())
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	var links: Array = page.get_node("%Residents").get_children()
+	var links: Array = page.get_node("Rows/Residents").get_node("%Residents").get_children()
 	if links.size() != 2:
 		push_error("家应列出两名住户，实际 %s" % links.size())
 		quit(1)
@@ -129,7 +129,7 @@ func _run() -> void:
 		quit(1)
 		return
 	browser.go_back()
-	if browser.current_path() != "home/%d" % home.id:
+	if browser.current_path() != "structure/%d" % home.id:
 		push_error("从住户返回应回到家")
 		quit(1)
 		return

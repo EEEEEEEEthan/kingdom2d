@@ -1,10 +1,15 @@
-extends Control
+extends VBoxContainer
 
 signal character_open_requested(character: Character)
 
 var _home: Structure
 var _characters: CharacterManager
 var _shown_ids: Array[int] = []
+
+
+func _ready() -> void:
+	if _home:
+		_sync()
 
 
 func bind(home: Structure, characters: CharacterManager) -> void:
@@ -21,20 +26,12 @@ func _process(_delta: float) -> void:
 	_sync()
 
 
-func alive() -> bool:
-	return _home != null and is_instance_valid(_home)
-
-
 func _sync() -> void:
+	if not is_node_ready():
+		return
 	var ids := _resident_ids()
 	if ids != _shown_ids:
 		_rebuild(ids)
-		return
-	%FoodLabel.text = "食物 ×%d" % Food.stored(_home)
-	for child in %Residents.get_children():
-		var character := _characters.characters.get(int(child.get_meta("character_id"))) as Character
-		if character:
-			(child.get_node("Name") as LinkButton).text = character.display_name()
 
 
 func _resident_ids() -> Array[int]:
@@ -52,7 +49,6 @@ func _rebuild(ids: Array[int]) -> void:
 		%Residents.remove_child(child)
 		child.free()
 	_shown_ids = ids.duplicate()
-	%FoodLabel.text = "食物 ×%d" % Food.stored(_home)
 	%EmptyLabel.visible = ids.is_empty()
 	for character_id in ids:
 		var character := _characters.characters.get(character_id) as Character

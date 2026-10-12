@@ -146,7 +146,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				_warehouse_id = 0
 				return Status.SUCCEEDED
 			if character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
-				character.carried_items.transfer_all_to(warehouse.container)
+				_deposit_accepted(character, warehouse)
 				_warehouse_id = 0
 				_phase = 8
 		8:
@@ -179,6 +179,15 @@ func _hut(context: CharacterAiContext) -> GathererHut:
 	var structure := context.structure_manager().get_structure_by_id(structure_id)
 	return structure as GathererHut
 
+func _deposit_accepted(character: Character, warehouse: Warehouse) -> void:
+	for item_id in character.carried_items.item_ids():
+		if not warehouse.accepts_deposit(item_id):
+			continue
+		var moved := character.carried_items.take(item_id, character.carried_items.count_of(item_id))
+		if moved > 0:
+			warehouse.container.add(item_id, moved)
+
+
 func _warehouse(context: CharacterAiContext) -> Warehouse:
 	var structure := context.structure_manager().get_structure_by_id(_warehouse_id)
 	return structure as Warehouse
@@ -191,6 +200,8 @@ static func _nearest_warehouse(context: CharacterAiContext, hut: GathererHut) ->
 		if not structure is Warehouse:
 			continue
 		var warehouse := structure as Warehouse
+		if not warehouse.accepts_deposit(ItemConfig.TypeId.BERRY):
+			continue
 		var distance := absi(warehouse.cell_index - hut.cell_index)
 		if not nearest or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):
 			nearest = warehouse

@@ -121,18 +121,20 @@ func _run() -> void:
 		return
 	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
 	root.add_child(browser)
-	browser.open_lumber_camp(camp)
+	browser.open_structure(camp)
 	if browser.current_path() != "structure/%d" % camp.id:
 		push_error("打开营地应落到 structure/id，实际 %s" % browser.current_path())
 		quit(1)
 		return
 	var page = browser.get_node("%PageHost").get_child(0)
-	if page.get_node("%ContainerTitle").text != "容器 %d/%d" % [camp.log_count(), LumberCamp.LOG_CAPACITY]:
-		push_error("营地窗口应显示原木容量，实际 %s" % page.get_node("%ContainerTitle").text)
+	var inventory = page.get_node("Rows/Inventory")
+	if inventory.get_node("%Title").text != "容器 %d/%d" % [camp.log_count(), LumberCamp.LOG_CAPACITY]:
+		push_error("营地窗口应显示原木容量，实际 %s" % inventory.get_node("%Title").text)
 		quit(1)
 		return
-	if page.get_node("%Worker0").text != lumberjack.display_name():
-		push_error("营地窗口应列出伐木工姓名，实际 %s" % page.get_node("%Worker0").text)
+	var workplace = page.get_node("Rows/Workplace")
+	if workplace.get_node("%Worker0").text != lumberjack.display_name():
+		push_error("营地窗口应列出伐木工姓名，实际 %s" % workplace.get_node("%Worker0").text)
 		quit(1)
 		return
 	if not _reservation_ok(game):

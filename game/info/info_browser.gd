@@ -4,9 +4,7 @@ signal reset_game_requested
 
 const SETTINGS_PAGE := preload("res://game/info/settings_page.tscn")
 const RESIDENT_PAGE := preload("res://game/info/resident_page.tscn")
-const GATHERER_HUT_PAGE := preload("res://game/info/gatherer_hut_page.tscn")
-const LUMBER_CAMP_PAGE := preload("res://game/info/lumber_camp_page.tscn")
-const HOME_PAGE := preload("res://game/info/home_page.tscn")
+const STRUCTURE_PAGE := preload("res://game/info/structure_page.tscn")
 
 var _history: Array[String] = []
 var _index := -1
@@ -29,16 +27,8 @@ func open_resident(character: Character) -> void:
 	_open("resident/%d" % character.id)
 
 
-func open_structure(hut: GathererHut) -> void:
-	_open("structure/%d" % hut.id)
-
-
-func open_lumber_camp(camp: LumberCamp) -> void:
-	_open("structure/%d" % camp.id)
-
-
-func open_home(home: Structure) -> void:
-	_open("home/%d" % home.id)
+func open_structure(structure: Structure) -> void:
+	_open("structure/%d" % structure.id)
 
 
 func go_back() -> void:
@@ -113,7 +103,7 @@ func inspect_target() -> Node2D:
 	match parts[0]:
 		"resident":
 			return game.character_manager.characters.get(int(parts[1])) as Character
-		"structure", "home":
+		"structure":
 			return game.structure_manager.get_structure_by_id(int(parts[1]))
 	return null
 
@@ -141,23 +131,10 @@ func _make_page(path: String) -> Control:
 			if not game:
 				return null
 			var structure := game.structure_manager.get_structure_by_id(int(parts[1]))
-			if structure is GathererHut:
-				var page := GATHERER_HUT_PAGE.instantiate()
-				page.bind(structure, game.character_manager)
-				return page
-			if structure is LumberCamp:
-				var camp_page := LUMBER_CAMP_PAGE.instantiate()
-				camp_page.bind(structure, game.character_manager)
-				return camp_page
-		"home":
-			var game := _find_game()
-			if not game:
+			if structure == null:
 				return null
-			var home := game.structure_manager.get_structure_by_id(int(parts[1]))
-			if home == null:
-				return null
-			var page := HOME_PAGE.instantiate()
-			page.bind(home, game.character_manager)
+			var page := STRUCTURE_PAGE.instantiate()
+			page.bind(structure, game.character_manager)
 			return page
 	return null
 

@@ -1,16 +1,54 @@
 extends Structure
 class_name Warehouse
 
-const _KEY_MANAGER_ID := 1
+enum StoragePolicy {
+	ACCEPT,
+	WITHDRAW_ONLY,
+	REFUSE,
+}
+
+const POLICY_NAMES := ["接收", "只出不进", "不接收"]
+const SLOT_COUNT := 1
+const _KEY_POLICIES := 1
+const _KEY_PRIORITY := 2
+
+var _policies: Dictionary[int, int] = {}
+var priority := GathererHut.Priority.NORMAL
 
 
 func _serialize() -> Dictionary:
-	return {}
+	var pairs: Array = []
+	for item_id in _policies:
+		pairs.append([item_id, _policies[item_id]])
+	return {
+		_KEY_POLICIES: pairs,
+		_KEY_PRIORITY: priority,
+	}
 
 
-func _deserialize(_data: Dictionary) -> void:
+func _deserialize(data: Dictionary) -> void:
+	_policies.clear()
+	for pair in data.get(_KEY_POLICIES, []):
+		_policies[int(pair[0])] = int(pair[1])
+	priority = int(data.get(_KEY_PRIORITY, GathererHut.Priority.NORMAL))
 	_watch_container()
 	_apply_fill()
+
+
+func policy_of(item_id: int) -> int:
+	return _policies.get(item_id, StoragePolicy.ACCEPT)
+
+
+func set_storage_policy(item_id: int, policy: int) -> void:
+	_policies[item_id] = policy
+
+
+func accepts_deposit(item_id: int) -> bool:
+	return policy_of(item_id) == StoragePolicy.ACCEPT
+
+
+func accepts_withdraw(item_id: int) -> bool:
+	return policy_of(item_id) != StoragePolicy.REFUSE
 
 
 func _ready() -> void:
@@ -35,10 +73,21 @@ func berry_count() -> int:
 
 
 func withdraw_berries(target: ItemContainer, amount: int) -> int:
+	if not accepts_withdraw(ItemConfig.TypeId.BERRY):
+		return 0
 	var moved := container.take(ItemConfig.TypeId.BERRY, amount)
 	if moved > 0:
 		target.add(ItemConfig.TypeId.BERRY, moved)
 	return moved
+
+
+func change_priority(value: int) -> void:
+	if priority == value:
+		return
+	priority = value
+	var game := Game.find(self)
+	if game:
+		game.rebalance_workplaces()
 
 
 func assign_manager(character: Character) -> void:
