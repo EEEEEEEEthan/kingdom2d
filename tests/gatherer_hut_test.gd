@@ -139,6 +139,17 @@ func _run() -> void:
 		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
 		quit(1)
 		return
+	page.get_node("%Worker0").pressed.emit()
+	await process_frame
+	if browser.current_path() != "resident/%d" % gatherer.id:
+		push_error("点工人应跳到居民，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	browser.go_back()
+	if browser.current_path() != "structure/%d" % hut.id:
+		push_error("从工人返回应回到小屋")
+		quit(1)
+		return
 	browser.go_back()
 	if not _priority_rebalance_ok(game):
 		quit(1)
