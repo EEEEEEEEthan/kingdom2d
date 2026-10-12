@@ -7,6 +7,11 @@ const _DRAW_Z := 4096
 static var _outlines: Array = []
 static var _pick_frame := -1
 static var _winner: Node2D
+static var _pinned: Node2D
+
+
+static func pin(host: Node2D) -> void:
+	_pinned = host if is_instance_valid(host) else null
 
 var show_outline := true
 var _ghosts: Array[Sprite2D] = []
@@ -31,6 +36,8 @@ func _exit_tree() -> void:
 	_outlines.erase(self)
 	if _winner == get_parent():
 		_winner = null
+	if _pinned == get_parent():
+		_pinned = null
 
 
 func _process(_delta: float) -> void:
@@ -45,6 +52,8 @@ func _process(_delta: float) -> void:
 
 func _show_outline(active: bool) -> void:
 	var host := get_parent() as Node2D
+	if host != null and host == _pinned:
+		active = true
 	if host == null or not active:
 		for ghost in _ghosts:
 			ghost.visible = false

@@ -21,12 +21,19 @@ script/source = "extends Camera2D
 
 var _center_x: float
 var _drag_loop_active := false
+var _follow: Node2D
 
 
 func _ready() -> void:
 	_center_x = Game.MAP_WIDTH * 0.5
 	position.x = _center_x
 	position_smoothing_enabled = true
+
+
+func follow(target: Node2D) -> void:
+	_follow = target
+	if not _drag_loop_active:
+		_apply_follow()
 
 
 func reset_to_center() -> void:
@@ -57,6 +64,20 @@ func _drag_pan_loop() -> void:
 		position.x = round(_clamp_camera_x(anchor_camera_x - delta_x))
 		await get_tree().physics_frame
 	_drag_loop_active = false
+	_apply_follow()
+
+
+func _process(_delta: float) -> void:
+	if _drag_loop_active:
+		return
+	_apply_follow()
+
+
+func _apply_follow() -> void:
+	if not is_instance_valid(_follow):
+		_follow = null
+		return
+	position.x = round(_clamp_camera_x(_follow.global_position.x))
 
 
 func _view_rect() -> Rect2:
