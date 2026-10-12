@@ -138,6 +138,8 @@ func is_map_center_off_screen() -> bool:
 
 signal structure_open_requested(structure: Structure)
 signal character_open_requested(character: Character)
+## 采集摇灌木结束、物品进入身上时发出。载荷为物品、实际增加数量、小人世界坐标。搬运、存仓、退回不发。
+signal item_gained(item_id: int, count: int, world_position: Vector2)
 
 const _CLICK_DRAG_THRESHOLD_PX := 4.0
 

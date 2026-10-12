@@ -99,7 +99,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		3:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds >= _SHAKE_SECONDS:
-				character.carried_items.add(_HARVEST_ITEM_ID, _HARVEST_ITEM_COUNT)
+				_take_harvest(character)
 				_phase = 4
 		4:
 			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
@@ -173,6 +173,17 @@ func _serialize_payload() -> Dictionary:
 		KEY_WAREHOUSE_ID: _warehouse_id,
 		KEY_HUT_ID: _hut_id,
 	}
+
+func _take_harvest(character: Character) -> void:
+	var before := character.carried_items.count_of(_HARVEST_ITEM_ID)
+	character.carried_items.add(_HARVEST_ITEM_ID, _HARVEST_ITEM_COUNT)
+	var gained := character.carried_items.count_of(_HARVEST_ITEM_ID) - before
+	if gained <= 0:
+		return
+	var game := Game.find(character)
+	if game:
+		game.item_gained.emit(_HARVEST_ITEM_ID, gained, character.global_position)
+
 
 func _hut(context: CharacterAiContext) -> GathererHut:
 	var structure_id := _hut_id if _hut_id != 0 else context.character.workplace_structure_id()

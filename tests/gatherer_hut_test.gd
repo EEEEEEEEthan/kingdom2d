@@ -1,5 +1,7 @@
 extends SceneTree
 
+var _gains: Array[Dictionary] = []
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -54,6 +56,7 @@ func _run() -> void:
 	var hut_x = Game.get_position_by_cell_index(hut_cell) + Game.HALF_TILE_SIZE
 	var saw_hut := false
 	var bush_x := 0.0
+	var gained_at := Vector2.ZERO
 	bush = null
 	for _step in 400:
 		gatherer._process(0.5)
@@ -64,6 +67,7 @@ func _run() -> void:
 			if bush != null:
 				bush_x = Game.get_position_by_cell_index(bush.cell_index) + Game.HALF_TILE_SIZE
 		if bush != null and is_equal_approx(gatherer.position.x, bush_x):
+			gained_at = gatherer.global_position
 			break
 	if not saw_hut or bush == null:
 		push_error("应先到小屋再到灌木 hut=%s bush=%s x=%s" % [saw_hut, bush, gatherer.position.x])
@@ -77,6 +81,7 @@ func _run() -> void:
 		return
 	var bush_id = bush.id
 	_set_hour(game, 19)
+	_arm_gains(game)
 	gatherer._process(0.2)
 	if gatherer.indoors or not is_equal_approx(gatherer.position.x, bush_x):
 		push_error("采集途中到点也不应回家")
@@ -86,6 +91,9 @@ func _run() -> void:
 		gatherer._process(0.5)
 		if hut.container.count_of(ItemConfig.TypeId.BERRY) > 0:
 			break
+	if not _gain_once_ok(gained_at):
+		quit(1)
+		return
 	if gatherer.indoors or not gatherer.visible:
 		push_error("工作段一轮结束后应留在屋外")
 		quit(1)
@@ -216,6 +224,7 @@ func _reservation_ok(game) -> bool:
 
 
 func _no_bush_ok(game) -> bool:
+	_arm_gains(game)
 	game._clear()
 	var hut = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(hut, 100)
@@ -236,10 +245,13 @@ func _no_bush_ok(game) -> bool:
 	if waiting.current_activity() != "正在等待可采集的灌木":
 		push_error("应显示正在等待可采集的灌木，实际 %s" % waiting.current_activity())
 		return false
+	if not _no_gain_ok("等待灌木"):
+		return false
 	return true
 
 
 func _berry_cap_ok(game) -> bool:
+	_arm_gains(game)
 	game._clear()
 	var hut = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(hut, 100)
@@ -279,10 +291,13 @@ func _berry_cap_ok(game) -> bool:
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY or not gatherer.carried_items.is_empty():
 		push_error("存入应截断到 10，实际 %s" % hut.berry_count())
 		return false
+	if not _no_gain_ok("满仓与存仓"):
+		return false
 	return true
 
 
 func _haul_ok(game) -> bool:
+	_arm_gains(game)
 	game._clear()
 	var hut = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(hut, 100)
@@ -326,6 +341,8 @@ func _haul_ok(game) -> bool:
 	gatherer.abandon_ai_tasks()
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
 		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
+		return false
+	if not _no_gain_ok("运仓与退回"):
 		return false
 	return true
 
@@ -423,3 +440,39 @@ func _dangling_ids_ok(game) -> bool:
 
 func _set_hour(game, hour: int) -> void:
 	game.game_time.all_days = 8.0 + (float(hour) + 0.5) / 24.0
+
+
+func _arm_gains(game) -> void:
+	if not game.item_gained.is_connected(_record_gain):
+		game.item_gained.connect(_record_gain)
+	_gains.clear()
+
+
+func _record_gain(item_id: int, count: int, world_position: Vector2) -> void:
+	_gains.append({
+		"item_id": item_id,
+		"count": count,
+		"world_position": world_position,
+	})
+
+
+func _gain_once_ok(gained_at: Vector2) -> bool:
+	if _gains.size() != 1:
+		push_error("摇灌木入包应恰好发出一次获得事件，实际 %s" % _gains.size())
+		return false
+	var gain: Dictionary = _gains[0]
+	if gain["item_id"] != ItemConfig.TypeId.BERRY or gain["count"] != 1:
+		push_error("获得事件应为浆果 1，实际 %s" % [gain])
+		return false
+	var world_position := gain["world_position"] as Vector2
+	if not world_position.is_equal_approx(gained_at):
+		push_error("获得事件坐标应为灌木旁 %s，实际 %s" % [gained_at, world_position])
+		return false
+	return true
+
+
+func _no_gain_ok(label: String) -> bool:
+	if _gains.is_empty():
+		return true
+	push_error("%s不应发出获得事件，实际 %s" % [label, _gains.size()])
+	return false
