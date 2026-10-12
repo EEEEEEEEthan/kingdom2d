@@ -56,7 +56,7 @@ static func nearest_stocked_warehouse(character: Character) -> Warehouse:
 		if not structure is Warehouse:
 			continue
 		var warehouse := structure as Warehouse
-		if warehouse.berry_count() <= 0:
+		if warehouse.berry_count() <= 0 or not warehouse.accepts_withdraw(ItemConfig.TypeId.BERRY):
 			continue
 		var distance := absi(warehouse.cell_index - origin)
 		if nearest == null or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):

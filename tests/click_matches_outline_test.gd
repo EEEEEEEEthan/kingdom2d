@@ -24,7 +24,7 @@ func _run() -> void:
 	var opened_character := [null]
 	var opened_hut := [null]
 	game.character_open_requested.connect(func(who) -> void: opened_character[0] = who)
-	game.gatherer_hut_open_requested.connect(func(who) -> void: opened_hut[0] = who)
+	game.structure_open_requested.connect(func(who) -> void: opened_hut[0] = who)
 	var camera := game.get_node("Camera2D") as Camera2D
 	camera.position_smoothing_enabled = false
 	camera.position.x = character.position.x
