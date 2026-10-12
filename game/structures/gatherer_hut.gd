@@ -9,6 +9,7 @@ enum Priority {
 
 const SLOT_COUNT := 2
 const BERRY_CAPACITY := 10
+const HAUL_BATCH := 10
 const PRIORITY_WEIGHTS := [2, 3, 6]
 const PRIORITY_NAMES := ["低优先", "普通", "高优先"]
 const _KEY_WORKER_IDS := 1
@@ -44,6 +45,13 @@ func berry_count() -> int:
 
 func berries_full() -> bool:
 	return berry_count() >= BERRY_CAPACITY
+
+
+func withdraw_berries(target: ItemContainer, amount: int) -> int:
+	var moved := container.take(ItemConfig.TypeId.BERRY, amount)
+	if moved > 0:
+		target.add(ItemConfig.TypeId.BERRY, moved)
+	return moved
 
 
 func deposit_carried(source: ItemContainer) -> void:

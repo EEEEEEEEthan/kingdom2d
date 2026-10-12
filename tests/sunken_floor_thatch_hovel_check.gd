@@ -10,8 +10,13 @@ func _run() -> void:
 	await process_frame
 	game._clear()
 	GameBuilder.build(game)
-	if game.character_manager.characters.size() != 0:
-		push_error("开局居民应为 0，实际 %s" % game.character_manager.characters.size())
+	if game.character_manager.characters.size() != 1:
+		push_error("开局应有 1 个居民，实际 %s" % game.character_manager.characters.size())
+		quit(1)
+		return
+	var manager: Character = game.character_manager.characters.values()[0]
+	if manager.occupation_name() != "仓库管理员":
+		push_error("开局居民应是仓库管理员，实际 %s" % manager.occupation_name())
 		quit(1)
 		return
 	var cell_index := -1
@@ -34,7 +39,11 @@ func _run() -> void:
 	placement._preview.cell_index = cell_index
 	placement._try_place()
 	await process_frame
-	var character: Character = game.character_manager.characters.values()[0] if game.character_manager.characters.size() == 1 else null
+	var character: Character = null
+	for resident in game.character_manager.characters.values():
+		if resident.home_cell_index == cell_index:
+			character = resident
+			break
 	if character == null:
 		push_error("半穴茅舍应带出 1 个居民")
 		quit(1)

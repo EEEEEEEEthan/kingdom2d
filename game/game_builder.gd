@@ -10,6 +10,7 @@ const _BUSH_NOISE_CLUSTER_POWER = 4.0
 static func build(game) -> void:
 	game.terrain.fill_terrain(Terrain.TerrainType.Land)
 	_spawn_sovereign_banner(game)
+	_spawn_starting_depot(game)
 	_spawn_random_oaks(game)
 	_spawn_clustered_bushes(game)
 
@@ -22,6 +23,17 @@ static func _spawn_sovereign_banner(game) -> void:
 	var structure_manager := game.structure_manager as StructureManager
 	var banner := StructureConfig.sovereign_banner.instantiate() as Structure
 	structure_manager.add_structure(banner, _map_center_cell_index())
+
+
+static func _spawn_starting_depot(game) -> void:
+	var structure_manager := game.structure_manager as StructureManager
+	var center := _map_center_cell_index()
+	var warehouse := StructureConfig.warehouse.instantiate() as Warehouse
+	structure_manager.add_structure(warehouse, center - 1)
+	var shelter := StructureConfig.refugee_shelter.instantiate() as Structure
+	structure_manager.add_structure(shelter, center + 1)
+	var resident: Character = game.spawn_resident_at_cell(center + 1)
+	warehouse.assign_manager(resident)
 
 
 static func _spawn_random_oaks(game) -> void:

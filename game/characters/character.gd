@@ -45,7 +45,7 @@ func _process(delta_seconds: float) -> void:
 		if not indoors:
 			_queue_enter_home()
 		return
-	if workplace_structure_id > 0 and _is_work_time():
+	if _is_work_time() and workplace_structure_id > 0 and not _workplace() is Warehouse:
 		_queue_gather_cycle()
 		return
 	_schedule_idle_wander()
@@ -179,6 +179,8 @@ func display_name() -> String:
 	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]
 
 func occupation_name() -> String:
+	if _workplace() is Warehouse:
+		return "仓库管理员"
 	if workplace_structure_id > 0:
 		return "采集者"
 	return ""
@@ -227,6 +229,15 @@ func _apply_daily_schedule() -> void:
 			_queue_enter_home()
 	else:
 		_leave_home()
+
+func _workplace() -> Structure:
+	if workplace_structure_id <= 0:
+		return null
+	var game := Game.find(self)
+	if not game:
+		return null
+	return game.structure_manager.get_structure_by_id(workplace_structure_id)
+
 
 func _queue_gather_cycle() -> void:
 	push_ai_task(CharacterAiGatherCycleTask.new({}))
