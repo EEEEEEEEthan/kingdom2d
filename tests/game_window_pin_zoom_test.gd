@@ -14,10 +14,14 @@ func _run() -> void:
 	await process_frame
 	var slide := window.get_node("GameWindowSlideController")
 	var dock_before: int = window.compute_docked_global_position().y
-	if window.position.y != dock_before:
-		push_error("钉住时应贴底，实际 %s 期望 %s" % [window.position.y, dock_before])
+	window.position.y = dock_before + 40
+	slide._sync_slide_targets()
+	if int(slide._slide_pos_y) == window.compute_docked_global_position().y and window.position.y == window.compute_docked_global_position().y:
+		push_error("钉住后的普通同步不应瞬移，实际 %s" % window.position.y)
 		quit(1)
 		return
+	window.position.y = dock_before
+	slide._slide_pos_y = float(dock_before)
 	window.scale = 2
 	var dock_after: int = window.compute_docked_global_position().y
 	if int(slide._slide_pos_y) != dock_after:
