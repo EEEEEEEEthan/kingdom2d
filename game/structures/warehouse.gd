@@ -1,15 +1,28 @@
 extends Structure
 class_name Warehouse
 
-const _KEY_MANAGER_ID := 1
+enum Priority {
+	LOW,
+	NORMAL,
+	HIGH,
+}
+
+const PRIORITY_NAMES := ["低优先", "普通", "高优先"]
+const _KEY_PRIORITY := 2
+
+var priority := Priority.NORMAL
 
 
 func _serialize() -> Dictionary:
-	return {}
+	return {_KEY_PRIORITY: priority}
 
 
-func _deserialize(_data: Dictionary) -> void:
-	pass
+func _deserialize(data: Dictionary) -> void:
+	priority = int(data.get(_KEY_PRIORITY, Priority.NORMAL))
+
+
+func change_priority(value: int) -> void:
+	priority = clampi(value, Priority.LOW, Priority.HIGH)
 
 
 func berry_count() -> int:

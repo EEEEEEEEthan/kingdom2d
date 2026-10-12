@@ -5,6 +5,7 @@ signal reset_game_requested
 const SETTINGS_PAGE := preload("res://game/info/settings_page.tscn")
 const RESIDENT_PAGE := preload("res://game/info/resident_page.tscn")
 const GATHERER_HUT_PAGE := preload("res://game/info/gatherer_hut_page.tscn")
+const WAREHOUSE_PAGE := preload("res://game/info/warehouse_page.tscn")
 const HOME_PAGE := preload("res://game/info/home_page.tscn")
 
 var _history: Array[String] = []
@@ -29,6 +30,10 @@ func open_resident(character: Character) -> void:
 
 func open_structure(hut: GathererHut) -> void:
 	_open("structure/%d" % hut.id)
+
+
+func open_warehouse(warehouse: Warehouse) -> void:
+	_open("warehouse/%d" % warehouse.id)
 
 
 func open_home(home: Structure) -> void:
@@ -115,6 +120,16 @@ func _make_page(path: String) -> Control:
 				var page := GATHERER_HUT_PAGE.instantiate()
 				page.bind(structure, game.character_manager)
 				return page
+		"warehouse":
+			var game := _find_game()
+			if not game:
+				return null
+			var warehouse := game.structure_manager.get_structure_by_id(int(parts[1])) as Warehouse
+			if warehouse == null:
+				return null
+			var page := WAREHOUSE_PAGE.instantiate()
+			page.bind(warehouse)
+			return page
 		"home":
 			var game := _find_game()
 			if not game:

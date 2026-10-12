@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/info/warehouse_page.gd" id="1_warehouse"]
+
+[node name="WarehousePage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_warehouse")
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="PriorityLabel" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "普通"
+
+[node name="PrioritySlider" type="HSlider" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 16)
+min_value = 0.0
+max_value = 2.0
+step = 1.0
+value = 1.0
+tick_count = 3
+ticks_on_borders = true
+
+[node name="Items" type="VBoxContainer" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ContainerEmpty" type="Label" parent="Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "空"

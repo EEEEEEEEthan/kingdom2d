@@ -9,7 +9,6 @@ var _revision := ""
 
 
 func _ready() -> void:
-	%PrioritySlider.value_changed.connect(_on_priority_slider)
 	for slot in GathererHut.SLOT_COUNT:
 		var link := get_node("%%Worker%d" % slot) as LinkButton
 		link.pressed.connect(_on_worker_pressed.bind(slot))
@@ -50,10 +49,6 @@ func alive() -> bool:
 
 
 func _sync() -> void:
-	var slider := %PrioritySlider as HSlider
-	if int(slider.value) != _hut.priority:
-		slider.set_value_no_signal(_hut.priority)
-	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
 	%ContainerTitle.text = "容器 %d/%d" % [_hut.berry_count(), GathererHut.BERRY_CAPACITY]
 	for slot in GathererHut.SLOT_COUNT:
 		_sync_worker(slot)
@@ -69,7 +64,7 @@ func _sync() -> void:
 
 
 func _revision_key() -> String:
-	var parts: PackedStringArray = [str(_hut.priority)]
+	var parts: PackedStringArray = []
 	var game := Game.find(_hut)
 	if game:
 		for worker_id in game.employment.workers_of(_hut.id):
@@ -110,10 +105,3 @@ func _on_worker_pressed(slot: int) -> void:
 	if character == null:
 		return
 	character_open_requested.emit(character)
-
-
-func _on_priority_slider(value: float) -> void:
-	if not _hut or not is_instance_valid(_hut):
-		return
-	_hut.change_priority(int(value))
-	_sync()
