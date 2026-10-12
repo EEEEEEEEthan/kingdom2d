@@ -9,7 +9,25 @@ func _serialize() -> Dictionary:
 
 
 func _deserialize(_data: Dictionary) -> void:
-	pass
+	_watch_container()
+	_apply_fill()
+
+
+func _ready() -> void:
+	super._ready()
+	_watch_container()
+	_apply_fill()
+
+
+func _watch_container() -> void:
+	if not container.changed.is_connected(_apply_fill):
+		container.changed.connect(_apply_fill)
+
+
+func _apply_fill() -> void:
+	var stock := get_node_or_null(^"%Stock") as Sprite2D
+	if stock:
+		stock.visible = not container.is_empty()
 
 
 func berry_count() -> int:

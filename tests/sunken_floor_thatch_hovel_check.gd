@@ -26,18 +26,29 @@ func _run() -> void:
 		quit(1)
 		return
 	var depot: Structure = game.structure_manager.index_to_structures[center - 1]
-	var depot_texture := (depot.get_node("Sprite2D") as Sprite2D).texture as CanvasTexture
-	var image := Image.new()
-	image.load_png_from_buffer(Marshalls.base64_to_raw(depot_texture.diffuse_texture.get("_base64_data")))
-	var top_opaque := 0
-	var bottom_opaque := 0
+	var stock := depot.get_node("%Stock") as Sprite2D
+	if stock.visible:
+		push_error("空仓库不该堆货")
+		quit(1)
+		return
+	var image := _texture_image((depot.get_node("Sprite2D") as Sprite2D).texture)
+	var fence := 0
 	for x in image.get_width():
-		if image.get_pixel(x, 1).a > 0.5:
-			top_opaque += 1
-		if image.get_pixel(x, image.get_height() - 2).a > 0.5:
-			bottom_opaque += 1
-	if top_opaque != 0 or bottom_opaque < image.get_width() - 2:
-		push_error("仓库应是贴地物料堆，实际顶行 %s 底行 %s" % [top_opaque, bottom_opaque])
+		if image.get_pixel(x, 0).a > 0.5:
+			fence += 1
+	if fence < 10 or image.get_pixel(6, 5).a > 0.5:
+		push_error("空仓库应是围栏，栏内是空的")
+		quit(1)
+		return
+	depot.container.add(ItemConfig.TypeId.BERRY, 3)
+	var stock_image := _texture_image(stock.texture)
+	if not stock.visible or stock_image.get_pixel(6, 5).a < 0.5:
+		push_error("进货后围栏里应堆出东西")
+		quit(1)
+		return
+	depot.container.take(ItemConfig.TypeId.BERRY, 3)
+	if stock.visible:
+		push_error("出空后围栏里应空下来")
 		quit(1)
 		return
 	var cell_index := -1
@@ -108,3 +119,10 @@ func _run() -> void:
 		return
 	print("sunken_floor_thatch_hovel_ok")
 	quit(0)
+
+
+func _texture_image(texture: Texture2D) -> Image:
+	var image := Image.new()
+	var canvas := texture as CanvasTexture
+	image.load_png_from_buffer(Marshalls.base64_to_raw(canvas.diffuse_texture.get("_base64_data")))
+	return image
