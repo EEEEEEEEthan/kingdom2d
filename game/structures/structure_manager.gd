@@ -67,7 +67,18 @@ func structures_of_type(type_id: int) -> Array:
 	return _structures_by_type.get(type_id, [])
 
 
-func add_structure(structure: Structure, cell_index: int) -> void:
+enum AddError {
+	OK,
+	CELL_OCCUPIED,
+	CELL_OUT_OF_RANGE,
+}
+
+
+## dry_run 为 true 时只返回错误码，不挂节点、不分配 id。
+func add_structure(structure: Structure, cell_index: int, dry_run := false) -> AddError:
+	var error := _add_error(cell_index)
+	if dry_run or error != AddError.OK:
+		return error
 	_next_id += 1
 	structure.id = _next_id
 	structure.cell_index = cell_index
@@ -78,6 +89,15 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 		var game := Game.find(self)
 		if game:
 			game.rebalance_workplaces()
+	return AddError.OK
+
+
+func _add_error(cell_index: int) -> AddError:
+	if cell_index < 0 or cell_index >= index_to_structures.size():
+		return AddError.CELL_OUT_OF_RANGE
+	if index_to_structures[cell_index]:
+		return AddError.CELL_OCCUPIED
+	return AddError.OK
 
 
 func _register_structure(structure: Structure) -> void:

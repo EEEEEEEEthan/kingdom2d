@@ -57,7 +57,7 @@ func _mouse_to_cell_index() -> int:
 
 func _try_place() -> void:
 	var structure_manager := _game.structure_manager
-	if structure_manager.index_to_structures[_preview.cell_index]:
+	if structure_manager.add_structure(_preview, _preview.cell_index, true) != StructureManager.AddError.OK:
 		return
 	_preview.modulate = Color.WHITE
 	_preview_juice.dispose()
