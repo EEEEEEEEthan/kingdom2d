@@ -152,9 +152,7 @@ static func _pick_bush_id(context: CharacterAiContext) -> int:
 	var character_id := context.character.id
 	var nearest: Structure
 	var nearest_distance := 0
-	for structure in structure_manager.index_to_structures:
-		if not structure or structure.config.id != StructureConfig.TypeId.BUSH:
-			continue
+	for structure in structure_manager.structures_of_type(StructureConfig.TypeId.BUSH):
 		var occupant_id := structure_manager.occupant_of(structure.id)
 		if occupant_id != 0 and occupant_id != character_id:
 			continue

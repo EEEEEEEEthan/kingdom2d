@@ -5,6 +5,7 @@ signal character_open_requested(character: Character)
 var _hut: GathererHut
 var _characters: CharacterManager
 var _item_labels: Dictionary[int, Label] = {}
+var _revision := ""
 
 
 func _ready() -> void:
@@ -39,6 +40,8 @@ func _process(_delta: float) -> void:
 		return
 	if not _hut or not is_instance_valid(_hut):
 		return
+	if _revision_key() == _revision:
+		return
 	_sync()
 
 
@@ -62,6 +65,19 @@ func _sync() -> void:
 			_item_labels[item_id].text = "×%d" % count
 			has_items = true
 	%ContainerEmpty.visible = not has_items
+	_revision = _revision_key()
+
+
+func _revision_key() -> String:
+	var parts: PackedStringArray = [str(_hut.priority)]
+	for worker_id in _hut.worker_ids:
+		parts.append(str(worker_id))
+	parts.append("#")
+	for item_id in _item_labels:
+		var count := _hut.container.count_of(item_id)
+		if count > 0:
+			parts.append("%d:%d" % [item_id, count])
+	return "|".join(parts)
 
 
 func _sync_worker(slot: int) -> void:
