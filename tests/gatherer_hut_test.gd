@@ -299,7 +299,7 @@ func _haul_ok(game) -> bool:
 		gatherer._process(0.5)
 		if gatherer.current_activity() == "正在把浆果送到仓库" and not is_equal_approx(gatherer.position.x, Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE):
 			break
-	gatherer.abandon_ai_tasks()
+	hut.release_worker(gatherer)
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
 		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
 		return false

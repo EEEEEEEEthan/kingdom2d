@@ -7,6 +7,7 @@ const KEY_PHASE = 1
 const KEY_ELAPSED_SECONDS = 2
 const KEY_BUSH_ID = 3
 const KEY_WAREHOUSE_ID = 4
+const KEY_HUT_ID = 5
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_BUSH_WAIT_SECONDS := 2.0
@@ -17,12 +18,14 @@ var _phase := 0
 var _elapsed_seconds := 0.0
 var _bush_id := 0
 var _warehouse_id := 0
+var _hut_id := 0
 
 func _init(save_payload: Dictionary) -> void:
 	_phase = save_payload.get(KEY_PHASE, 0)
 	_elapsed_seconds = save_payload.get(KEY_ELAPSED_SECONDS, 0.0)
 	_bush_id = save_payload.get(KEY_BUSH_ID, 0)
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
+	_hut_id = save_payload.get(KEY_HUT_ID, 0)
 
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
@@ -46,6 +49,8 @@ func activity_text() -> String:
 
 func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 	var character := context.character
+	if _hut_id == 0:
+		_hut_id = character.workplace_structure_id
 	var hut := _hut(context)
 	if not hut:
 		character.visible = true
@@ -166,10 +171,12 @@ func _serialize_payload() -> Dictionary:
 		KEY_ELAPSED_SECONDS: _elapsed_seconds,
 		KEY_BUSH_ID: _bush_id,
 		KEY_WAREHOUSE_ID: _warehouse_id,
+		KEY_HUT_ID: _hut_id,
 	}
 
-static func _hut(context: CharacterAiContext) -> GathererHut:
-	var structure := context.structure_manager().get_structure_by_id(context.character.workplace_structure_id)
+func _hut(context: CharacterAiContext) -> GathererHut:
+	var structure_id := _hut_id if _hut_id != 0 else context.character.workplace_structure_id
+	var structure := context.structure_manager().get_structure_by_id(structure_id)
 	return structure as GathererHut
 
 func _warehouse(context: CharacterAiContext) -> Warehouse:
@@ -194,7 +201,7 @@ static func _nearest_warehouse(context: CharacterAiContext, hut: GathererHut) ->
 func _bush(context: CharacterAiContext) -> Structure:
 	return context.structure_manager().get_structure_by_id(_bush_id)
 
-static func _pick_bush_id(context: CharacterAiContext) -> int:
+func _pick_bush_id(context: CharacterAiContext) -> int:
 	var structure_manager := context.structure_manager()
 	var hut := _hut(context)
 	if not hut:
