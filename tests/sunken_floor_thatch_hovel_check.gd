@@ -78,8 +78,16 @@ func _run() -> void:
 		return
 	var first_avatar := links[0].get_node("Avatar") as PixelAvatar
 	var second_avatar := links[1].get_node("Avatar") as PixelAvatar
-	if first_avatar.face != _pick(character.id, 1) or second_avatar.hair != _pick(housemate.id, 2):
+	var first_expected := PixelAvatar.new()
+	var second_expected := PixelAvatar.new()
+	first_expected.apply_id(character.id)
+	second_expected.apply_id(housemate.id)
+	if first_avatar.face != first_expected.face or second_avatar.hair != second_expected.hair:
 		push_error("住户头像应跟 id 走")
+		quit(1)
+		return
+	if first_avatar.face == second_avatar.face and first_avatar.hair == second_avatar.hair and first_avatar.eyes == second_avatar.eyes and first_avatar.mouth == second_avatar.mouth and first_avatar.body == second_avatar.body:
+		push_error("两个住户不应是同一张脸")
 		quit(1)
 		return
 	links[1].get_node("Name").pressed.emit()
@@ -95,9 +103,3 @@ func _run() -> void:
 		return
 	print("sunken_floor_thatch_hovel_ok")
 	quit(0)
-
-
-func _pick(character_id: int, salt: int) -> int:
-	var avatar := PixelAvatar.new()
-	var mixed := posmod(character_id * 1103515245 + salt * 12345, 2147483647)
-	return posmod(mixed, avatar.variant_count())

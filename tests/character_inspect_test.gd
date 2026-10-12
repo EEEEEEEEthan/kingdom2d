@@ -89,13 +89,11 @@ func _run() -> void:
 		quit(1)
 		return
 	var portrait := page.get_node("%Avatar") as PixelAvatar
+	var expected := PixelAvatar.new()
+	expected.apply_id(character.id)
 	portrait.apply_id(0)
-	if portrait.face == _avatar_part(character.id, 1) and portrait.hair == _avatar_part(character.id, 2):
-		push_error("人物页头像应在同步后换成这个人")
-		quit(1)
-		return
 	page._process(0.0)
-	if portrait.face != _avatar_part(character.id, 1) or portrait.body != _avatar_part(character.id, 5):
+	if portrait.face != expected.face or portrait.hair != expected.hair or portrait.body != expected.body:
 		push_error("人物页头像应跟 id 走")
 		quit(1)
 		return
@@ -146,9 +144,3 @@ func _run() -> void:
 
 func _set_hour(game, hour: int) -> void:
 	game.game_time.all_days = (float(hour) + 0.5) / 24.0
-
-
-func _avatar_part(character_id: int, salt: int) -> int:
-	var avatar := PixelAvatar.new()
-	var mixed := posmod(character_id * 1103515245 + salt * 12345, 2147483647)
-	return posmod(mixed, avatar.variant_count())

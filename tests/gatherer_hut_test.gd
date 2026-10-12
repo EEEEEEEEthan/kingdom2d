@@ -140,7 +140,9 @@ func _run() -> void:
 		quit(1)
 		return
 	var worker_avatar := page.get_node("%WorkerAvatar0") as PixelAvatar
-	if not worker_avatar.visible or worker_avatar.face != _avatar_part(gatherer.id, 1):
+	var expected_avatar := PixelAvatar.new()
+	expected_avatar.apply_id(gatherer.id)
+	if not worker_avatar.visible or worker_avatar.face != expected_avatar.face or worker_avatar.hair != expected_avatar.hair:
 		push_error("在岗工人应显示自己的头像")
 		quit(1)
 		return
@@ -420,9 +422,3 @@ func _dangling_ids_ok(game) -> bool:
 
 func _set_hour(game, hour: int) -> void:
 	game.game_time.all_days = 8.0 + (float(hour) + 0.5) / 24.0
-
-
-func _avatar_part(character_id: int, salt: int) -> int:
-	var avatar := PixelAvatar.new()
-	var mixed := posmod(character_id * 1103515245 + salt * 12345, 2147483647)
-	return posmod(mixed, avatar.variant_count())
