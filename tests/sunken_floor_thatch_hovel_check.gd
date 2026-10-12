@@ -70,11 +70,27 @@ func _run() -> void:
 		push_error("家应列出两名住户，实际 %s" % links.size())
 		quit(1)
 		return
-	if links[0].text != character.display_name() or links[1].text != housemate.display_name():
-		push_error("住户顺序应按 id，实际 %s %s" % [links[0].text, links[1].text])
+	var first_name: String = links[0].get_node("Name").text
+	var second_name: String = links[1].get_node("Name").text
+	if first_name != character.display_name() or second_name != housemate.display_name():
+		push_error("住户顺序应按 id，实际 %s %s" % [first_name, second_name])
 		quit(1)
 		return
-	links[1].pressed.emit()
+	var first_avatar := links[0].get_node("Avatar") as PixelAvatar
+	var second_avatar := links[1].get_node("Avatar") as PixelAvatar
+	var first_expected := PixelAvatar.new()
+	var second_expected := PixelAvatar.new()
+	first_expected.apply_id(character.id)
+	second_expected.apply_id(housemate.id)
+	if first_avatar.face != first_expected.face or second_avatar.hair != second_expected.hair:
+		push_error("住户头像应跟 id 走")
+		quit(1)
+		return
+	if first_avatar.face == second_avatar.face and first_avatar.hair == second_avatar.hair and first_avatar.eyes == second_avatar.eyes and first_avatar.mouth == second_avatar.mouth and first_avatar.body == second_avatar.body:
+		push_error("两个住户不应是同一张脸")
+		quit(1)
+		return
+	links[1].get_node("Name").pressed.emit()
 	await process_frame
 	if browser.current_path() != "resident/%d" % housemate.id:
 		push_error("点住户应跳到这个人，实际 %s" % browser.current_path())

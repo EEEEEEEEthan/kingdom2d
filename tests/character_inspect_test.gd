@@ -88,6 +88,15 @@ func _run() -> void:
 		push_error("无业只显示姓名，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
+	var portrait := page.get_node("%Avatar") as PixelAvatar
+	var expected := PixelAvatar.new()
+	expected.apply_id(character.id)
+	portrait.apply_id(0)
+	page._process(0.0)
+	if portrait.face != expected.face or portrait.hair != expected.hair or portrait.body != expected.body:
+		push_error("人物页头像应跟 id 走")
+		quit(1)
+		return
 	game.employment.assign(character.id, 1)
 	page._process(0.0)
 	if page.get_node("%IdentityLabel").text != "Aldric Ashford，采集者":

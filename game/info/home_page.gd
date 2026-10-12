@@ -34,7 +34,7 @@ func _sync() -> void:
 	for child in %Residents.get_children():
 		var character := _characters.characters.get(int(child.get_meta("character_id"))) as Character
 		if character:
-			(child as LinkButton).text = character.display_name()
+			(child.get_node("Name") as LinkButton).text = character.display_name()
 
 
 func _resident_ids() -> Array[int]:
@@ -56,12 +56,21 @@ func _rebuild(ids: Array[int]) -> void:
 	%EmptyLabel.visible = ids.is_empty()
 	for character_id in ids:
 		var character := _characters.characters.get(character_id) as Character
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		row.set_meta("character_id", character_id)
+		var avatar := PixelAvatar.new()
+		avatar.name = "Avatar"
+		if character:
+			avatar.apply_id(character.id)
+		row.add_child(avatar)
 		var link := LinkButton.new()
+		link.name = "Name"
 		link.focus_mode = Control.FOCUS_NONE
 		link.text = character.display_name() if character else ""
-		link.set_meta("character_id", character_id)
 		link.pressed.connect(_on_resident_pressed.bind(character_id))
-		%Residents.add_child(link)
+		row.add_child(link)
+		%Residents.add_child(row)
 
 
 func _on_resident_pressed(character_id: int) -> void:
