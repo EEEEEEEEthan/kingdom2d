@@ -8,4 +8,5 @@ enum TypeId {
 	GATHER_CYCLE = 4,
 	FETCH_FOOD = 5,
 	LOG_CYCLE = 6,
+	BUILD_CYCLE = 7,
 }

@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/info/parts/upgrade_part.gd" id="1_upgrade"]
+
+[node name="Upgrade" type="VBoxContainer"]
+theme_override_constants/separation = 2
+script = ExtResource("1_upgrade")
+
+[node name="Status" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "需要 20 原木"
+
+[node name="UpgradeButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "升级为木架茅屋"

@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/structures/base_structure.tscn" id="1_base"]
+[ext_resource type="Script" path="res://game/structures/timber_frame_cottage.gd" id="2_cottage"]
+[ext_resource type="Script" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_tex"]
+
+[sub_resource type="Texture2D" id="Texture2D_cottage"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAYAAAAmlE46AAAAuElEQVR4nGNgwAH6w6z/gzAueSZcmhiwsPFqxKawH4sYikZ8TutHk2OEMdIsDXFqQgazjp8H62GBCcT5SDLYVG9jVFIwwWrAvQdnGI+0ev2fdfw87sABKVqUKsYAwiA2NjVwG5dvvQEXBNkaN/sVnI1NDQsuGxmQADbnw50a6a3BgK5YCU0DshqsfkTWoIQjsJiwuR/kVBfJvwwgjOxsgn4E2bLnOX4bUQIBFE/YFMEAKJ7xydMWAABg+1C8Fgde9wAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_cottage"]
+diffuse_texture = SubResource("Texture2D_cottage")
+
+[node name="TimberFrameCottage" instance=ExtResource("1_base")]
+script = ExtResource("2_cottage")
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0"]
+unique_name_in_owner = true
+texture = SubResource("CanvasTexture_cottage")
+offset = Vector2(0, -8)

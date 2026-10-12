@@ -87,11 +87,23 @@ func add_structure(structure: Structure, cell_index: int, dry_run := false) -> A
 	if structure.get_parent() != self:
 		add_child(structure)
 	_register_structure(structure)
-	if structure is GathererHut or structure is LumberCamp:
+	if structure is GathererHut or structure is LumberCamp or structure is BuildersGuild:
 		var game := Game.find(self)
 		if game:
 			game.rebalance_workplaces()
 	return AddError.OK
+
+
+func retarget_config(structure: Structure, next_config: StructureConfig) -> void:
+	var old_type := int(structure.config.id)
+	var new_type := int(next_config.id)
+	if old_type != new_type:
+		var bucket: Array = _structures_by_type.get(old_type, [])
+		bucket.erase(structure)
+		if not _structures_by_type.has(new_type):
+			_structures_by_type[new_type] = []
+		(_structures_by_type[new_type] as Array).append(structure)
+	structure.config = next_config
 
 
 func _add_error(cell_index: int) -> AddError:

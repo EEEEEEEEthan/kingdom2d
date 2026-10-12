@@ -11,6 +11,8 @@ enum TypeId {
 	WAREHOUSE = 6,
 	# 7 是旧档难民棚，见 Structure._LEGACY_REFUGEE_SHELTER。
 	LUMBER_CAMP = 8,
+	BUILDERS_GUILD = 9,
+	TIMBER_FRAME_COTTAGE = 10,
 }
 
 static var oak: StructureConfig:
@@ -67,6 +69,25 @@ static var lumber_camp: StructureConfig:
 			lumber_camp._scene_path = &"res://game/structures/lumber_camp.tscn"
 		return lumber_camp
 
+static var builders_guild: StructureConfig:
+	get:
+		if not builders_guild:
+			builders_guild = StructureConfig.new()
+			builders_guild.id = TypeId.BUILDERS_GUILD
+			builders_guild.name = &"建筑工会"
+			builders_guild._scene_path = &"res://game/structures/builders_guild.tscn"
+		return builders_guild
+
+static var timber_frame_cottage: StructureConfig:
+	get:
+		if not timber_frame_cottage:
+			timber_frame_cottage = StructureConfig.new()
+			timber_frame_cottage.id = TypeId.TIMBER_FRAME_COTTAGE
+			timber_frame_cottage.name = &"木架茅屋"
+			timber_frame_cottage.placeable = false
+			timber_frame_cottage._scene_path = &"res://game/structures/timber_frame_cottage.tscn"
+		return timber_frame_cottage
+
 static var bush: StructureConfig:
 	get:
 		if not bush:
@@ -84,10 +105,13 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 	gatherer_hut.id: gatherer_hut,
 	warehouse.id: warehouse,
 	lumber_camp.id: lumber_camp,
+	builders_guild.id: builders_guild,
+	timber_frame_cottage.id: timber_frame_cottage,
 }
 
 var id: TypeId = TypeId.NONE
 var name: StringName
+var placeable := true
 var max_hp = 32
 var _scene_path: StringName
 var _scene: PackedScene:

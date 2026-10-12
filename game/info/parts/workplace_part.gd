@@ -79,6 +79,8 @@ func _slot_count() -> int:
 		return GathererHut.SLOT_COUNT
 	if _structure is LumberCamp:
 		return LumberCamp.SLOT_COUNT
+	if _structure is BuildersGuild:
+		return BuildersGuild.SLOT_COUNT
 	if _structure is Warehouse:
 		return Warehouse.SLOT_COUNT
 	return 0

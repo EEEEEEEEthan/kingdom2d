@@ -52,6 +52,8 @@ func _process(delta_seconds: float) -> void:
 	if _is_work_time() and workplace_structure_id() > 0 and not _workplace() is Warehouse:
 		if _workplace() is LumberCamp:
 			_queue_log_cycle()
+		elif _workplace() is BuildersGuild:
+			_queue_build_cycle()
 		else:
 			_queue_gather_cycle()
 		return
@@ -198,6 +200,8 @@ func occupation_name() -> String:
 		return "仓库管理员"
 	if workplace is LumberCamp:
 		return "伐木工"
+	if workplace is BuildersGuild:
+		return "建筑工"
 	if workplace_structure_id() > 0:
 		return "采集者"
 	return ""
@@ -216,6 +220,8 @@ func current_activity() -> String:
 		return (top as CharacterAiGatherCycleTask).activity_text()
 	if top is CharacterAiLogCycleTask:
 		return (top as CharacterAiLogCycleTask).activity_text()
+	if top is CharacterAiBuildCycleTask:
+		return (top as CharacterAiBuildCycleTask).activity_text()
 	if top is CharacterAiFetchFoodTask:
 		return (top as CharacterAiFetchFoodTask).activity_text()
 	if top is CharacterAiMoveToWorldXTask and ai_task_stack.has_task(CharacterAiEnterHomeTask):
@@ -238,7 +244,7 @@ func _apply_daily_schedule() -> void:
 		return
 	if _is_on_food_errand():
 		return
-	if _is_on_gather_cycle() or _is_on_log_cycle():
+	if _is_on_gather_cycle() or _is_on_log_cycle() or _is_on_build_cycle():
 		_schedule_initialized = true
 		_schedule_sleeping = sleeping
 		return
@@ -277,6 +283,13 @@ func _queue_log_cycle() -> void:
 
 func _is_on_log_cycle() -> bool:
 	return ai_task_stack.peek() is CharacterAiLogCycleTask
+
+
+func _queue_build_cycle() -> void:
+	push_ai_task(CharacterAiBuildCycleTask.new({}))
+
+func _is_on_build_cycle() -> bool:
+	return ai_task_stack.peek() is CharacterAiBuildCycleTask
 
 
 func _is_on_food_errand() -> bool:
