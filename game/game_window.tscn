@@ -54,6 +54,16 @@ func _sync_slide_targets() -> void:
 		_slide_target_y = _slide_y_docked
 	else:
 		_slide_target_y = _slide_y_hidden
+	if _is_pined():
+		_slide_pos_y = _slide_target_y
+		_slide_pos_y_velocity = 0.0
+		var pos := _game_window.position
+		_game_window.position = Vector2i(pos.x, int(_slide_pos_y))
+
+
+func _is_pined() -> bool:
+	var auto_hide := _game_window.get_node_or_null(\"AutoHideController\")
+	return auto_hide != null and auto_hide.pined
 
 
 func _process(delta: float) -> void:
