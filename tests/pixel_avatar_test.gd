@@ -64,16 +64,26 @@ func _run() -> void:
 		return
 	avatar.atlas = load("res://addons/pixel_avatar/atlas.png")
 	avatar.apply_id(1)
-	var first_face := avatar.face
-	var first_hair := avatar.hair
+	var first := [avatar.face, avatar.hair, avatar.eyes, avatar.mouth, avatar.body]
 	avatar.apply_id(2)
-	if avatar.face == first_face and avatar.hair == first_hair and avatar.body == first_face:
+	var second := [avatar.face, avatar.hair, avatar.eyes, avatar.mouth, avatar.body]
+	if first == second:
 		push_error("不同 id 应换一张脸")
 		quit(1)
 		return
 	avatar.apply_id(1)
-	if avatar.face != first_face or avatar.hair != first_hair:
+	if [avatar.face, avatar.hair, avatar.eyes, avatar.mouth, avatar.body] != first:
 		push_error("同一 id 头像应稳定")
+		quit(1)
+		return
+	var columns := {}
+	for character_id in 36:
+		avatar.apply_id(character_id + 1)
+		columns[avatar.face] = true
+		columns[avatar.hair] = true
+		columns[avatar.body] = true
+	if columns.size() != avatar.variant_count():
+		push_error("五官应能用上每一列，实际 %s" % columns.keys())
 		quit(1)
 		return
 	avatar.face = 0

@@ -101,9 +101,8 @@ func apply_id(character_id: int) -> void:
 
 
 func _pick(character_id: int, salt: int) -> int:
-	var mixed := character_id * (3 + salt * 3) + salt * 7
-	mixed ^= salt * 997
-	return posmod(mixed, variant_count())
+	var mixed := (character_id * 0x9E3779B1) & 0xFFFFFFFF
+	return posmod(mixed >> (salt * 5), variant_count())
 
 
 func _validate_property(property: Dictionary) -> void:
