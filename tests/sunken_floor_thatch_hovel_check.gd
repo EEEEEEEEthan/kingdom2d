@@ -20,14 +20,15 @@ func _run() -> void:
 		quit(1)
 		return
 	var center := Game.MAP_CELL_COUNT / 2
-	var home: Structure = game.structure_manager.index_to_structures[center + 1]
-	if home == null or home.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+	var starting_home: Structure = game.structure_manager.index_to_structures[center + 1]
+	if starting_home == null or starting_home.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		push_error("开局住房应是半穴茅舍")
 		quit(1)
 		return
 	var depot: Structure = game.structure_manager.index_to_structures[center - 1]
-	var depot_texture := (depot.get_node("Sprite2D") as Sprite2D).texture
-	var image := depot_texture.get_image()
+	var depot_texture := (depot.get_node("Sprite2D") as Sprite2D).texture as CanvasTexture
+	var image := Image.new()
+	image.load_png_from_buffer(Marshalls.base64_to_raw(depot_texture.diffuse_texture.get("_base64_data")))
 	var top_opaque := 0
 	var bottom_opaque := 0
 	for x in image.get_width():
