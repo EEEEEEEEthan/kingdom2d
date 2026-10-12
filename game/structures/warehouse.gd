@@ -12,6 +12,17 @@ func _deserialize(_data: Dictionary) -> void:
 	pass
 
 
+func berry_count() -> int:
+	return container.count_of(ItemConfig.TypeId.BERRY)
+
+
+func withdraw_berries(target: ItemContainer, amount: int) -> int:
+	var moved := container.take(ItemConfig.TypeId.BERRY, amount)
+	if moved > 0:
+		target.add(ItemConfig.TypeId.BERRY, moved)
+	return moved
+
+
 func assign_manager(character: Character) -> void:
 	var game := Game.find(self)
 	if game:

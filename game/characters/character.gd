@@ -8,6 +8,7 @@ const _KEY_HOME_CELL_INDEX = 4
 const _KEY_INDOORS = 5
 const _KEY_WORKPLACE_STRUCTURE_ID = 6 # 旧档字段，关系已改由 WorkplaceIndex 保存
 const _KEY_CARRIED_ITEMS = 7
+const _KEY_FOOD_DAY = 8
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
 const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
 const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
@@ -29,6 +30,7 @@ var ai_task_stack := CharacterAiTaskStack.new()
 var _ai_context: CharacterAiContext
 var _schedule_initialized := false
 var _schedule_sleeping := false
+var _food_day := -1
 
 func _ready() -> void:
 	_get_ai_context()
@@ -41,6 +43,9 @@ func _process(delta_seconds: float) -> void:
 	if not ai_task_stack.is_empty():
 		return
 	if _is_sleeping():
+		if _needs_food_today():
+			_queue_food_errand()
+			return
 		if not indoors:
 			_queue_enter_home()
 		return
@@ -80,6 +85,7 @@ func deserialize(data: Dictionary) -> void:
 	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
 	indoors = data.get(_KEY_INDOORS, false)
 	carried_items = ItemContainer.deserialize(data.get(_KEY_CARRIED_ITEMS, {}))
+	_food_day = data.get(_KEY_FOOD_DAY, -1)
 	visible = not indoors
 	_schedule_initialized = false
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
@@ -92,6 +98,7 @@ func serialize() -> Dictionary:
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
 		_KEY_CARRIED_ITEMS: carried_items.serialize(),
+		_KEY_FOOD_DAY: _food_day,
 	}
 
 
@@ -201,6 +208,8 @@ func current_activity() -> String:
 		return "正在进屋"
 	if top is CharacterAiGatherCycleTask:
 		return (top as CharacterAiGatherCycleTask).activity_text()
+	if top is CharacterAiFetchFoodTask:
+		return (top as CharacterAiFetchFoodTask).activity_text()
 	if top is CharacterAiMoveToWorldXTask and ai_task_stack.has_task(CharacterAiEnterHomeTask):
 		return "正在回家"
 	if top is CharacterAiWaitDurationTask:
@@ -219,6 +228,8 @@ func _apply_daily_schedule() -> void:
 	var sleeping := _is_sleeping()
 	if _schedule_initialized and sleeping == _schedule_sleeping:
 		return
+	if _is_on_food_errand():
+		return
 	if _is_on_gather_cycle():
 		_schedule_initialized = true
 		_schedule_sleeping = sleeping
@@ -227,7 +238,9 @@ func _apply_daily_schedule() -> void:
 	_schedule_sleeping = sleeping
 	abandon_ai_tasks()
 	if sleeping:
-		if indoors:
+		if _needs_food_today():
+			_queue_food_errand()
+		elif indoors:
 			visible = false
 		else:
 			_queue_enter_home()
@@ -249,6 +262,27 @@ func _queue_gather_cycle() -> void:
 
 func _is_on_gather_cycle() -> bool:
 	return ai_task_stack.peek() is CharacterAiGatherCycleTask
+
+
+func _is_on_food_errand() -> bool:
+	return ai_task_stack.peek() is CharacterAiFetchFoodTask
+
+
+func _needs_food_today() -> bool:
+	return _food_day != _food_cycle_index()
+
+
+func _food_cycle_index() -> int:
+	var game_time := _get_ai_context().game_time
+	var day_index := int(game_time.all_days)
+	if game_time.hour_of_day < 6:
+		return day_index - 1
+	return day_index
+
+
+func _queue_food_errand() -> void:
+	_food_day = _food_cycle_index()
+	push_ai_task(CharacterAiFetchFoodTask.new({}))
 
 func _queue_enter_home() -> void:
 	if not indoors:

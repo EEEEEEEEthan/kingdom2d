@@ -30,6 +30,7 @@ func _sync() -> void:
 	if ids != _shown_ids:
 		_rebuild(ids)
 		return
+	%FoodLabel.text = "食物 ×%d" % Food.stored(_home)
 	for child in %Residents.get_children():
 		var character := _characters.characters.get(int(child.get_meta("character_id"))) as Character
 		if character:
@@ -51,6 +52,7 @@ func _rebuild(ids: Array[int]) -> void:
 		%Residents.remove_child(child)
 		child.free()
 	_shown_ids = ids.duplicate()
+	%FoodLabel.text = "食物 ×%d" % Food.stored(_home)
 	%EmptyLabel.visible = ids.is_empty()
 	for character_id in ids:
 		var character := _characters.characters.get(character_id) as Character
