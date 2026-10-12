@@ -121,6 +121,11 @@ func _clear() -> void:
 	character_manager.clear()
 	terrain.clear()
 
+func set_inspect_focus(target: Node2D) -> void:
+	%Camera2D.follow(target)
+	HoverOutline.pin(target)
+
+
 func reset_camera() -> void:
 	%Camera2D.reset_to_center()
 
