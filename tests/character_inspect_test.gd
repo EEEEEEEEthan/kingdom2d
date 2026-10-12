@@ -35,7 +35,7 @@ func _run() -> void:
 		push_error("白天无业应在闲逛或歇着，实际 %s" % character.current_activity())
 		quit(1)
 		return
-	character.workplace_structure_id = 1
+	game.employment.assign(character.id, 1)
 	character.abandon_ai_tasks()
 	character._process(0.05)
 	if character.occupation_name() != "采集者":
@@ -48,7 +48,7 @@ func _run() -> void:
 		return
 	_set_hour(game, 23)
 	character.abandon_ai_tasks()
-	character.workplace_structure_id = 0
+	game.employment.release(character.id)
 	character.indoors = false
 	character.visible = true
 	character.position.x += 24.0
@@ -88,13 +88,13 @@ func _run() -> void:
 		push_error("无业只显示姓名，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
-	character.workplace_structure_id = 1
+	game.employment.assign(character.id, 1)
 	page._process(0.0)
 	if page.get_node("%IdentityLabel").text != "Aldric Ashford，采集者":
 		push_error("有职业应跟在姓名后面，实际 %s" % page.get_node("%IdentityLabel").text)
 		quit(1)
 		return
-	character.workplace_structure_id = 0
+	game.employment.release(character.id)
 	page._process(0.0)
 	if page.get_node("%ActivityLabel").text != "正在睡觉":
 		push_error("窗口应显示正在睡觉")

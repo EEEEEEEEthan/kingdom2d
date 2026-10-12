@@ -60,9 +60,13 @@ func _sync() -> void:
 
 
 func _worker_label(slot: int) -> String:
-	if slot >= _hut.worker_ids.size():
+	var game := Game.find(_hut)
+	if game == null:
 		return "空位"
-	var character: Character = _characters.characters.get(_hut.worker_ids[slot])
+	var workers := game.employment.workers_of(_hut.id)
+	if slot >= workers.size():
+		return "空位"
+	var character: Character = _characters.characters.get(workers[slot])
 	if character == null:
 		return "空位"
 	return character.display_name()

@@ -41,8 +41,8 @@ func _run() -> void:
 	var bush = StructureConfig.bush.instantiate()
 	game.structure_manager.add_structure(bush, bush_cell)
 	_set_hour(game, 12)
-	if gatherer.workplace_structure_id != hut.id:
-		push_error("采集者应入职小屋 %s" % [gatherer.workplace_structure_id])
+	if gatherer.workplace_structure_id() != hut.id:
+		push_error("采集者应入职小屋 %s" % [gatherer.workplace_structure_id()])
 		quit(1)
 		return
 	var deposited := false

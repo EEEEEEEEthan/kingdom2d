@@ -86,3 +86,6 @@ func _register_structure(structure: Structure) -> void:
 		index_to_structures[cell_index] = null
 	if structures.get(structure.id) == structure:
 		structures.erase(structure.id)
+	var game := Game.find(self)
+	if game:
+		game.employment.release_structure(structure.id)

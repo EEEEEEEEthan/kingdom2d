@@ -5,14 +5,15 @@ class_name WorkplaceStaffing
 ## 由 Game 在加人、加小屋、改优先级、读档后各调用一次。
 
 
-static func rebalance(structures: Dictionary[int, Structure], characters: Dictionary[int, Character]) -> void:
+static func rebalance(structures: Dictionary[int, Structure], characters: Dictionary[int, Character], employment: WorkplaceIndex) -> void:
+	employment.prune(characters, structures)
 	var tier_huts := _huts_by_priority(structures)
 	var tier_counts := GathererHut.allocate_tier_counts(_tier_demands(tier_huts), characters.size())
 	var targets := _target_counts(tier_huts, tier_counts)
 	for tier in tier_huts:
 		for hut in tier:
-			_release_excess(hut, targets, characters)
-	_fill_vacancies(tier_huts, targets, characters)
+			_release_excess(hut, targets, characters, employment)
+	_fill_vacancies(tier_huts, targets, characters, employment)
 
 
 # 每个优先级一个列表，各自按 id 排序，保证分配次序稳定。
@@ -49,16 +50,17 @@ static func _target_counts(tier_huts: Array, tier_counts: Array) -> Dictionary[i
 
 
 # 超编的先辞退家最远的。
-static func _release_excess(hut: GathererHut, targets: Dictionary[int, int], characters: Dictionary[int, Character]) -> void:
-	while hut.worker_ids.size() > targets[hut.id]:
-		var farthest := _farthest_worker(hut, characters)
+static func _release_excess(hut: GathererHut, targets: Dictionary[int, int], characters: Dictionary[int, Character], employment: WorkplaceIndex) -> void:
+	while employment.count_of(hut.id) > targets[hut.id]:
+		var farthest := _farthest_worker(hut, characters, employment)
 		if farthest == null:
 			break
-		hut.release_worker(farthest)
+		employment.release(farthest.id)
+		farthest.abandon_ai_tasks()
 
 
 # 缺编的每次补一个家最近的无业居民；距离相同先看居民 id，再看小屋 id。
-static func _fill_vacancies(tier_huts: Array, targets: Dictionary[int, int], characters: Dictionary[int, Character]) -> void:
+static func _fill_vacancies(tier_huts: Array, targets: Dictionary[int, int], characters: Dictionary[int, Character], employment: WorkplaceIndex) -> void:
 	while true:
 		var best_hut: GathererHut = null
 		var best_character: Character = null
@@ -66,11 +68,11 @@ static func _fill_vacancies(tier_huts: Array, targets: Dictionary[int, int], cha
 		for tier in tier_huts:
 			for hut_value in tier:
 				var hut := hut_value as GathererHut
-				if hut.worker_ids.size() >= targets[hut.id]:
+				if employment.count_of(hut.id) >= targets[hut.id]:
 					continue
 				for character_value in characters.values():
 					var character := character_value as Character
-					if character.workplace_structure_id != 0:
+					if employment.workplace_of(character.id) != 0:
 						continue
 					var distance := absi(character.resolved_home_cell_index() - hut.cell_index)
 					if best_character != null and distance > best_distance:
@@ -84,13 +86,14 @@ static func _fill_vacancies(tier_huts: Array, targets: Dictionary[int, int], cha
 					best_distance = distance
 		if best_character == null:
 			return
-		best_hut.assign_worker(best_character)
+		employment.assign(best_character.id, best_hut.id)
+		best_character.abandon_ai_tasks()
 
 
-static func _farthest_worker(hut: GathererHut, characters: Dictionary[int, Character]) -> Character:
+static func _farthest_worker(hut: GathererHut, characters: Dictionary[int, Character], employment: WorkplaceIndex) -> Character:
 	var farthest: Character = null
 	var farthest_distance := 0
-	for worker_id in hut.worker_ids:
+	for worker_id in employment.workers_of(hut.id):
 		var character: Character = characters.get(worker_id)
 		if character == null:
 			continue

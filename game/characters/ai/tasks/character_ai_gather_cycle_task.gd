@@ -119,7 +119,7 @@ func _serialize_payload() -> Dictionary:
 	}
 
 static func _hut(context: CharacterAiContext) -> GathererHut:
-	var structure := context.structure_manager().get_structure_by_id(context.character.workplace_structure_id)
+	var structure := context.structure_manager().get_structure_by_id(context.character.workplace_structure_id())
 	return structure as GathererHut
 
 func _bush(context: CharacterAiContext) -> Structure:
