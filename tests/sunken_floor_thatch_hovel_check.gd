@@ -10,8 +10,13 @@ func _run() -> void:
 	await process_frame
 	game._clear()
 	GameBuilder.build(game)
-	if game.character_manager.characters.size() != 0:
-		push_error("开局居民应为 0，实际 %s" % game.character_manager.characters.size())
+	if game.character_manager.characters.size() != 1:
+		push_error("开局应有 1 个居民，实际 %s" % game.character_manager.characters.size())
+		quit(1)
+		return
+	var manager: Character = game.character_manager.characters.values()[0]
+	if manager.occupation_name() != "仓库管理员":
+		push_error("开局居民应是仓库管理员，实际 %s" % manager.occupation_name())
 		quit(1)
 		return
 	var cell_index := -1
@@ -30,10 +35,15 @@ func _run() -> void:
 	game.horizon.add_child(placement)
 	for _i in 5:
 		await process_frame
+	placement.set_process(false)
 	placement._preview.cell_index = cell_index
 	placement._try_place()
 	await process_frame
-	var character: Character = game.character_manager.characters.values()[0] if game.character_manager.characters.size() == 1 else null
+	var character: Character = null
+	for resident in game.character_manager.characters.values():
+		if resident.home_cell_index == cell_index:
+			character = resident
+			break
 	if character == null:
 		push_error("半穴茅舍应带出 1 个居民")
 		quit(1)
@@ -41,6 +51,38 @@ func _run() -> void:
 	var expected_x: float = Game.get_position_by_cell_index(cell_index) + Game.HALF_TILE_SIZE
 	if not is_equal_approx(character.position.x, expected_x):
 		push_error("居民不在茅舍的格子上")
+		quit(1)
+		return
+	var home: Structure = game.structure_manager.index_to_structures[cell_index]
+	var housemate := game.spawn_resident_at_cell(cell_index + 3)
+	housemate.home_cell_index = cell_index
+	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
+	root.add_child(browser)
+	browser.open_home(home)
+	await process_frame
+	if browser.current_path() != "home/%d" % home.id:
+		push_error("打开家应落到 home/id，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	var page = browser.get_node("%PageHost").get_child(0)
+	var links: Array = page.get_node("%Residents").get_children()
+	if links.size() != 2:
+		push_error("家应列出两名住户，实际 %s" % links.size())
+		quit(1)
+		return
+	if links[0].text != character.display_name() or links[1].text != housemate.display_name():
+		push_error("住户顺序应按 id，实际 %s %s" % [links[0].text, links[1].text])
+		quit(1)
+		return
+	links[1].pressed.emit()
+	await process_frame
+	if browser.current_path() != "resident/%d" % housemate.id:
+		push_error("点住户应跳到这个人，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	browser.go_back()
+	if browser.current_path() != "home/%d" % home.id:
+		push_error("从住户返回应回到家")
 		quit(1)
 		return
 	print("sunken_floor_thatch_hovel_ok")

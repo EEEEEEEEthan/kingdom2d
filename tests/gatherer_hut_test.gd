@@ -84,17 +84,16 @@ func _run() -> void:
 		return
 	for _step in 400:
 		gatherer._process(0.5)
-		if gatherer.indoors:
+		if hut.container.count_of(ItemConfig.TypeId.BERRY) > 0:
 			break
 	if gatherer.indoors or not gatherer.visible:
-		push_error("休息段一轮结束后应留在屋外")
+		push_error("工作段一轮结束后应留在屋外")
 		quit(1)
 		return
-	gatherer.abandon_ai_tasks()
 	gatherer._process(0.05)
-	var rest_activity: String = gatherer.current_activity()
-	if rest_activity != "正在闲逛" and rest_activity != "正在歇着":
-		push_error("休息段应留在屋外，实际 %s" % rest_activity)
+	var top = gatherer.ai_task_stack.peek()
+	if not top is CharacterAiGatherCycleTask:
+		push_error("工作段一轮结束后应继续采集")
 		quit(1)
 		return
 	_set_hour(game, 23)
@@ -140,6 +139,17 @@ func _run() -> void:
 		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
 		quit(1)
 		return
+	page.get_node("%Worker0").pressed.emit()
+	await process_frame
+	if browser.current_path() != "resident/%d" % gatherer.id:
+		push_error("点工人应跳到居民，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	browser.go_back()
+	if browser.current_path() != "structure/%d" % hut.id:
+		push_error("从工人返回应回到小屋")
+		quit(1)
+		return
 	browser.go_back()
 	if not _priority_rebalance_ok(game):
 		quit(1)
@@ -148,6 +158,12 @@ func _run() -> void:
 		quit(1)
 		return
 	if not _no_bush_ok(game):
+		quit(1)
+		return
+	if not _berry_cap_ok(game):
+		quit(1)
+		return
+	if not _haul_ok(game):
 		quit(1)
 		return
 	print("gatherer_hut_ok")
@@ -211,6 +227,97 @@ func _no_bush_ok(game) -> bool:
 	return true
 
 
+func _berry_cap_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var bush = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(bush, 110)
+	var gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	var hut_x = Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE
+	for _step in 80:
+		gatherer._process(0.5)
+	if gatherer.visible or not is_equal_approx(gatherer.position.x, hut_x):
+		push_error("浆果满仓时应待在采集小屋")
+		return false
+	if gatherer.current_activity() != "待在采集者小屋":
+		push_error("满仓应显示待在采集者小屋，实际 %s" % gatherer.current_activity())
+		return false
+	if game.structure_manager.occupant_of(bush.id) != 0:
+		push_error("满仓不应去灌木")
+		return false
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY:
+		push_error("满仓数量应停在 %s" % GathererHut.BERRY_CAPACITY)
+		return false
+	hut.container.set_count(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY - 1)
+	var left := false
+	for _step in 80:
+		gatherer._process(0.5)
+		if game.structure_manager.occupant_of(bush.id) == gatherer.id:
+			left = true
+			break
+	if not left:
+		push_error("浆果不满 10 后应继续采集")
+		return false
+	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 5)
+	hut.deposit_carried(gatherer.carried_items)
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or not gatherer.carried_items.is_empty():
+		push_error("存入应截断到 10，实际 %s" % hut.berry_count())
+		return false
+	return true
+
+
+func _haul_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var far = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(far, 140)
+	var near = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(near, 108)
+	var gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	var saw_haul := false
+	for _step in 200:
+		gatherer._process(0.5)
+		if gatherer.current_activity() == "正在把浆果送到仓库":
+			saw_haul = true
+		if near.container.count_of(ItemConfig.TypeId.BERRY) > 0:
+			break
+	if not saw_haul:
+		push_error("满仓应去送仓库")
+		return false
+	if near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+		push_error("应把 10 个浆果送到最近仓库，实际 %s" % near.container.count_of(ItemConfig.TypeId.BERRY))
+		return false
+	if far.container.count_of(ItemConfig.TypeId.BERRY) != 0:
+		push_error("较远仓库不应收到浆果")
+		return false
+	if hut.berry_count() != 0:
+		push_error("送出后小屋应空，实际 %s" % hut.berry_count())
+		return false
+	if not gatherer.carried_items.is_empty():
+		push_error("送到仓库后身上应为空")
+		return false
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	gatherer.abandon_ai_tasks()
+	for _step in 30:
+		gatherer._process(0.5)
+		if gatherer.current_activity() == "正在把浆果送到仓库" and not is_equal_approx(gatherer.position.x, Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE):
+			break
+	game.employment.release(gatherer.id)
+	gatherer.abandon_ai_tasks()
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
+		return false
+	return true
+
+
 func _priority_math_ok() -> bool:
 	var counts = GathererHut.allocate_tier_counts([50, 0, 10], 40)
 	if counts != [30, 0, 10]:
@@ -250,6 +357,17 @@ func _priority_rebalance_ok(game) -> bool:
 	game.rebalance_workplaces()
 	if game.employment.workers_of(very.id).has(at_normal.id) or game.employment.count_of(normal.id) != 1:
 		push_error("超编应先辞家最远的人")
+		return false
+	var warehouse = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(warehouse, 200)
+	var manager = game.spawn_resident_at_cell(200)
+	warehouse.assign_manager(manager)
+	game.rebalance_workplaces()
+	if game.employment.count_of(very.id) != 2 or game.employment.count_of(normal.id) != 1:
+		push_error("仓库管理员不应占用采集名额 %s %s" % [game.employment.workers_of(very.id), game.employment.workers_of(normal.id)])
+		return false
+	if manager.workplace_structure_id() != warehouse.id:
+		push_error("仓库管理员应留在仓库")
 		return false
 	if not _dangling_ids_ok(game):
 		return false

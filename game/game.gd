@@ -128,6 +128,7 @@ func is_map_center_off_screen() -> bool:
 	return %Camera2D.is_map_center_off_screen()
 
 signal gatherer_hut_open_requested(hut: GathererHut)
+signal home_open_requested(home: Structure)
 signal character_open_requested(character: Character)
 
 func _input(event: InputEvent) -> void:
@@ -152,11 +153,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _build_placement_active():
 		return
-	var hut := _gatherer_hut_under_mouse()
-	if not hut:
+	var structure := _structure_under_mouse()
+	if structure is GathererHut:
+		get_viewport().set_input_as_handled()
+		gatherer_hut_open_requested.emit(structure)
 		return
-	get_viewport().set_input_as_handled()
-	gatherer_hut_open_requested.emit(hut)
+	if structure and structure.config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+		get_viewport().set_input_as_handled()
+		home_open_requested.emit(structure)
 
 
 func _build_placement_active() -> bool:
@@ -167,34 +171,11 @@ func _build_placement_active() -> bool:
 
 
 func _character_under_mouse() -> Character:
-	var local: Vector2 = character_manager.get_global_transform().affine_inverse() * character_manager.get_global_mouse_position()
-	var nearest: Character = null
-	var nearest_distance := 6.0
-	for character in character_manager.characters.values():
-		if not character.visible:
-			continue
-		var distance := local.distance_to(character.position + Vector2(0, -3))
-		if distance > nearest_distance:
-			continue
-		nearest = character
-		nearest_distance = distance
-	return nearest
+	return HoverOutline.hovered_host() as Character
 
 
-func _gatherer_hut_under_mouse() -> GathererHut:
-	var local: Vector2 = structure_manager.get_global_transform().affine_inverse() * structure_manager.get_global_mouse_position()
-	var cell_index := roundi((local.x - HALF_TILE_SIZE) / float(TILE_SIZE))
-	for offset in range(-1, 2):
-		var index := cell_index + offset
-		if index < 0 or index >= MAP_CELL_COUNT:
-			continue
-		var structure := structure_manager.index_to_structures[index]
-		if not structure is GathererHut:
-			continue
-		var hut_x := float(get_position_by_cell_index(index) + HALF_TILE_SIZE)
-		if absf(local.x - hut_x) <= 8.0:
-			return structure as GathererHut
-	return null
+func _structure_under_mouse() -> Structure:
+	return HoverOutline.hovered_host() as Structure
 
 
 func start_build_placement(structure_config: StructureConfig) -> void:

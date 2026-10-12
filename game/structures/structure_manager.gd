@@ -8,6 +8,7 @@ const _KEY_OCCUPANTS = 3
 var _next_id = 0
 var index_to_structures: Array[Structure] = []
 var structures: Dictionary[int, Structure] = {}
+var _structures_by_type: Dictionary[int, Array] = {}
 var _occupant_by_structure_id: Dictionary[int, int] = {}
 
 
@@ -19,6 +20,7 @@ func clear() -> void:
 	index_to_structures.clear()
 	index_to_structures.resize(Game.MAP_CELL_COUNT)
 	structures.clear()
+	_structures_by_type.clear()
 	_occupant_by_structure_id.clear()
 
 
@@ -61,7 +63,22 @@ func get_structure_by_id(structure_id: int) -> Structure:
 	return structures.get(structure_id)
 
 
-func add_structure(structure: Structure, cell_index: int) -> void:
+func structures_of_type(type_id: int) -> Array:
+	return _structures_by_type.get(type_id, [])
+
+
+enum AddError {
+	OK,
+	CELL_OCCUPIED,
+	CELL_OUT_OF_RANGE,
+}
+
+
+## dry_run 为 true 时只返回错误码，不挂节点、不分配 id。
+func add_structure(structure: Structure, cell_index: int, dry_run := false) -> AddError:
+	var error := _add_error(cell_index)
+	if dry_run or error != AddError.OK:
+		return error
 	_next_id += 1
 	structure.id = _next_id
 	structure.cell_index = cell_index
@@ -72,6 +89,15 @@ func add_structure(structure: Structure, cell_index: int) -> void:
 		var game := Game.find(self)
 		if game:
 			game.rebalance_workplaces()
+	return AddError.OK
+
+
+func _add_error(cell_index: int) -> AddError:
+	if cell_index < 0 or cell_index >= index_to_structures.size():
+		return AddError.CELL_OUT_OF_RANGE
+	if index_to_structures[cell_index]:
+		return AddError.CELL_OCCUPIED
+	return AddError.OK
 
 
 func _register_structure(structure: Structure) -> void:
@@ -81,11 +107,17 @@ func _register_structure(structure: Structure) -> void:
 	var cell_index := structure.cell_index
 	index_to_structures[cell_index] = structure
 	structures[structure.id] = structure
+	var type_id := int(structure.config.id)
+	if not _structures_by_type.has(type_id):
+		_structures_by_type[type_id] = []
+	(_structures_by_type[type_id] as Array).append(structure)
 	await structure.tree_exiting
 	if index_to_structures[cell_index] == structure:
 		index_to_structures[cell_index] = null
 	if structures.get(structure.id) == structure:
 		structures.erase(structure.id)
+	var bucket: Array = _structures_by_type.get(type_id, [])
+	bucket.erase(structure)
 	var game := Game.find(self)
 	if game:
 		game.employment.release_structure(structure.id)

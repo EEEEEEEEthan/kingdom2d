@@ -118,13 +118,16 @@ func _legacy_worker_lists(manager: Dictionary) -> Dictionary:
 	for item in manager.get(StructureManager._KEY_STRUCTURES, []):
 		var structure_id := int(item.get(Structure._KEY_INSTANCE_ID, 0))
 		var payload: Dictionary = item.get(Structure._KEY_DATA, {})
-		var workers: Array = payload.get(GathererHut._KEY_WORKER_IDS, [])
-		if workers.is_empty():
-			continue
-		var ids: Array[int] = []
-		for worker_id in workers:
-			ids.append(int(worker_id))
-		lists[structure_id] = ids
+		var raw = payload.get(GathererHut._KEY_WORKER_IDS, [])
+		if raw is Array:
+			if raw.is_empty():
+				continue
+			var ids: Array[int] = []
+			for worker_id in raw:
+				ids.append(int(worker_id))
+			lists[structure_id] = ids
+		elif int(raw) > 0:
+			lists[structure_id] = [int(raw)]
 	return lists
 
 
