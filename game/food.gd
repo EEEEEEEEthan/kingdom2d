@@ -12,7 +12,7 @@ static func is_dwelling(structure: Structure) -> bool:
 	if structure == null:
 		return false
 	var type_id := structure.config.id
-	return type_id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL or type_id == StructureConfig.TypeId.REFUGEE_SHELTER
+	return type_id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL
 
 
 static func home_of(character: Character) -> Structure:

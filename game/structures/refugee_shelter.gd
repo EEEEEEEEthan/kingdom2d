@@ -1,2 +1,0 @@
-extends Structure
-class_name RefugeeShelter

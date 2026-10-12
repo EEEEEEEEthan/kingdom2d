@@ -35,11 +35,13 @@ func serialize() -> Dictionary:
 	}
 
 
-func deserialize(data: Dictionary) -> void:
+func deserialize(data: Dictionary, save_version := 0) -> void:
 	_next_id = data[_KEY_NEXT_ID]
 	var structure_data: Array = data[_KEY_STRUCTURES]
 	for item in structure_data:
-		var structure = Structure.deserialize(item, self)
+		var structure = Structure.deserialize(item, self, save_version)
+		if structure == null:
+			continue
 		_register_structure(structure)
 	_occupant_by_structure_id.clear()
 	var occupants: Dictionary = data.get(_KEY_OCCUPANTS, {})

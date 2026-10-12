@@ -4,20 +4,36 @@
 [ext_resource type="Script" path="res://game/structures/warehouse.gd" id="2_warehouse"]
 [ext_resource type="Script" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_tex"]
 
-[sub_resource type="Texture2D" id="Texture2D_warehouse"]
+[sub_resource type="Texture2D" id="Texture2D_empty"]
 resource_local_to_scene = false
 resource_name = ""
 script = ExtResource("3_tex")
-_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAWElEQVR4nGNgGDKAkYGBgcFLT+I/KZq2XXrByALjGCgIEaXpwoN3DAwMDAxMuE19xbDt0iucBuDUSAjg1dhSpkGexpquG+RpxAfgoQoLLRiQ4mPBKk4xAAD5UBRg+ca4jwAAAABJRU5ErkJggg=="
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAKElEQVR42mPw0pP4v6LA4T+pNAOIwUAiAOsZ1Th8NGJNGUiK8MmTDAAadk69p9weqgAAAABJRU5ErkJggg=="
 metadata/_custom_type_script = "uid://xqi7kv2y70eo"
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_warehouse"]
-diffuse_texture = SubResource("Texture2D_warehouse")
+[sub_resource type="CanvasTexture" id="CanvasTexture_empty"]
+diffuse_texture = SubResource("Texture2D_empty")
+
+[sub_resource type="Texture2D" id="Texture2D_stocked"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAT0lEQVR42mPw0pP4v6LA4T+pNAOIwUAiAOuhisYjSxL+g3BPjgUYX9o3DYw3WBiAMV6NME0kaURXiO4C6mtEdxLRGukXHVhTBpIifPIkAwBtgK3Pm6gNAAAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_stocked"]
+diffuse_texture = SubResource("Texture2D_stocked")
 
 [node name="Warehouse" instance=ExtResource("1_base")]
 script = ExtResource("2_warehouse")
 
 [node name="Sprite2D" type="Sprite2D" parent="." index="0"]
 unique_name_in_owner = true
-texture = SubResource("CanvasTexture_warehouse")
+texture = SubResource("CanvasTexture_empty")
+offset = Vector2(0, -6)
+
+[node name="Stock" type="Sprite2D" parent="." index="1"]
+unique_name_in_owner = true
+visible = false
+texture = SubResource("CanvasTexture_stocked")
 offset = Vector2(0, -6)

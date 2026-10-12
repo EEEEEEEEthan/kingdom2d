@@ -30,8 +30,8 @@ static func _spawn_starting_depot(game) -> void:
 	var center := _map_center_cell_index()
 	var warehouse := StructureConfig.warehouse.instantiate() as Warehouse
 	structure_manager.add_structure(warehouse, center - 1)
-	var shelter := StructureConfig.refugee_shelter.instantiate() as Structure
-	structure_manager.add_structure(shelter, center + 1)
+	var home := StructureConfig.sunken_floor_thatch_hovel.instantiate() as Structure
+	structure_manager.add_structure(home, center + 1)
 	var resident: Character = game.spawn_resident_at_cell(center + 1)
 	warehouse.assign_manager(resident)
 

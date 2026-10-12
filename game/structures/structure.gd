@@ -8,6 +8,7 @@ const _KEY_DATA = 3
 const _KEY_CELL_INDEX = 4
 const _KEY_HP = 5
 const _KEY_CONTAINER = 6
+const _LEGACY_REFUGEE_SHELTER = 7
 
 var config: StructureConfig
 var id: int
@@ -33,8 +34,11 @@ var hp: int
 		if outline:
 			outline.show_outline = value
 
-static func deserialize(data: Dictionary, parent: Node) -> Structure:
-	var type_id := data[_KEY_TYPE_ID] as StructureConfig.TypeId
+static func deserialize(data: Dictionary, parent: Node, save_version := 0) -> Structure:
+	var raw_type := int(data[_KEY_TYPE_ID])
+	if save_version < 1 and raw_type == _LEGACY_REFUGEE_SHELTER:
+		raw_type = StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL
+	var type_id := raw_type as StructureConfig.TypeId
 	var structure_config = StructureConfig.configs_by_id.get(type_id)
 	if not structure_config:
 		printerr("type_id not found: %s" % type_id)
