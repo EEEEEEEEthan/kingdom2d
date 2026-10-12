@@ -164,7 +164,13 @@ static func _opaque(sprite: Sprite2D, local: Vector2) -> bool:
 static func _image_of(texture: Texture2D) -> Image:
 	if texture is CanvasTexture and (texture as CanvasTexture).diffuse_texture:
 		texture = (texture as CanvasTexture).diffuse_texture
-	return texture.get_image()
+	var image := texture.get_image()
+	if image != null and not image.is_empty():
+		return image
+	var inner: Variant = texture.get("_texture")
+	if inner is Texture2D:
+		return (inner as Texture2D).get_image()
+	return image
 
 
 static func _is_in_front(front: Node, back: Node) -> bool:
