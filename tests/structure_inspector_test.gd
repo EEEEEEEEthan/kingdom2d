@@ -75,7 +75,7 @@ func _run() -> void:
 		push_error("仓库管理员应出现在工人列表，实际 %s" % workplace.get_node("%Worker0").text)
 		quit(1)
 		return
-	if workplace.get_node("WorkerRow1").visible:
+	if workplace.get_node("%Worker1").visible:
 		push_error("仓库只有一个工人位")
 		quit(1)
 		return

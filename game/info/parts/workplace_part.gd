@@ -10,8 +10,7 @@ var _revision := ""
 func _ready() -> void:
 	%PrioritySlider.value_changed.connect(_on_priority_slider)
 	for slot in _row_count():
-		var link := get_node("%%Worker%d" % slot) as LinkButton
-		link.pressed.connect(_on_worker_pressed.bind(slot))
+		_link(slot).pressed.connect(_on_worker_pressed.bind(slot))
 	if _structure:
 		_sync()
 
@@ -41,9 +40,9 @@ func _sync() -> void:
 		slider.set_value_no_signal(priority)
 	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[priority]
 	for slot in _row_count():
-		var row := get_node("WorkerRow%d" % slot) as Control
-		row.visible = slot < _slot_count()
-		if row.visible:
+		var link := _link(slot)
+		link.visible = slot < _slot_count()
+		if link.visible:
 			_sync_worker(slot)
 	_revision = _revision_key()
 
@@ -58,20 +57,16 @@ func _revision_key() -> String:
 
 
 func _sync_worker(slot: int) -> void:
-	var link := get_node("%%Worker%d" % slot) as LinkButton
+	var link := _link(slot)
 	var character := _worker(slot)
-	var avatar := get_node("%%WorkerAvatar%d" % slot) as PixelAvatar
 	if character == null:
-		avatar.visible = false
-		link.text = "空位"
-		link.disabled = true
-		link.remove_meta("character_id")
+		link.set_vacant()
 		return
-	avatar.visible = true
-	avatar.apply_id(character.id)
-	link.text = character.display_name()
-	link.disabled = false
-	link.set_meta("character_id", character.id)
+	link.set_character(character)
+
+
+func _link(slot: int) -> PersonLink:
+	return get_node("%%Worker%d" % slot) as PersonLink
 
 
 func _slot_count() -> int:
