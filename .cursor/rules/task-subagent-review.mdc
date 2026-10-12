@@ -1,0 +1,25 @@
+---
+description: 任务完成后用干净上下文的 subagent 审查，不通过则打回重做
+alwaysApply: true
+---
+
+# 收尾审查
+
+实现和自测都做完之后，再唤起一个上下文干净的 subagent 做审查。审查不通过就按意见改，改完再审，直到通过才收尾。
+
+## 怎么唤起
+
+- 用 Task，`subagent_type` 用 `generalPurpose` 或 `bugbot`（用户明确要求 Bugbot 时用 bugbot）
+- 新开一次调用，不 resume 旧审查 agent
+- prompt 只给：仓库路径、diff 范围（`branch changes` 或 `uncommitted changes`）、本次任务原话、通过标准
+- 不把本对话里的推理、试错和自我评价写进 prompt
+
+## 通过标准
+
+- 改动对上任务，没有顺手扩范围
+- 关键路径有本次实测证据
+- 指出的问题都已修掉，或明确说明为何不修
+
+## 例子
+
+审查结论写「不通过：存档没覆盖建造中的建筑」。先补测试和修复，再开一个新的 subagent 重审。通过后再贴截图并结束。
