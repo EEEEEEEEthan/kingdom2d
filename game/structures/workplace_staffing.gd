@@ -7,12 +7,22 @@ class_name WorkplaceStaffing
 
 static func rebalance(structures: Dictionary[int, Structure], characters: Dictionary[int, Character]) -> void:
 	var tier_huts := _huts_by_priority(structures)
-	var tier_counts := GathererHut.allocate_tier_counts(_tier_demands(tier_huts), characters.size())
+	var tier_counts := GathererHut.allocate_tier_counts(_tier_demands(tier_huts), _gatherer_pool_size(structures, characters))
 	var targets := _target_counts(tier_huts, tier_counts)
 	for tier in tier_huts:
 		for hut in tier:
 			_release_excess(hut, targets, characters)
 	_fill_vacancies(tier_huts, targets, characters)
+
+
+# 仓库管理员不进采集编制。
+static func _gatherer_pool_size(structures: Dictionary[int, Structure], characters: Dictionary[int, Character]) -> int:
+	var count := 0
+	for character in characters.values():
+		if structures.get(character.workplace_structure_id) is Warehouse:
+			continue
+		count += 1
+	return count
 
 
 # 每个优先级一个列表，各自按 id 排序，保证分配次序稳定。

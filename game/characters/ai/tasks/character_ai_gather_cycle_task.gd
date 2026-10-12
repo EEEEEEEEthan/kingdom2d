@@ -153,6 +153,9 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 func on_exit(context: CharacterAiContext) -> void:
 	if context.character.visible == false and not context.character.indoors:
 		context.character.visible = true
+	var hut := _hut(context)
+	if hut and not context.character.carried_items.is_empty():
+		hut.deposit_carried(context.character.carried_items)
 	if _bush_id != 0:
 		context.structure_manager().mark_occupied(_bush_id, 0)
 		_bush_id = 0

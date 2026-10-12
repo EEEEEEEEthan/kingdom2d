@@ -293,6 +293,16 @@ func _haul_ok(game) -> bool:
 	if not gatherer.carried_items.is_empty():
 		push_error("送到仓库后身上应为空")
 		return false
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	gatherer.abandon_ai_tasks()
+	for _step in 30:
+		gatherer._process(0.5)
+		if gatherer.current_activity() == "正在把浆果送到仓库" and not is_equal_approx(gatherer.position.x, Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE):
+			break
+	gatherer.abandon_ai_tasks()
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
+		return false
 	return true
 
 
@@ -338,6 +348,14 @@ func _priority_rebalance_ok(game) -> bool:
 	game.rebalance_workplaces()
 	if very.worker_ids.has(at_normal.id) or normal.worker_ids.size() != 1:
 		push_error("超编应先辞家最远的人")
+		return false
+	var warehouse = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(warehouse, 200)
+	var manager = game.spawn_resident_at_cell(200)
+	warehouse.assign_manager(manager)
+	game.rebalance_workplaces()
+	if very.worker_ids.size() != 2 or normal.worker_ids.size() != 1:
+		push_error("仓库管理员不应占用采集名额 %s %s" % [very.worker_ids, normal.worker_ids])
 		return false
 	return true
 
