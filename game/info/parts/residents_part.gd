@@ -1,5 +1,7 @@
 extends VBoxContainer
 
+const PERSON_LINK := preload("res://game/info/parts/person_link.tscn")
+
 signal character_open_requested(character: Character)
 
 var _home: Structure
@@ -52,21 +54,11 @@ func _rebuild(ids: Array[int]) -> void:
 	%EmptyLabel.visible = ids.is_empty()
 	for character_id in ids:
 		var character := _characters.characters.get(character_id) as Character
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 4)
-		row.set_meta("character_id", character_id)
-		var avatar := PixelAvatar.new()
-		avatar.name = "Avatar"
+		var link := PERSON_LINK.instantiate() as PersonLink
 		if character:
-			avatar.apply_id(character.id)
-		row.add_child(avatar)
-		var link := LinkButton.new()
-		link.name = "Name"
-		link.focus_mode = Control.FOCUS_NONE
-		link.text = character.display_name() if character else ""
+			link.set_character(character)
 		link.pressed.connect(_on_resident_pressed.bind(character_id))
-		row.add_child(link)
-		%Residents.add_child(row)
+		%Residents.add_child(link)
 
 
 func _on_resident_pressed(character_id: int) -> void:

@@ -140,14 +140,14 @@ func _run() -> void:
 		push_error("空位应显示空位，实际 %s" % workplace.get_node("%Worker1").text)
 		quit(1)
 		return
-	var worker_avatar := workplace.get_node("%WorkerAvatar0") as PixelAvatar
+	var worker_avatar := workplace.get_node("%Worker0").get_node("Avatar") as PixelAvatar
 	var expected_avatar := PixelAvatar.new()
 	expected_avatar.apply_id(gatherer.id)
 	if not worker_avatar.visible or worker_avatar.face != expected_avatar.face or worker_avatar.hair != expected_avatar.hair:
 		push_error("在岗工人应显示自己的头像")
 		quit(1)
 		return
-	if workplace.get_node("%WorkerAvatar1").visible:
+	if workplace.get_node("%Worker1").get_node("Avatar").visible:
 		push_error("空位不应带头像")
 		quit(1)
 		return
