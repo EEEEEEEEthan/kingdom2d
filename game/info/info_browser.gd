@@ -5,6 +5,7 @@ signal reset_game_requested
 const SETTINGS_PAGE := preload("res://game/info/settings_page.tscn")
 const RESIDENT_PAGE := preload("res://game/info/resident_page.tscn")
 const GATHERER_HUT_PAGE := preload("res://game/info/gatherer_hut_page.tscn")
+const HOME_PAGE := preload("res://game/info/home_page.tscn")
 
 var _history: Array[String] = []
 var _index := -1
@@ -27,6 +28,10 @@ func open_resident(character: Character) -> void:
 
 func open_structure(hut: GathererHut) -> void:
 	_open("structure/%d" % hut.id)
+
+
+func open_home(home: Structure) -> void:
+	_open("home/%d" % home.id)
 
 
 func go_back() -> void:
@@ -75,12 +80,15 @@ func _show_current() -> void:
 	var path := current_path()
 	%PathLabel.text = path
 	for child in %PageHost.get_children():
-		child.free()
+		%PageHost.remove_child(child)
+		child.queue_free()
 	var page := _make_page(path)
 	if page:
 		%PageHost.add_child(page)
 		if page.has_signal("reset_game_requested"):
 			page.reset_game_requested.connect(reset_game_requested.emit)
+		if page.has_signal("character_open_requested"):
+			page.character_open_requested.connect(open_resident)
 	_sync_nav_buttons()
 	show()
 
@@ -106,6 +114,16 @@ func _make_page(path: String) -> Control:
 				var page := GATHERER_HUT_PAGE.instantiate()
 				page.bind(structure, game.character_manager)
 				return page
+		"home":
+			var game := _find_game()
+			if not game:
+				return null
+			var home := game.structure_manager.get_structure_by_id(int(parts[1]))
+			if home == null:
+				return null
+			var page := HOME_PAGE.instantiate()
+			page.bind(home, game.character_manager)
+			return page
 	return null
 
 

@@ -1,5 +1,7 @@
 extends Control
 
+signal character_open_requested(character: Character)
+
 var _hut: GathererHut
 var _characters: CharacterManager
 var _item_labels: Dictionary[int, Label] = {}
@@ -7,6 +9,9 @@ var _item_labels: Dictionary[int, Label] = {}
 
 func _ready() -> void:
 	%PrioritySlider.value_changed.connect(_on_priority_slider)
+	for slot in GathererHut.SLOT_COUNT:
+		var link := get_node("%%Worker%d" % slot) as LinkButton
+		link.pressed.connect(_on_worker_pressed.bind(slot))
 	for item_id in ItemConfig.configs_by_id:
 		var config := ItemConfig.configs_by_id[item_id]
 		var row := HBoxContainer.new()
@@ -47,8 +52,7 @@ func _sync() -> void:
 		slider.set_value_no_signal(_hut.priority)
 	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
 	for slot in GathererHut.SLOT_COUNT:
-		var label := get_node("%%Worker%d" % slot) as Label
-		label.text = _worker_label(slot)
+		_sync_worker(slot)
 	var has_items := false
 	for item_id in _item_labels:
 		var count := _hut.container.count_of(item_id)
@@ -59,13 +63,30 @@ func _sync() -> void:
 	%ContainerEmpty.visible = not has_items
 
 
-func _worker_label(slot: int) -> String:
-	if slot >= _hut.worker_ids.size():
-		return "空位"
-	var character: Character = _characters.characters.get(_hut.worker_ids[slot])
+func _sync_worker(slot: int) -> void:
+	var link := get_node("%%Worker%d" % slot) as LinkButton
+	var character := _worker(slot)
 	if character == null:
-		return "空位"
-	return character.display_name()
+		link.text = "空位"
+		link.disabled = true
+		link.remove_meta("character_id")
+		return
+	link.text = character.display_name()
+	link.disabled = false
+	link.set_meta("character_id", character.id)
+
+
+func _worker(slot: int) -> Character:
+	if slot >= _hut.worker_ids.size():
+		return null
+	return _characters.characters.get(_hut.worker_ids[slot]) as Character
+
+
+func _on_worker_pressed(slot: int) -> void:
+	var character := _worker(slot)
+	if character == null:
+		return
+	character_open_requested.emit(character)
 
 
 func _on_priority_slider(value: float) -> void:
