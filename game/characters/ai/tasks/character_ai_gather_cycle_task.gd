@@ -6,6 +6,7 @@ class_name CharacterAiGatherCycleTask
 const KEY_PHASE = 1
 const KEY_ELAPSED_SECONDS = 2
 const KEY_BUSH_ID = 3
+const KEY_WAREHOUSE_ID = 4
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_BUSH_WAIT_SECONDS := 2.0
@@ -15,11 +16,13 @@ const _HARVEST_ITEM_COUNT := 1
 var _phase := 0
 var _elapsed_seconds := 0.0
 var _bush_id := 0
+var _warehouse_id := 0
 
 func _init(save_payload: Dictionary) -> void:
 	_phase = save_payload.get(KEY_PHASE, 0)
 	_elapsed_seconds = save_payload.get(KEY_ELAPSED_SECONDS, 0.0)
 	_bush_id = save_payload.get(KEY_BUSH_ID, 0)
+	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
 
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
@@ -36,6 +39,8 @@ func activity_text() -> String:
 			return "正在等待可采集的灌木"
 		6:
 			return "待在采集者小屋"
+		7:
+			return "正在把浆果送到仓库"
 		_:
 			return "正在回采集者小屋"
 
@@ -113,6 +118,14 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if context.day_time_period != GameTime.DayTimePeriod.WORK:
 				return Status.SUCCEEDED
 			if hut.berries_full():
+				var warehouse := _nearest_warehouse(context, hut)
+				if not warehouse:
+					return Status.RUNNING
+				if hut.withdraw_berries(character.carried_items, GathererHut.HAUL_BATCH) <= 0:
+					return Status.RUNNING
+				_warehouse_id = warehouse.id
+				character.visible = true
+				_phase = 7
 				return Status.RUNNING
 			if not pick_and_mark.call():
 				character.visible = true
@@ -121,6 +134,20 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				return Status.RUNNING
 			character.visible = true
 			_phase = 2
+		7:
+			var warehouse := _warehouse(context)
+			if not warehouse:
+				hut.deposit_carried(character.carried_items)
+				_warehouse_id = 0
+				return Status.SUCCEEDED
+			if character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
+				character.carried_items.transfer_all_to(warehouse.container)
+				_warehouse_id = 0
+				_phase = 8
+		8:
+			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
+				character.visible = false
+				return Status.SUCCEEDED
 	return Status.RUNNING
 
 func on_exit(context: CharacterAiContext) -> void:
@@ -135,11 +162,31 @@ func _serialize_payload() -> Dictionary:
 		KEY_PHASE: _phase,
 		KEY_ELAPSED_SECONDS: _elapsed_seconds,
 		KEY_BUSH_ID: _bush_id,
+		KEY_WAREHOUSE_ID: _warehouse_id,
 	}
 
 static func _hut(context: CharacterAiContext) -> GathererHut:
 	var structure := context.structure_manager().get_structure_by_id(context.character.workplace_structure_id)
 	return structure as GathererHut
+
+func _warehouse(context: CharacterAiContext) -> Warehouse:
+	var structure := context.structure_manager().get_structure_by_id(_warehouse_id)
+	return structure as Warehouse
+
+
+static func _nearest_warehouse(context: CharacterAiContext, hut: GathererHut) -> Warehouse:
+	var nearest: Warehouse
+	var nearest_distance := 0
+	for structure in context.structure_manager().index_to_structures:
+		if not structure is Warehouse:
+			continue
+		var warehouse := structure as Warehouse
+		var distance := absi(warehouse.cell_index - hut.cell_index)
+		if not nearest or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):
+			nearest = warehouse
+			nearest_distance = distance
+	return nearest
+
 
 func _bush(context: CharacterAiContext) -> Structure:
 	return context.structure_manager().get_structure_by_id(_bush_id)

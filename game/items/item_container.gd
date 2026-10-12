@@ -37,6 +37,14 @@ func is_empty() -> bool:
 	return _counts.is_empty()
 
 
+func take(item_id: int, amount: int) -> int:
+	var moved := mini(count_of(item_id), amount)
+	if moved <= 0:
+		return 0
+	set_count(item_id, count_of(item_id) - moved)
+	return moved
+
+
 func transfer_all_to(target: ItemContainer) -> void:
 	for item_id in item_ids():
 		target.add(item_id, count_of(item_id))
