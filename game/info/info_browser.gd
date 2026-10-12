@@ -8,6 +8,7 @@ const GATHERER_HUT_PAGE := preload("res://game/info/gatherer_hut_page.tscn")
 
 var _history: Array[String] = []
 var _index := -1
+var _game: Game
 
 
 func _ready() -> void:
@@ -128,19 +129,23 @@ func _character_by_id(character_id: int) -> Character:
 
 
 func _find_game() -> Game:
-	var tree := get_tree()
-	if not tree:
+	if is_instance_valid(_game):
+		return _game
+	_game = Game.find(self)
+	if _game:
+		return _game
+	var parent := get_parent()
+	if parent == null:
 		return null
-	return _find_game_in(tree.root)
-
-
-func _find_game_in(node: Node) -> Game:
-	if node is Game:
-		return node
-	for child in node.get_children():
-		var found := _find_game_in(child)
-		if found:
-			return found
+	for child in parent.get_children():
+		if child is Game:
+			_game = child
+			return _game
+		if child is Window:
+			var named := child.get_node_or_null("%Game")
+			if named is Game:
+				_game = named
+				return _game
 	return null
 
 
