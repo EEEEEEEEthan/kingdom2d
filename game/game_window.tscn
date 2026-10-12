@@ -43,10 +43,10 @@ func _ready() -> void:
 
 
 func _on_game_window_size_changed() -> void:
-	_sync_slide_targets()
+	_sync_slide_targets(true)
 
 
-func _sync_slide_targets() -> void:
+func _sync_slide_targets(snap_when_pined: bool = false) -> void:
 	_slide_pos_y = float(_game_window.position.y)
 	_slide_y_docked = float(_game_window.compute_docked_global_position().y)
 	_slide_y_hidden = float(_game_window.compute_hidden_below_global_position().y)
@@ -54,6 +54,16 @@ func _sync_slide_targets() -> void:
 		_slide_target_y = _slide_y_docked
 	else:
 		_slide_target_y = _slide_y_hidden
+	if snap_when_pined and _is_pined():
+		_slide_pos_y = _slide_target_y
+		_slide_pos_y_velocity = 0.0
+		var pos := _game_window.position
+		_game_window.position = Vector2i(pos.x, int(_slide_pos_y))
+
+
+func _is_pined() -> bool:
+	var auto_hide := _game_window.get_node_or_null(\"AutoHideController\")
+	return auto_hide != null and auto_hide.pined
 
 
 func _process(delta: float) -> void:
