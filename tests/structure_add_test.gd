@@ -11,6 +11,7 @@ func _run() -> void:
 	manager.clear()
 	var cell := 3
 	var first := Structure.new()
+	first.config = StructureConfig.bush
 	if manager.add_structure(first, cell, true) != StructureManager.AddError.OK:
 		push_error("空格子 dry_run 应为 OK")
 		quit(1)
@@ -31,6 +32,7 @@ func _run() -> void:
 	var structure_count := manager.structures.size()
 	var assigned_id := first.id
 	var overlap := Structure.new()
+	overlap.config = StructureConfig.bush
 	if manager.add_structure(overlap, cell, true) != StructureManager.AddError.CELL_OCCUPIED:
 		push_error("占用格 dry_run 应为 CELL_OCCUPIED")
 		quit(1)
@@ -52,6 +54,7 @@ func _run() -> void:
 		quit(1)
 		return
 	var outside := Structure.new()
+	outside.config = StructureConfig.bush
 	if manager.add_structure(outside, -1) != StructureManager.AddError.CELL_OUT_OF_RANGE:
 		push_error("负下标应为 CELL_OUT_OF_RANGE")
 		quit(1)
@@ -65,6 +68,7 @@ func _run() -> void:
 		quit(1)
 		return
 	var next := Structure.new()
+	next.config = StructureConfig.oak
 	if manager.add_structure(next, cell + 1) != StructureManager.AddError.OK or next.id != assigned_id + 1:
 		push_error("失败不应消耗 id")
 		quit(1)

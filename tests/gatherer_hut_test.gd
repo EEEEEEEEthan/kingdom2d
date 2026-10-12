@@ -139,6 +139,17 @@ func _run() -> void:
 		push_error("空位应显示空位，实际 %s" % page.get_node("%Worker1").text)
 		quit(1)
 		return
+	page.get_node("%Worker0").pressed.emit()
+	await process_frame
+	if browser.current_path() != "resident/%d" % gatherer.id:
+		push_error("点工人应跳到居民，实际 %s" % browser.current_path())
+		quit(1)
+		return
+	browser.go_back()
+	if browser.current_path() != "structure/%d" % hut.id:
+		push_error("从工人返回应回到小屋")
+		quit(1)
+		return
 	browser.go_back()
 	if not _priority_rebalance_ok(game):
 		quit(1)
@@ -147,6 +158,9 @@ func _run() -> void:
 		quit(1)
 		return
 	if not _no_bush_ok(game):
+		quit(1)
+		return
+	if not _berry_cap_ok(game):
 		quit(1)
 		return
 	print("gatherer_hut_ok")
@@ -206,6 +220,49 @@ func _no_bush_ok(game) -> bool:
 		return false
 	if waiting.current_activity() != "正在等待可采集的灌木":
 		push_error("应显示正在等待可采集的灌木，实际 %s" % waiting.current_activity())
+		return false
+	return true
+
+
+func _berry_cap_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var bush = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(bush, 110)
+	var gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	var hut_x = Game.get_position_by_cell_index(100) + Game.HALF_TILE_SIZE
+	for _step in 80:
+		gatherer._process(0.5)
+	if gatherer.visible or not is_equal_approx(gatherer.position.x, hut_x):
+		push_error("浆果满仓时应待在采集小屋")
+		return false
+	if gatherer.current_activity() != "待在采集者小屋":
+		push_error("满仓应显示待在采集者小屋，实际 %s" % gatherer.current_activity())
+		return false
+	if game.structure_manager.occupant_of(bush.id) != 0:
+		push_error("满仓不应去灌木")
+		return false
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY:
+		push_error("满仓数量应停在 %s" % GathererHut.BERRY_CAPACITY)
+		return false
+	hut.container.set_count(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY - 1)
+	var left := false
+	for _step in 80:
+		gatherer._process(0.5)
+		if game.structure_manager.occupant_of(bush.id) == gatherer.id:
+			left = true
+			break
+	if not left:
+		push_error("浆果不满 10 后应继续采集")
+		return false
+	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 5)
+	hut.deposit_carried(gatherer.carried_items)
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or not gatherer.carried_items.is_empty():
+		push_error("存入应截断到 10，实际 %s" % hut.berry_count())
 		return false
 	return true
 
