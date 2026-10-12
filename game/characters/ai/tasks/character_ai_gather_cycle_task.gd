@@ -34,6 +34,8 @@ func activity_text() -> String:
 			return "正在采集"
 		5:
 			return "正在等待可采集的灌木"
+		6:
+			return "待在采集者小屋"
 		_:
 			return "正在回采集者小屋"
 
@@ -63,6 +65,9 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _INSIDE_SECONDS:
 				return Status.RUNNING
+			if hut.berries_full():
+				_phase = 6
+				return Status.RUNNING
 			if not pick_and_mark.call():
 				character.visible = true
 				_phase = 5
@@ -89,7 +94,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		4:
 			if character.advance_toward_world_x(delta_seconds, _world_x(hut)):
 				character.visible = false
-				character.carried_items.transfer_all_to(hut.container)
+				hut.deposit_carried(character.carried_items)
 				return Status.SUCCEEDED
 		5:
 			character.visible = true
@@ -101,6 +106,20 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if not pick_and_mark.call():
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
+			_phase = 2
+		6:
+			character.position.x = _world_x(hut)
+			character.visible = false
+			if context.day_time_period != GameTime.DayTimePeriod.WORK:
+				return Status.SUCCEEDED
+			if hut.berries_full():
+				return Status.RUNNING
+			if not pick_and_mark.call():
+				character.visible = true
+				_phase = 5
+				_elapsed_seconds = 0.0
+				return Status.RUNNING
+			character.visible = true
 			_phase = 2
 	return Status.RUNNING
 

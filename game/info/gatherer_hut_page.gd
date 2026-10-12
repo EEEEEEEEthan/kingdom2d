@@ -46,6 +46,7 @@ func _sync() -> void:
 	if int(slider.value) != _hut.priority:
 		slider.set_value_no_signal(_hut.priority)
 	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[_hut.priority]
+	%ContainerTitle.text = "容器 %d/%d" % [_hut.berry_count(), GathererHut.BERRY_CAPACITY]
 	for slot in GathererHut.SLOT_COUNT:
 		var label := get_node("%%Worker%d" % slot) as Label
 		label.text = _worker_label(slot)
