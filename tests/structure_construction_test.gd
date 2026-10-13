@@ -10,6 +10,7 @@ func _run() -> void:
 	load("res://game/structures/builders_guild.gd")
 	load("res://game/structures/sunken_floor_thatch_hovel.gd")
 	load("res://game/characters/ai/tasks/character_ai_build_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_log_cycle_task.gd")
 	var game = (load("res://game/game.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
@@ -17,6 +18,9 @@ func _run() -> void:
 		quit(1)
 		return
 	if not await _paid_waits_builder_ok(game):
+		quit(1)
+		return
+	if not await _log_skips_unbuilt_warehouse_ok(game):
 		quit(1)
 		return
 	print("structure_construction_ok")
@@ -119,6 +123,43 @@ func _paid_waits_builder_ok(game) -> bool:
 		return false
 	if not site.get_node("Sprite2D").visible or site.get_node("Scaffold").visible:
 		push_error("完工后应显示本体并拆脚手架")
+		return false
+	return true
+
+
+func _log_skips_unbuilt_warehouse_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var camp = StructureConfig.lumber_camp.instantiate()
+	var oak = StructureConfig.oak.instantiate()
+	var unfinished = StructureConfig.warehouse.instantiate() as Warehouse
+	var finished = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(camp, 100)
+	game.structure_manager.add_structure(oak, 90)
+	game.structure_manager.add_structure(unfinished, 104)
+	game.structure_manager.add_structure(finished, 120)
+	camp.begin_initial_upgrade()
+	unfinished.begin_initial_upgrade()
+	if unfinished.is_built() or not unfinished.is_under_construction():
+		push_error("近仓应保持 0 级待建")
+		return false
+	if not finished.is_built():
+		push_error("远仓默认应已完工")
+		return false
+	var lumberjack = game.spawn_resident_at_cell(98)
+	lumberjack.set_process(false)
+	_set_hour(game, 12)
+	camp.container.add(ItemConfig.TypeId.LOG, LumberCamp.LOG_CAPACITY)
+	if not _until([lumberjack], 400, func() -> bool:
+		return lumberjack.current_activity() == "正在把原木送到仓库" and lumberjack.carried_items.count_of(ItemConfig.TypeId.LOG) > 0
+	):
+		push_error("满仓后应去送原木，活动 %s 携带 %s" % [lumberjack.current_activity(), lumberjack.carried_items.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	if not _until([lumberjack], 400, func() -> bool: return finished.container.count_of(ItemConfig.TypeId.LOG) > 0):
+		push_error("应送到已完工远仓，近仓 %s 远仓 %s" % [unfinished.container.count_of(ItemConfig.TypeId.LOG), finished.container.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	if unfinished.container.count_of(ItemConfig.TypeId.LOG) != 0:
+		push_error("未完工仓库不应进原木，实际 %s" % unfinished.container.count_of(ItemConfig.TypeId.LOG))
 		return false
 	return true
 
