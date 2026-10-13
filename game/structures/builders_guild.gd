@@ -4,7 +4,7 @@ class_name BuildersGuild
 const SLOT_COUNT := 2
 const _KEY_PRIORITY := 1
 
-var priority := GathererHut.Priority.NORMAL
+var priority := WorkplacePriority.Priority.NORMAL
 
 
 func _serialize() -> Dictionary:
@@ -14,7 +14,7 @@ func _serialize() -> Dictionary:
 
 
 func _deserialize(data: Dictionary) -> void:
-	priority = int(data.get(_KEY_PRIORITY, GathererHut.Priority.NORMAL))
+	priority = int(data.get(_KEY_PRIORITY, WorkplacePriority.Priority.NORMAL))
 
 
 func change_priority(value: int) -> void:

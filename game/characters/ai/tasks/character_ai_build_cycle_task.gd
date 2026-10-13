@@ -325,21 +325,14 @@ func _pick_site(context: CharacterAiContext, guild: BuildersGuild) -> SunkenFloo
 
 
 func _nearest_warehouse(context: CharacterAiContext, site: SunkenFloorThatchHovel) -> Warehouse:
-	var nearest: Warehouse
-	var nearest_distance := 0
-	for structure in context.structure_manager().index_to_structures:
-		if not structure is Warehouse:
-			continue
-		var warehouse := structure as Warehouse
-		if warehouse.container.count_of(ItemConfig.TypeId.LOG) <= 0:
-			continue
-		if not warehouse.accepts_withdraw(ItemConfig.TypeId.LOG):
-			continue
-		var distance := absi(warehouse.cell_index - site.cell_index)
-		if nearest == null or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):
-			nearest = warehouse
-			nearest_distance = distance
-	return nearest
+	return Warehouse.nearest(
+		context.structure_manager(),
+		site.cell_index,
+		ItemConfig.TypeId.LOG,
+		false,
+		true,
+		true,
+	)
 
 
 func _pace_x(character: Character, site: Structure) -> float:

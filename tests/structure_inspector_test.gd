@@ -79,8 +79,8 @@ func _run() -> void:
 		push_error("仓库只有一个工人位")
 		quit(1)
 		return
-	workplace.get_node("%PrioritySlider").value = GathererHut.Priority.HIGH
-	if warehouse.priority != GathererHut.Priority.HIGH:
+	workplace.get_node("%PrioritySlider").value = WorkplacePriority.Priority.HIGH
+	if warehouse.priority != WorkplacePriority.Priority.HIGH:
 		push_error("仓库优先级滑条应写回")
 		quit(1)
 		return
@@ -105,7 +105,7 @@ func _run() -> void:
 		push_error("存储策略应进存档")
 		quit(1)
 		return
-	if (saved as Warehouse).priority != GathererHut.Priority.HIGH:
+	if (saved as Warehouse).priority != WorkplacePriority.Priority.HIGH:
 		push_error("仓库优先级应进存档")
 		quit(1)
 		return

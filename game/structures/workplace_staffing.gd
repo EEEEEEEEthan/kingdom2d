@@ -8,12 +8,77 @@ class_name WorkplaceStaffing
 static func rebalance(structures: Dictionary[int, Structure], characters: Dictionary[int, Character], employment: WorkplaceIndex) -> void:
 	employment.prune(characters, structures)
 	var tier_workplaces := _workplaces_by_priority(structures)
-	var tier_counts := GathererHut.allocate_tier_counts(_tier_demands(tier_workplaces), _worker_pool_size(structures, characters, employment))
+	var tier_counts := allocate_tier_counts(_tier_demands(tier_workplaces), _worker_pool_size(structures, characters, employment))
 	var targets := _target_counts(tier_workplaces, tier_counts)
 	for tier in tier_workplaces:
 		for workplace in tier:
 			_release_excess(workplace, targets, characters, employment)
 	_fill_vacancies(tier_workplaces, targets, characters, employment)
+
+
+# demands 下标是 WorkplacePriority.Priority。先按需求×权重分人，超额从高优先依次流到普通、低优先。
+static func allocate_tier_counts(demands: Array, total_people: int) -> Array:
+	var result := [0, 0, 0]
+	if total_people <= 0:
+		return result
+	var sum_weight := 0
+	for tier in demands.size():
+		if int(demands[tier]) > 0:
+			sum_weight += int(demands[tier]) * WorkplacePriority.WEIGHTS[tier]
+	if sum_weight == 0:
+		return result
+	var remainders: Array[Array] = []
+	var used := 0
+	for tier in demands.size():
+		var demand := int(demands[tier])
+		if demand <= 0:
+			continue
+		var numer := total_people * demand * int(WorkplacePriority.WEIGHTS[tier])
+		result[tier] = numer / sum_weight
+		used += result[tier]
+		remainders.append([numer % sum_weight, tier])
+	var leftover := total_people - used
+	remainders.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return a[0] > b[0]
+		return a[1] > b[1]
+	)
+	var cursor := 0
+	while leftover > 0 and not remainders.is_empty():
+		result[remainders[cursor][1]] += 1
+		leftover -= 1
+		cursor = (cursor + 1) % remainders.size()
+	var carry := 0
+	for offset in result.size():
+		var tier := result.size() - 1 - offset
+		result[tier] += carry
+		carry = 0
+		var demand := int(demands[tier]) if tier < demands.size() else 0
+		if result[tier] > demand:
+			carry = result[tier] - demand
+			result[tier] = demand
+	return result
+
+
+# 同一优先级里的名额逐个轮流发给还没满的建筑。
+static func spread_evenly(total: int, capacities: Array) -> Array:
+	var shares: Array[int] = []
+	shares.resize(capacities.size())
+	shares.fill(0)
+	var left := total
+	while left > 0:
+		var progressed := false
+		for index in capacities.size():
+			if left <= 0:
+				break
+			if shares[index] >= int(capacities[index]):
+				continue
+			shares[index] += 1
+			left -= 1
+			progressed = true
+		if not progressed:
+			break
+	return shares
 
 
 static func _worker_pool_size(structures: Dictionary[int, Structure], characters: Dictionary[int, Character], employment: WorkplaceIndex) -> int:
@@ -52,7 +117,7 @@ static func _target_counts(tier_workplaces: Array, tier_counts: Array) -> Dictio
 		var capacities: Array[int] = []
 		for workplace in workplaces:
 			capacities.append(_slot_count(workplace))
-		var shares := GathererHut.spread_evenly(tier_counts[tier], capacities)
+		var shares := spread_evenly(tier_counts[tier], capacities)
 		for index in workplaces.size():
 			targets[(workplaces[index] as Structure).id] = shares[index]
 	return targets
