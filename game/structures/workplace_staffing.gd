@@ -1,7 +1,7 @@
 extends RefCounted
 class_name WorkplaceStaffing
 
-## 采集小屋和伐木营地共用这一套编制：按优先级权重把居民分到各工作建筑，再按住址远近减最远、补最近。
+## 采集小屋、伐木营地和建筑工会共用这一套编制：按优先级权重把居民分到各工作建筑，再按住址远近减最远、补最近。
 ## 仓库管理员不进入这池。由 Game 在加人、加工位、改优先级、读档后各调用一次。
 
 
@@ -112,16 +112,20 @@ static func _farthest_worker(workplace: Structure, characters: Dictionary[int, C
 
 
 static func _is_workplace(structure: Structure) -> bool:
-	return structure is GathererHut or structure is LumberCamp
+	return structure is GathererHut or structure is LumberCamp or structure is BuildersGuild
 
 
 static func _priority_of(structure: Structure) -> int:
 	if structure is LumberCamp:
 		return (structure as LumberCamp).priority
+	if structure is BuildersGuild:
+		return (structure as BuildersGuild).priority
 	return (structure as GathererHut).priority
 
 
 static func _slot_count(structure: Structure) -> int:
 	if structure is LumberCamp:
 		return LumberCamp.SLOT_COUNT
+	if structure is BuildersGuild:
+		return BuildersGuild.SLOT_COUNT
 	return GathererHut.SLOT_COUNT

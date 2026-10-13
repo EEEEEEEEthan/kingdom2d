@@ -72,6 +72,15 @@ func berry_count() -> int:
 	return container.count_of(ItemConfig.TypeId.BERRY)
 
 
+func withdraw_logs(target: ItemContainer, amount: int) -> int:
+	if not accepts_withdraw(ItemConfig.TypeId.LOG):
+		return 0
+	var moved := container.take(ItemConfig.TypeId.LOG, amount)
+	if moved > 0:
+		target.add(ItemConfig.TypeId.LOG, moved)
+	return moved
+
+
 func withdraw_berries(target: ItemContainer, amount: int) -> int:
 	if not accepts_withdraw(ItemConfig.TypeId.BERRY):
 		return 0

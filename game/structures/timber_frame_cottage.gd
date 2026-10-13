@@ -1,0 +1,2 @@
+extends Structure
+class_name TimberFrameCottage

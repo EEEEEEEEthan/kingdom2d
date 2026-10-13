@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://game/structures/base_structure.tscn" id="1_base"]
+[ext_resource type="Script" path="res://game/structures/builders_guild.gd" id="2_guild"]
+[ext_resource type="Script" path="res://addons/godot_editable_texture/editable_texture.gd" id="3_tex"]
+
+[sub_resource type="Texture2D" id="Texture2D_guild"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("3_tex")
+_base64_data = "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAjklEQVR4nGNkwAL6w6z/I/MLVx1lRFfDREgTLjEUk460emEoQAY21dswbIZrUlIw+Y8NM6AZjOFUELj34AzjolQxBhAGsbGpYYExlm+9ARcE2RA3+xWcjU0NCy4bGZAAsmYMp0Z6a6BIpFka/gdhZDFkNVhtBNmw5zlu20AAxUnZVkp4o2PqsXtYA4o+AABwYDx+C2bCUwAAAABJRU5ErkJggg=="
+metadata/_custom_type_script = "uid://xqi7kv2y70eo"
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_guild"]
+diffuse_texture = SubResource("Texture2D_guild")
+
+[node name="BuildersGuild" instance=ExtResource("1_base")]
+script = ExtResource("2_guild")
+
+[node name="Sprite2D" type="Sprite2D" parent="." index="0"]
+unique_name_in_owner = true
+texture = SubResource("CanvasTexture_guild")
+offset = Vector2(0, -6)
