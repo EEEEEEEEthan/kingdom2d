@@ -3,10 +3,10 @@ class_name SunkenFloorThatchHovel
 
 ## 半穴茅舍升成木架茅屋。20 原木到齐才搭脚手架，之后每 10 秒记 1 个建造单元，满 3 个就升级。
 ## 单元按人累加，多名建筑工可以同时干同一座。
+## 初始从 0 级放下走基类修建（免费即时完工）；本类字段只管升木架。
 
 const LOG_COST := 20
 const WORK_UNITS_REQUIRED := 3
-const WORK_UNIT_SECONDS := 10.0
 const _KEY_ORDERED := 1
 const _KEY_WORK_UNITS := 2
 const _KEY_LOGS_INBOUND := 3
@@ -14,9 +14,6 @@ const _KEY_LOGS_INBOUND := 3
 var upgrade_ordered := false
 var work_units := 0
 var logs_inbound := 0
-
-var _scaffold: Node2D
-var _knock_tween: Tween
 
 
 func _serialize() -> Dictionary:
@@ -33,18 +30,6 @@ func _deserialize(data: Dictionary) -> void:
 	upgrade_ordered = bool(data.get(_KEY_ORDERED, false))
 	work_units = int(data.get(_KEY_WORK_UNITS, 0))
 	logs_inbound = int(data.get(_KEY_LOGS_INBOUND, 0))
-	sync_scaffold()
-
-
-func _ready() -> void:
-	super._ready()
-	if Engine.is_editor_hint():
-		return
-	_scaffold = ScaffoldMark.new()
-	_scaffold.name = "Scaffold"
-	_scaffold.z_index = 2
-	_scaffold.visible = false
-	add_child(_scaffold)
 	sync_scaffold()
 
 
@@ -65,48 +50,78 @@ func logs_still_needed() -> int:
 func order_upgrade() -> void:
 	if config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		return
+	if not is_built():
+		return
 	upgrade_ordered = true
 	sync_scaffold()
 
 
+func _cottage_job_active() -> bool:
+	return upgrade_ordered and config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL and is_built()
+
+
+func builder_job_active() -> bool:
+	return super.builder_job_active() or _cottage_job_active()
+
+
+func builder_log_cost() -> int:
+	if is_under_construction():
+		return super.builder_log_cost()
+	return LOG_COST
+
+
+func builder_work_units_required() -> int:
+	if is_under_construction():
+		return super.builder_work_units_required()
+	return WORK_UNITS_REQUIRED
+
+
+func builder_work_units() -> int:
+	if is_under_construction():
+		return super.builder_work_units()
+	return work_units
+
+
+func builder_logs_ready() -> bool:
+	if is_under_construction():
+		return super.builder_logs_ready()
+	return logs_ready()
+
+
+func builder_logs_still_needed() -> int:
+	if is_under_construction():
+		return super.builder_logs_still_needed()
+	return logs_still_needed()
+
+
 func reserve_logs(amount: int) -> void:
+	if is_under_construction():
+		super.reserve_logs(amount)
+		return
 	if amount <= 0:
 		return
 	logs_inbound += amount
 
 
 func release_logs(amount: int) -> void:
+	if is_under_construction():
+		super.release_logs(amount)
+		return
 	logs_inbound = maxi(0, logs_inbound - amount)
 
 
-func sync_scaffold() -> void:
-	if _scaffold == null:
-		return
-	_scaffold.visible = upgrade_ordered and logs_ready() and config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL
-	if _scaffold.visible:
-		_scaffold.queue_redraw()
-
-
-func add_work_unit() -> void:
-	if config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
-		return
-	if not upgrade_ordered or not logs_ready():
+func _add_builder_work_unit() -> void:
+	if is_under_construction():
+		super._add_builder_work_unit()
 		return
 	work_units += 1
-	if work_units >= WORK_UNITS_REQUIRED:
-		finish_upgrade()
 
 
-func play_knock() -> void:
-	if not is_inside_tree():
+func _finish_builder_job() -> void:
+	if is_under_construction():
+		super._finish_builder_job()
 		return
-	if _knock_tween and _knock_tween.is_valid():
-		_knock_tween.kill()
-	rotation = 0.0
-	_knock_tween = create_tween()
-	_knock_tween.tween_property(self, "rotation", 0.05, 0.04)
-	_knock_tween.tween_property(self, "rotation", -0.03, 0.05)
-	_knock_tween.tween_property(self, "rotation", 0.0, 0.05)
+	finish_upgrade()
 
 
 func finish_upgrade() -> void:
@@ -136,16 +151,3 @@ func _apply_cottage_look() -> void:
 	sprite.offset = cottage_sprite.offset
 	cottage_sprite.texture = null
 	preview.free()
-
-
-class ScaffoldMark extends Node2D:
-	func _draw() -> void:
-		var wood := Color("c4854a")
-		var dark := Color("6b3a22")
-		draw_line(Vector2(-7, -2), Vector2(-7, -18), dark, 1.0)
-		draw_line(Vector2(7, -2), Vector2(7, -18), dark, 1.0)
-		draw_line(Vector2(-7, -7), Vector2(7, -7), wood, 1.0)
-		draw_line(Vector2(-7, -12), Vector2(7, -12), wood, 1.0)
-		draw_line(Vector2(-7, -17), Vector2(7, -17), wood, 1.0)
-		draw_line(Vector2(-5, -18), Vector2(0, -22), dark, 1.0)
-		draw_line(Vector2(5, -18), Vector2(0, -22), dark, 1.0)

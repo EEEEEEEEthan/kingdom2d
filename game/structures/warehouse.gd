@@ -44,11 +44,11 @@ func set_storage_policy(item_id: int, policy: int) -> void:
 
 
 func accepts_deposit(item_id: int) -> bool:
-	return policy_of(item_id) == StoragePolicy.ACCEPT
+	return is_built() and policy_of(item_id) == StoragePolicy.ACCEPT
 
 
 func accepts_withdraw(item_id: int) -> bool:
-	return policy_of(item_id) != StoragePolicy.REFUSE
+	return is_built() and policy_of(item_id) != StoragePolicy.REFUSE
 
 
 func _ready() -> void:

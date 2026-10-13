@@ -30,6 +30,7 @@ static var sunken_floor_thatch_hovel: StructureConfig:
 			sunken_floor_thatch_hovel = StructureConfig.new()
 			sunken_floor_thatch_hovel.id = TypeId.SUNKEN_FLOOR_THATCH_HOVEL
 			sunken_floor_thatch_hovel.name = &"半穴茅舍"
+			sunken_floor_thatch_hovel.uses_construction = true
 			sunken_floor_thatch_hovel._scene_path = &"res://game/structures/sunken_floor_thatch_hovel.tscn"
 		return sunken_floor_thatch_hovel
 
@@ -48,6 +49,7 @@ static var gatherer_hut: StructureConfig:
 			gatherer_hut = StructureConfig.new()
 			gatherer_hut.id = TypeId.GATHERER_HUT
 			gatherer_hut.name = &"采集者小屋"
+			gatherer_hut.uses_construction = true
 			gatherer_hut._scene_path = &"res://game/structures/gatherer_hut.tscn"
 		return gatherer_hut
 
@@ -57,6 +59,9 @@ static var warehouse: StructureConfig:
 			warehouse = StructureConfig.new()
 			warehouse.id = TypeId.WAREHOUSE
 			warehouse.name = &"仓库"
+			warehouse.uses_construction = true
+			warehouse.build_log_cost = 10
+			warehouse.build_work_units = 2
 			warehouse._scene_path = &"res://game/structures/warehouse.tscn"
 		return warehouse
 
@@ -66,6 +71,7 @@ static var lumber_camp: StructureConfig:
 			lumber_camp = StructureConfig.new()
 			lumber_camp.id = TypeId.LUMBER_CAMP
 			lumber_camp.name = &"伐木营地"
+			lumber_camp.uses_construction = true
 			lumber_camp._scene_path = &"res://game/structures/lumber_camp.tscn"
 		return lumber_camp
 
@@ -75,6 +81,7 @@ static var builders_guild: StructureConfig:
 			builders_guild = StructureConfig.new()
 			builders_guild.id = TypeId.BUILDERS_GUILD
 			builders_guild.name = &"建筑工会"
+			builders_guild.uses_construction = true
 			builders_guild._scene_path = &"res://game/structures/builders_guild.tscn"
 		return builders_guild
 
@@ -112,6 +119,11 @@ static var configs_by_id: Dictionary[TypeId, StructureConfig] = {
 var id: TypeId = TypeId.NONE
 var name: StringName
 var placeable := true
+## 玩家放置时走 0 级→升级流程；植物等为 false。
+var uses_construction := false
+## 初始修建所需原木；0 且 build_work_units 为 0 时即时完工。
+var build_log_cost := 0
+var build_work_units := 0
 var max_hp = 32
 var _scene_path: StringName
 var _scene: PackedScene:
