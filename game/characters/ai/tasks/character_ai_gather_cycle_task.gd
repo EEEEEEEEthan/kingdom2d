@@ -202,6 +202,8 @@ static func _nearest_warehouse(context: CharacterAiContext, hut: GathererHut) ->
 		var warehouse := structure as Warehouse
 		if not warehouse.accepts_deposit(ItemConfig.TypeId.BERRY):
 			continue
+		if warehouse.is_full(ItemConfig.TypeId.BERRY):
+			continue
 		var distance := absi(warehouse.cell_index - hut.cell_index)
 		if not nearest or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):
 			nearest = warehouse
