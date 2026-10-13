@@ -175,6 +175,9 @@ func _run() -> void:
 	if not _berry_cap_ok(game):
 		quit(1)
 		return
+	if not _no_second_harvest_ok(game):
+		quit(1)
+		return
 	if not _haul_ok(game):
 		quit(1)
 		return
@@ -279,8 +282,53 @@ func _berry_cap_ok(game) -> bool:
 		return false
 	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 5)
 	hut.deposit_carried(gatherer.carried_items)
-	if hut.berry_count() != GathererHut.BERRY_CAPACITY or not gatherer.carried_items.is_empty():
-		push_error("存入应截断到 10，实际 %s" % hut.berry_count())
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY - 1 + 5 or not gatherer.carried_items.is_empty():
+		push_error("溢出不应丢弃，实际 %s" % hut.berry_count())
+		return false
+	hut.container.set_count(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 2)
+	gatherer.abandon_ai_tasks()
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY + 2 or not gatherer.carried_items.is_empty():
+		push_error("打断后也不应截断，实际 %s" % hut.berry_count())
+		return false
+	return true
+
+
+func _no_second_harvest_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var left = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(left, 90)
+	var right = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(right, 110)
+	var first = game.spawn_resident_at_cell(99)
+	var second = game.spawn_resident_at_cell(101)
+	first.set_process(false)
+	second.set_process(false)
+	_set_hour(game, 12)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY - 1)
+	var saw_one := false
+	for _step in 400:
+		first._process(0.5)
+		second._process(0.5)
+		var occupied := 0
+		if game.structure_manager.occupant_of(left.id) != 0:
+			occupied += 1
+		if game.structure_manager.occupant_of(right.id) != 0:
+			occupied += 1
+		if occupied > 1:
+			push_error("只剩 1 个空位时不应两人同时出去采")
+			return false
+		if occupied == 1:
+			saw_one = true
+		if saw_one and hut.berry_count() >= GathererHut.BERRY_CAPACITY:
+			break
+	if not saw_one:
+		push_error("应有一人出去采")
+		return false
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY:
+		push_error("一人回来应正好到 10，实际 %s" % hut.berry_count())
 		return false
 	return true
 

@@ -51,8 +51,6 @@ func withdraw_berries(target: ItemContainer, amount: int) -> int:
 
 func deposit_carried(source: ItemContainer) -> void:
 	source.transfer_all_to(container)
-	if berry_count() > BERRY_CAPACITY:
-		container.set_count(ItemConfig.TypeId.BERRY, BERRY_CAPACITY)
 
 
 func change_priority(value: int) -> void:

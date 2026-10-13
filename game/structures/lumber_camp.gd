@@ -43,8 +43,6 @@ func withdraw_logs(target: ItemContainer, amount: int) -> int:
 
 func deposit_carried(source: ItemContainer) -> void:
 	source.transfer_all_to(container)
-	if log_count() > LOG_CAPACITY:
-		container.set_count(ItemConfig.TypeId.LOG, LOG_CAPACITY)
 
 
 func change_priority(value: int) -> void:

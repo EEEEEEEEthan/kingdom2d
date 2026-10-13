@@ -8,6 +8,7 @@ const KEY_ELAPSED_SECONDS = 2
 const KEY_OAK_ID = 3
 const KEY_WAREHOUSE_ID = 4
 const KEY_CAMP_ID = 5
+const KEY_HOLDING_SLOT = 6
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_OAK_WAIT_SECONDS := 2.0
@@ -19,6 +20,7 @@ var _elapsed_seconds := 0.0
 var _oak_id := 0
 var _warehouse_id := 0
 var _camp_id := 0
+var _holding_slot := false
 
 func _init(save_payload: Dictionary) -> void:
 	_phase = save_payload.get(KEY_PHASE, 0)
@@ -26,6 +28,7 @@ func _init(save_payload: Dictionary) -> void:
 	_oak_id = save_payload.get(KEY_OAK_ID, 0)
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
 	_camp_id = save_payload.get(KEY_CAMP_ID, 0)
+	_holding_slot = bool(save_payload.get(KEY_HOLDING_SLOT, false))
 
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.LOG_CYCLE
@@ -75,10 +78,11 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _INSIDE_SECONDS:
 				return Status.RUNNING
-			if camp.logs_full():
+			if camp.logs_full() or not _claim_harvest(context, camp):
 				_phase = 6
 				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				character.visible = true
 				_phase = 5
 				_elapsed_seconds = 0.0
@@ -90,6 +94,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if not oak:
 				context.structure_manager().mark_occupied(_oak_id, 0)
 				_oak_id = 0
+				_release_harvest()
 				_phase = 1
 				return Status.RUNNING
 			if character.advance_toward_world_x(delta_seconds, _world_x(oak)):
@@ -113,7 +118,11 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _NO_OAK_WAIT_SECONDS:
 				return Status.RUNNING
+			if not _claim_harvest(context, camp):
+				_phase = 6
+				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
 			_phase = 2
@@ -123,6 +132,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if context.day_time_period != GameTime.DayTimePeriod.WORK:
 				return Status.SUCCEEDED
 			if camp.logs_full():
+				_release_harvest()
 				var warehouse := _nearest_warehouse(context, camp)
 				if not warehouse:
 					return Status.RUNNING
@@ -132,7 +142,10 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				character.visible = true
 				_phase = 7
 				return Status.RUNNING
+			if not _claim_harvest(context, camp):
+				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				character.visible = true
 				_phase = 5
 				_elapsed_seconds = 0.0
@@ -161,6 +174,7 @@ func on_exit(context: CharacterAiContext) -> void:
 	var camp := _camp(context)
 	if camp and not context.character.carried_items.is_empty():
 		camp.deposit_carried(context.character.carried_items)
+	_release_harvest()
 	if _oak_id != 0:
 		context.structure_manager().mark_occupied(_oak_id, 0)
 		_oak_id = 0
@@ -172,7 +186,40 @@ func _serialize_payload() -> Dictionary:
 		KEY_OAK_ID: _oak_id,
 		KEY_WAREHOUSE_ID: _warehouse_id,
 		KEY_CAMP_ID: _camp_id,
+		KEY_HOLDING_SLOT: _holding_slot,
 	}
+
+
+func holds_harvest_slot() -> bool:
+	return _holding_slot
+
+
+func _claim_harvest(context: CharacterAiContext, camp: LumberCamp) -> bool:
+	if _holding_slot:
+		return true
+	if camp.log_count() + _other_harvests(context, camp) >= LumberCamp.LOG_CAPACITY:
+		return false
+	_holding_slot = true
+	return true
+
+
+func _release_harvest() -> void:
+	_holding_slot = false
+
+
+func _other_harvests(context: CharacterAiContext, camp: LumberCamp) -> int:
+	var game := Game.find(context.character)
+	if game == null:
+		return 0
+	var committed := 0
+	for worker_id in game.employment.workers_of(camp.id):
+		var worker := game.character_manager.characters.get(worker_id) as Character
+		if worker == null or worker == context.character:
+			continue
+		var top := worker.ai_task_stack.peek()
+		if top is CharacterAiLogCycleTask and (top as CharacterAiLogCycleTask).holds_harvest_slot():
+			committed += 1
+	return committed
 
 func _camp(context: CharacterAiContext) -> LumberCamp:
 	var structure_id := _camp_id if _camp_id != 0 else context.character.workplace_structure_id()

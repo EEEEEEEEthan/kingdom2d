@@ -146,6 +146,9 @@ func _run() -> void:
 	if not _log_cap_ok(game):
 		quit(1)
 		return
+	if not _no_second_harvest_ok(game):
+		quit(1)
+		return
 	if not _haul_ok(game):
 		quit(1)
 		return
@@ -280,8 +283,53 @@ func _log_cap_ok(game) -> bool:
 		return false
 	lumberjack.carried_items.add(ItemConfig.TypeId.LOG, 5)
 	camp.deposit_carried(lumberjack.carried_items)
-	if camp.log_count() != LumberCamp.LOG_CAPACITY or not lumberjack.carried_items.is_empty():
-		push_error("存入应截断到 10，实际 %s" % camp.log_count())
+	if camp.log_count() != LumberCamp.LOG_CAPACITY - 1 + 5 or not lumberjack.carried_items.is_empty():
+		push_error("溢出不应丢弃，实际 %s" % camp.log_count())
+		return false
+	camp.container.set_count(ItemConfig.TypeId.LOG, LumberCamp.LOG_CAPACITY)
+	lumberjack.carried_items.add(ItemConfig.TypeId.LOG, 2)
+	lumberjack.abandon_ai_tasks()
+	if camp.log_count() != LumberCamp.LOG_CAPACITY + 2 or not lumberjack.carried_items.is_empty():
+		push_error("打断后也不应截断，实际 %s" % camp.log_count())
+		return false
+	return true
+
+
+func _no_second_harvest_ok(game) -> bool:
+	game._clear()
+	var camp = StructureConfig.lumber_camp.instantiate()
+	game.structure_manager.add_structure(camp, 100)
+	var left = StructureConfig.oak.instantiate()
+	game.structure_manager.add_structure(left, 90)
+	var right = StructureConfig.oak.instantiate()
+	game.structure_manager.add_structure(right, 110)
+	var first = game.spawn_resident_at_cell(99)
+	var second = game.spawn_resident_at_cell(101)
+	first.set_process(false)
+	second.set_process(false)
+	_set_hour(game, 12)
+	camp.container.add(ItemConfig.TypeId.LOG, LumberCamp.LOG_CAPACITY - 1)
+	var saw_one := false
+	for _step in 400:
+		first._process(0.5)
+		second._process(0.5)
+		var occupied := 0
+		if game.structure_manager.occupant_of(left.id) != 0:
+			occupied += 1
+		if game.structure_manager.occupant_of(right.id) != 0:
+			occupied += 1
+		if occupied > 1:
+			push_error("只剩 1 个空位时不应两人同时出去伐木")
+			return false
+		if occupied == 1:
+			saw_one = true
+		if saw_one and camp.log_count() >= LumberCamp.LOG_CAPACITY:
+			break
+	if not saw_one:
+		push_error("应有一人出去伐木")
+		return false
+	if camp.log_count() != LumberCamp.LOG_CAPACITY:
+		push_error("一人回来应正好到 10，实际 %s" % camp.log_count())
 		return false
 	return true
 
