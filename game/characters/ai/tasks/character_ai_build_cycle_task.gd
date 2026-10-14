@@ -3,6 +3,7 @@ class_name CharacterAiBuildCycleTask
 
 ## 建筑工的一轮：去工会，要么去仓库搬还缺的原木，要么在工地干满 10 秒。
 ## 一轮结束就收工；还在工时就再来一轮。材料没齐就在工会等。
+## 工地包括：玩家放下后待建的建筑，以及半穴茅舍升木架。
 
 const KEY_PHASE = 1
 const KEY_ELAPSED_SECONDS = 2
@@ -108,7 +109,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				return Status.FAILED
 		_PHASE_TO_SITE:
 			var site := _site(context)
-			if site == null or not site.logs_ready():
+			if site == null or not site.builder_logs_ready():
 				_phase = _PHASE_TO_GUILD
 				return Status.RUNNING
 			if character.advance_toward_world_x(delta_seconds, _pace_x(character, site)):
@@ -167,11 +168,11 @@ func _decide(context: CharacterAiContext, character: Character, guild: BuildersG
 	if site == null:
 		_begin_wait(character, _WAIT_JOB)
 		return
-	if site.logs_ready():
+	if site.builder_logs_ready():
 		character.visible = true
 		_phase = _PHASE_TO_SITE
 		return
-	if site.logs_still_needed() <= 0:
+	if site.builder_logs_still_needed() <= 0:
 		_begin_wait(character, _WAIT_LOGS)
 		return
 	var warehouse := _nearest_warehouse(context, site)
@@ -198,7 +199,7 @@ func _walk_to_warehouse(delta_seconds: float, context: CharacterAiContext, chara
 	character.visible = true
 	if not character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
 		return true
-	var need := site.logs_still_needed()
+	var need := site.builder_logs_still_needed()
 	var moved := warehouse.withdraw_logs(character.carried_items, need)
 	if moved <= 0:
 		_phase = _PHASE_TO_GUILD
@@ -223,7 +224,11 @@ func _haul(delta_seconds: float, context: CharacterAiContext, character: Charact
 	site.release_logs(_reserved)
 	_reserved = 0
 	site.sync_scaffold()
-	if site.logs_ready():
+	if site.builder_logs_ready():
+		if site.builder_work_units_required() <= 0:
+			site.add_work_unit()
+			_phase = _PHASE_BACK
+			return true
 		_phase = _PHASE_BUILD
 		_elapsed_seconds = 0.0
 		_knocks = 0
@@ -235,7 +240,7 @@ func _haul(delta_seconds: float, context: CharacterAiContext, character: Charact
 
 func _build(delta_seconds: float, context: CharacterAiContext, character: Character) -> bool:
 	var site := _site(context)
-	if site == null or not site.logs_ready():
+	if site == null or not site.builder_logs_ready():
 		_reset_pose(character)
 		_phase = _PHASE_BACK
 		return true
@@ -248,7 +253,7 @@ func _build(delta_seconds: float, context: CharacterAiContext, character: Charac
 	if knocks != _knocks:
 		_knocks = knocks
 		site.play_knock()
-	if _elapsed_seconds >= SunkenFloorThatchHovel.WORK_UNIT_SECONDS:
+	if _elapsed_seconds >= Structure.WORK_UNIT_SECONDS:
 		_reset_pose(character)
 		site.add_work_unit()
 		_phase = _PHASE_BACK
@@ -298,33 +303,28 @@ func _warehouse(context: CharacterAiContext) -> Warehouse:
 	return context.structure_manager().get_structure_by_id(_warehouse_id) as Warehouse
 
 
-func _site(context: CharacterAiContext) -> SunkenFloorThatchHovel:
+func _site(context: CharacterAiContext) -> Structure:
 	var structure := context.structure_manager().get_structure_by_id(_site_id)
-	if not structure is SunkenFloorThatchHovel:
+	if structure == null or not structure.builder_job_active():
 		return null
-	var hovel := structure as SunkenFloorThatchHovel
-	if hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
-		return null
-	return hovel
+	return structure
 
 
-func _pick_site(context: CharacterAiContext, guild: BuildersGuild) -> SunkenFloorThatchHovel:
-	var nearest: SunkenFloorThatchHovel
+func _pick_site(context: CharacterAiContext, guild: BuildersGuild) -> Structure:
+	var nearest: Structure
 	var nearest_distance := 0
 	for structure in context.structure_manager().structures.values():
-		if not structure is SunkenFloorThatchHovel:
+		var site := structure as Structure
+		if site == null or not site.builder_job_active():
 			continue
-		var hovel := structure as SunkenFloorThatchHovel
-		if hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL or not hovel.upgrade_ordered:
-			continue
-		var distance := absi(hovel.cell_index - guild.cell_index)
-		if nearest == null or distance < nearest_distance or (distance == nearest_distance and hovel.id < nearest.id):
-			nearest = hovel
+		var distance := absi(site.cell_index - guild.cell_index)
+		if nearest == null or distance < nearest_distance or (distance == nearest_distance and site.id < nearest.id):
+			nearest = site
 			nearest_distance = distance
 	return nearest
 
 
-func _nearest_warehouse(context: CharacterAiContext, site: SunkenFloorThatchHovel) -> Warehouse:
+func _nearest_warehouse(context: CharacterAiContext, site: Structure) -> Warehouse:
 	return Warehouse.nearest(
 		context.structure_manager(),
 		site.cell_index,

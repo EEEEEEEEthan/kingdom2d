@@ -87,7 +87,7 @@ func add_structure(structure: Structure, cell_index: int, dry_run := false) -> A
 	if structure.get_parent() != self:
 		add_child(structure)
 	_register_structure(structure)
-	if structure is GathererHut or structure is LumberCamp or structure is BuildersGuild:
+	if structure.is_built() and (structure is GathererHut or structure is LumberCamp or structure is BuildersGuild):
 		var game := Game.find(self)
 		if game:
 			game.rebalance_workplaces()

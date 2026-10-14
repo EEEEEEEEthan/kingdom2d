@@ -177,6 +177,8 @@ static func _farthest_worker(workplace: Structure, characters: Dictionary[int, C
 
 
 static func _is_workplace(structure: Structure) -> bool:
+	if structure == null or not structure.is_built():
+		return false
 	return structure is GathererHut or structure is LumberCamp or structure is BuildersGuild
 
 

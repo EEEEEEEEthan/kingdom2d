@@ -25,8 +25,20 @@ func _process(_delta: float) -> void:
 func _sync() -> void:
 	if not is_node_ready():
 		return
+	if _structure != null and _structure.is_under_construction():
+		visible = true
+		var button := %UpgradeButton as Button
+		button.disabled = true
+		button.text = "修建中"
+		%Status.text = "原木 %d/%d · 建造 %d/%d" % [
+			mini(_structure.container.count_of(ItemConfig.TypeId.LOG), _structure.builder_log_cost()),
+			_structure.builder_log_cost(),
+			_structure.builder_work_units(),
+			_structure.builder_work_units_required(),
+		]
+		return
 	var hovel := _structure as SunkenFloorThatchHovel
-	if hovel == null or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+	if hovel == null or not hovel.is_built() or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		visible = false
 		return
 	visible = true
@@ -43,7 +55,7 @@ func _sync() -> void:
 
 func _on_pressed() -> void:
 	var hovel := _structure as SunkenFloorThatchHovel
-	if hovel == null or hovel.upgrade_ordered or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+	if hovel == null or not hovel.is_built() or hovel.upgrade_ordered or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		return
 	hovel.order_upgrade()
 	_sync()

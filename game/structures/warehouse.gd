@@ -44,11 +44,11 @@ func set_storage_policy(item_id: int, policy: int) -> void:
 
 
 func accepts_deposit(item_id: int) -> bool:
-	return policy_of(item_id) == StoragePolicy.ACCEPT
+	return is_built() and policy_of(item_id) == StoragePolicy.ACCEPT
 
 
 func accepts_withdraw(item_id: int) -> bool:
-	return policy_of(item_id) != StoragePolicy.REFUSE
+	return is_built() and policy_of(item_id) != StoragePolicy.REFUSE
 
 
 ## 找离 origin_cell 最近、且匹配收发条件的仓库。同类距离取更小 id。
