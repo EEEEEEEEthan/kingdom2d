@@ -107,6 +107,13 @@ func withdraw_logs(target: ItemContainer, amount: int) -> int:
 	return moved
 
 
+## 退回原木。不看收发策略，也不卡住容量。
+func restore_logs(amount: int) -> void:
+	if amount <= 0:
+		return
+	container.add(ItemConfig.TypeId.LOG, amount)
+
+
 func withdraw_berries(target: ItemContainer, amount: int) -> int:
 	if not accepts_withdraw(ItemConfig.TypeId.BERRY):
 		return 0
