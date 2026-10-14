@@ -38,7 +38,7 @@ func _sync() -> void:
 	var priority := int(_structure.get("priority"))
 	if int(slider.value) != priority:
 		slider.set_value_no_signal(priority)
-	%PriorityLabel.text = GathererHut.PRIORITY_NAMES[priority]
+	%PriorityLabel.text = WorkplacePriority.NAMES[priority]
 	for slot in _row_count():
 		var link := _link(slot)
 		link.visible = slot < _slot_count()

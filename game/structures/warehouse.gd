@@ -16,7 +16,7 @@ const _KEY_POLICIES := 1
 const _KEY_PRIORITY := 2
 
 var _policies: Dictionary[int, int] = {}
-var priority := GathererHut.Priority.NORMAL
+var priority := WorkplacePriority.Priority.NORMAL
 
 
 func _serialize() -> Dictionary:
@@ -33,7 +33,7 @@ func _deserialize(data: Dictionary) -> void:
 	_policies.clear()
 	for pair in data.get(_KEY_POLICIES, []):
 		_policies[int(pair[0])] = int(pair[1])
-	priority = int(data.get(_KEY_PRIORITY, GathererHut.Priority.NORMAL))
+	priority = int(data.get(_KEY_PRIORITY, WorkplacePriority.Priority.NORMAL))
 	_watch_container()
 	_apply_fill()
 
@@ -52,6 +52,35 @@ func accepts_deposit(item_id: int) -> bool:
 
 func accepts_withdraw(item_id: int) -> bool:
 	return policy_of(item_id) != StoragePolicy.REFUSE
+
+
+## 找离 origin_cell 最近、且匹配收发条件的仓库。同类距离取更小 id。
+static func nearest(
+	structure_manager: StructureManager,
+	origin_cell: int,
+	item_id: int,
+	for_deposit := false,
+	for_withdraw := false,
+	require_stock := false,
+	skip_full := false,
+) -> Warehouse:
+	var nearest_warehouse: Warehouse
+	var nearest_distance := 0
+	for structure in structure_manager.structures_of_type(StructureConfig.TypeId.WAREHOUSE):
+		var warehouse := structure as Warehouse
+		if for_deposit and not warehouse.accepts_deposit(item_id):
+			continue
+		if for_withdraw and not warehouse.accepts_withdraw(item_id):
+			continue
+		if require_stock and warehouse.container.count_of(item_id) <= 0:
+			continue
+		if skip_full and warehouse.is_full(item_id):
+			continue
+		var distance := absi(warehouse.cell_index - origin_cell)
+		if nearest_warehouse == null or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest_warehouse.id):
+			nearest_warehouse = warehouse
+			nearest_distance = distance
+	return nearest_warehouse
 
 
 func _ready() -> void:

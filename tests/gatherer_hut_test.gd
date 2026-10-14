@@ -8,7 +8,7 @@ func _run() -> void:
 	load("res://game/game.gd")
 	load("res://game/game_builder.gd")
 	load("res://game/structures/gatherer_hut.gd")
-	load("res://game/characters/ai/tasks/character_ai_gather_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	var game = (load("res://game/game.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
@@ -92,7 +92,7 @@ func _run() -> void:
 		return
 	gatherer._process(0.05)
 	var top = gatherer.ai_task_stack.peek()
-	if not top is CharacterAiGatherCycleTask:
+	if not top is CharacterAiHarvestCycleTask:
 		push_error("工作段一轮结束后应继续采集")
 		quit(1)
 		return
@@ -355,7 +355,7 @@ func _haul_ok(game) -> bool:
 	if not saw_haul:
 		push_error("满仓应去送仓库")
 		return false
-	if near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+	if near.container.count_of(ItemConfig.TypeId.BERRY) != HarvestWorkplace.HAUL_BATCH:
 		push_error("应把 10 个浆果送到最近仓库，实际 %s" % near.container.count_of(ItemConfig.TypeId.BERRY))
 		return false
 	if far.container.count_of(ItemConfig.TypeId.BERRY) != 0:
@@ -375,7 +375,7 @@ func _haul_ok(game) -> bool:
 			break
 	game.employment.release(gatherer.id)
 	gatherer.abandon_ai_tasks()
-	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != HarvestWorkplace.HAUL_BATCH:
 		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
 		return false
 	return true
@@ -398,7 +398,7 @@ func _warehouse_capacity_ok(game) -> bool:
 		gatherer._process(0.5)
 		if open.container.count_of(ItemConfig.TypeId.BERRY) > 0:
 			break
-	if open.container.count_of(ItemConfig.TypeId.BERRY) != GathererHut.HAUL_BATCH:
+	if open.container.count_of(ItemConfig.TypeId.BERRY) != HarvestWorkplace.HAUL_BATCH:
 		push_error("近仓已满应改送远仓，实际 %s" % open.container.count_of(ItemConfig.TypeId.BERRY))
 		return false
 	if full.berry_count() != Warehouse.BERRY_CAPACITY:
@@ -446,18 +446,18 @@ func _warehouse_capacity_ok(game) -> bool:
 	if not hauling:
 		push_error("出发时应还能启运")
 		return false
-	if warehouse.berry_count() != Warehouse.BERRY_CAPACITY + GathererHut.HAUL_BATCH:
+	if warehouse.berry_count() != Warehouse.BERRY_CAPACITY + HarvestWorkplace.HAUL_BATCH:
 		push_error("途中满仓到达应爆仓，实际 %s" % warehouse.berry_count())
 		return false
 	return true
 
 
 func _priority_math_ok() -> bool:
-	var counts = GathererHut.allocate_tier_counts([50, 0, 10], 40)
+	var counts = WorkplaceStaffing.allocate_tier_counts([50, 0, 10], 40)
 	if counts != [30, 0, 10]:
 		push_error("40 人应按权重落到低优先 30、高优先 10，实际 %s" % [counts])
 		return false
-	var shares = GathererHut.spread_evenly(30, [10, 10, 10])
+	var shares = WorkplaceStaffing.spread_evenly(30, [10, 10, 10])
 	if shares != [10, 10, 10]:
 		push_error("30 人应均匀分到三栋普通建筑，实际 %s" % [shares])
 		return false
@@ -467,7 +467,7 @@ func _priority_math_ok() -> bool:
 func _priority_rebalance_ok(game) -> bool:
 	game._clear()
 	var very = StructureConfig.gatherer_hut.instantiate()
-	very.priority = GathererHut.Priority.HIGH
+	very.priority = WorkplacePriority.Priority.HIGH
 	game.structure_manager.add_structure(very, 0)
 	var normal = StructureConfig.gatherer_hut.instantiate()
 	game.structure_manager.add_structure(normal, 100)
