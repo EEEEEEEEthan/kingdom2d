@@ -51,7 +51,11 @@ func _sync() -> void:
 	if home.level >= DwellingGrade.LEVEL_TIMBER:
 		button.disabled = true
 		button.text = "原木宅"
-		%Status.text = _stock_line(home)
+		%Status.text = "居民 %d · 浆果 %d/%d · 原木已扣" % [
+			DwellingGrade.resident_count(home),
+			Food.stored(home),
+			Food.PER_DAY,
+		]
 		return
 	if home.level >= DwellingGrade.LEVEL_COTTAGE:
 		button.disabled = not DwellingGrade.can_raise(home, DwellingGrade.LEVEL_TIMBER)
@@ -61,16 +65,6 @@ func _sync() -> void:
 	button.disabled = not DwellingGrade.can_raise(home, DwellingGrade.LEVEL_COTTAGE)
 	button.text = "升级为木架茅屋"
 	%Status.text = "居民 %d · 浆果 %d/%d" % [DwellingGrade.resident_count(home), Food.stored(home), Food.PER_DAY]
-
-
-func _stock_line(home: Dwelling) -> String:
-	return "居民 %d · 浆果 %d/%d · 仓库原木 %d/%d" % [
-		DwellingGrade.resident_count(home),
-		Food.stored(home),
-		Food.PER_DAY,
-		DwellingGrade.withdrawable_logs(home),
-		DwellingGrade.LOG_NEED,
-	]
 
 
 func _on_pressed() -> void:
