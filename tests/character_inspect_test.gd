@@ -129,12 +129,16 @@ func _run() -> void:
 		push_error("白天窗口应刷新掉睡觉，实际 %s" % activity_text)
 		quit(1)
 		return
-	var gather := CharacterAiHarvestCycleTask.new({CharacterAiHarvestCycleTask.KEY_PHASE: 2})
+	var gather := CharacterAiHarvestCycleTask.new({
+		CharacterAiHarvestCycleTask.KEY_PHASE: CharacterAiHarvestCycleTask.Phase.TO_PLANT,
+	})
 	if gather.activity_text() != "正在采集":
 		push_error("去灌木应显示正在采集，实际 %s" % gather.activity_text())
 		quit(1)
 		return
-	gather = CharacterAiHarvestCycleTask.new({CharacterAiHarvestCycleTask.KEY_PHASE: 4})
+	gather = CharacterAiHarvestCycleTask.new({
+		CharacterAiHarvestCycleTask.KEY_PHASE: CharacterAiHarvestCycleTask.Phase.RETURN_HARVEST,
+	})
 	if gather.activity_text() != "正在回采集者小屋":
 		push_error("返回应显示正在回采集者小屋，实际 %s" % gather.activity_text())
 		quit(1)

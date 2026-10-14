@@ -3,6 +3,18 @@ class_name CharacterAiHarvestCycleTask
 
 ## 进采集小屋或伐木营地，去最近植物采一轮，再回屋。满仓则按收发策略送到最近仓库。
 
+enum Phase {
+	TO_WORKPLACE,
+	IN_WORKPLACE,
+	TO_PLANT,
+	HARVEST,
+	RETURN_HARVEST,
+	WAIT_PLANT,
+	STAY_IN_WORKPLACE,
+	TO_WAREHOUSE,
+	RETURN_HAUL,
+}
+
 const KEY_PHASE = 1
 const KEY_ELAPSED_SECONDS = 2
 const KEY_PLANT_ID = 3
@@ -13,7 +25,7 @@ const _SHAKE_SECONDS := 2.4
 const _NO_PLANT_WAIT_SECONDS := 2.0
 const _HARVEST_ITEM_COUNT := 1
 
-var _phase := 0
+var _phase: Phase = Phase.TO_WORKPLACE
 var _elapsed_seconds := 0.0
 var _plant_id := 0
 var _warehouse_id := 0
@@ -22,7 +34,7 @@ var _type_id := CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
 
 
 func _init(save_payload: Dictionary, type_id: CharacterAiTaskTypeId.TypeId = CharacterAiTaskTypeId.TypeId.GATHER_CYCLE) -> void:
-	_phase = save_payload.get(KEY_PHASE, 0)
+	_phase = int(save_payload.get(KEY_PHASE, Phase.TO_WORKPLACE)) as Phase
 	_elapsed_seconds = save_payload.get(KEY_ELAPSED_SECONDS, 0.0)
 	_plant_id = save_payload.get(KEY_PLANT_ID, 0)
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
@@ -37,17 +49,17 @@ func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 func activity_text() -> String:
 	var is_log := _is_log()
 	match _phase:
-		0:
+		Phase.TO_WORKPLACE:
 			return "正在去伐木营地" if is_log else "正在去采集者小屋"
-		1:
+		Phase.IN_WORKPLACE:
 			return "正在伐木营地" if is_log else "正在采集者小屋"
-		2, 3:
+		Phase.TO_PLANT, Phase.HARVEST:
 			return "正在伐木" if is_log else "正在采集"
-		5:
+		Phase.WAIT_PLANT:
 			return "正在等待可砍伐的橡树" if is_log else "正在等待可采集的灌木"
-		6:
+		Phase.STAY_IN_WORKPLACE:
 			return "待在伐木营地" if is_log else "待在采集者小屋"
-		7:
+		Phase.TO_WAREHOUSE:
 			return "正在把原木送到仓库" if is_log else "正在把浆果送到仓库"
 		_:
 			return "正在回伐木营地" if is_log else "正在回采集者小屋"
@@ -71,49 +83,49 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		context.structure_manager().mark_occupied(_plant_id, character.id)
 		return true
 	match _phase:
-		0:
+		Phase.TO_WORKPLACE:
 			if character.advance_toward_world_x(delta_seconds, _world_x(workplace)):
 				character.visible = false
-				_phase = 1
+				_phase = Phase.IN_WORKPLACE
 				_elapsed_seconds = 0.0
-		1:
+		Phase.IN_WORKPLACE:
 			character.position.x = _world_x(workplace)
 			character.visible = false
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _INSIDE_SECONDS:
 				return Status.RUNNING
 			if workplace.storage_full():
-				_phase = 6
+				_phase = Phase.STAY_IN_WORKPLACE
 				return Status.RUNNING
 			if not pick_and_mark.call():
 				character.visible = true
-				_phase = 5
+				_phase = Phase.WAIT_PLANT
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
 			character.visible = true
-			_phase = 2
-		2:
+			_phase = Phase.TO_PLANT
+		Phase.TO_PLANT:
 			var plant := _plant(context)
 			if not plant:
 				context.structure_manager().mark_occupied(_plant_id, 0)
 				_plant_id = 0
-				_phase = 1
+				_phase = Phase.IN_WORKPLACE
 				return Status.RUNNING
 			if character.advance_toward_world_x(delta_seconds, _world_x(plant)):
 				plant.play_shake()
-				_phase = 3
+				_phase = Phase.HARVEST
 				_elapsed_seconds = 0.0
-		3:
+		Phase.HARVEST:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds >= _SHAKE_SECONDS:
 				character.carried_items.add(workplace.harvest_item_id(), _HARVEST_ITEM_COUNT)
-				_phase = 4
-		4:
+				_phase = Phase.RETURN_HARVEST
+		Phase.RETURN_HARVEST:
 			if character.advance_toward_world_x(delta_seconds, _world_x(workplace)):
 				character.visible = false
 				workplace.deposit_carried(character.carried_items)
 				return Status.SUCCEEDED
-		5:
+		Phase.WAIT_PLANT:
 			character.visible = true
 			if context.day_time_period != GameTime.DayTimePeriod.WORK:
 				return Status.SUCCEEDED
@@ -123,8 +135,8 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if not pick_and_mark.call():
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
-			_phase = 2
-		6:
+			_phase = Phase.TO_PLANT
+		Phase.STAY_IN_WORKPLACE:
 			character.position.x = _world_x(workplace)
 			character.visible = false
 			if context.day_time_period != GameTime.DayTimePeriod.WORK:
@@ -142,16 +154,16 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 					return Status.RUNNING
 				_warehouse_id = warehouse.id
 				character.visible = true
-				_phase = 7
+				_phase = Phase.TO_WAREHOUSE
 				return Status.RUNNING
 			if not pick_and_mark.call():
 				character.visible = true
-				_phase = 5
+				_phase = Phase.WAIT_PLANT
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
 			character.visible = true
-			_phase = 2
-		7:
+			_phase = Phase.TO_PLANT
+		Phase.TO_WAREHOUSE:
 			var warehouse := _warehouse(context)
 			if not warehouse:
 				workplace.deposit_carried(character.carried_items)
@@ -160,8 +172,8 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
 				_deposit_accepted(character, warehouse)
 				_warehouse_id = 0
-				_phase = 8
-		8:
+				_phase = Phase.RETURN_HAUL
+		Phase.RETURN_HAUL:
 			if character.advance_toward_world_x(delta_seconds, _world_x(workplace)):
 				character.visible = false
 				return Status.SUCCEEDED
