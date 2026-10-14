@@ -85,11 +85,24 @@ func _run() -> void:
 		quit(1)
 		return
 	var stock = warehouse_page.get_node("Rows/Inventory")
+	if stock.get_node("%Title").text != "库存":
+		push_error("仓库标题应为库存，实际 %s" % stock.get_node("%Title").text)
+		quit(1)
+		return
 	var policy: OptionButton = null
+	var berry_count: Label = null
 	for row in stock.get_node("%Items").get_children():
-		if row.visible and row.get_node_or_null("Policy"):
+		if not row.visible or row.get_node_or_null("Policy") == null:
+			continue
+		var count_label := row.get_node("Count") as Label
+		if count_label.text.begins_with("×%d/" % warehouse.berry_count()):
+			berry_count = count_label
 			policy = row.get_node("Policy")
 			break
+	if berry_count == null or berry_count.text != "×%d/%d" % [warehouse.berry_count(), Warehouse.BERRY_CAPACITY]:
+		push_error("仓库应显示数量/容量，实际 %s" % (berry_count.text if berry_count else "无"))
+		quit(1)
+		return
 	if policy == null or policy.get_item_text(policy.selected) != "接收":
 		push_error("仓库每项应有存储策略，默认接收")
 		quit(1)

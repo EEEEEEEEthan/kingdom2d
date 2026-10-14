@@ -20,6 +20,7 @@ const KEY_ELAPSED_SECONDS = 2
 const KEY_PLANT_ID = 3
 const KEY_WAREHOUSE_ID = 4
 const KEY_WORKPLACE_ID = 5
+const KEY_HOLDING_SLOT = 6
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_PLANT_WAIT_SECONDS := 2.0
@@ -30,6 +31,7 @@ var _elapsed_seconds := 0.0
 var _plant_id := 0
 var _warehouse_id := 0
 var _workplace_id := 0
+var _holding_slot := false
 var _type_id := CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
 
 
@@ -39,6 +41,7 @@ func _init(save_payload: Dictionary, type_id: CharacterAiTaskTypeId.TypeId = Cha
 	_plant_id = save_payload.get(KEY_PLANT_ID, 0)
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
 	_workplace_id = save_payload.get(KEY_WORKPLACE_ID, 0)
+	_holding_slot = bool(save_payload.get(KEY_HOLDING_SLOT, false))
 	_type_id = type_id
 
 
@@ -94,10 +97,11 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _INSIDE_SECONDS:
 				return Status.RUNNING
-			if workplace.storage_full():
+			if workplace.storage_full() or not _claim_harvest(context, workplace):
 				_phase = Phase.STAY_IN_WORKPLACE
 				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				character.visible = true
 				_phase = Phase.WAIT_PLANT
 				_elapsed_seconds = 0.0
@@ -109,6 +113,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if not plant:
 				context.structure_manager().mark_occupied(_plant_id, 0)
 				_plant_id = 0
+				_release_harvest()
 				_phase = Phase.IN_WORKPLACE
 				return Status.RUNNING
 			if character.advance_toward_world_x(delta_seconds, _world_x(plant)):
@@ -124,6 +129,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if character.advance_toward_world_x(delta_seconds, _world_x(workplace)):
 				character.visible = false
 				workplace.deposit_carried(character.carried_items)
+				_release_harvest()
 				return Status.SUCCEEDED
 		Phase.WAIT_PLANT:
 			character.visible = true
@@ -132,7 +138,11 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds < _NO_PLANT_WAIT_SECONDS:
 				return Status.RUNNING
+			if not _claim_harvest(context, workplace):
+				_phase = Phase.STAY_IN_WORKPLACE
+				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				_elapsed_seconds = 0.0
 				return Status.RUNNING
 			_phase = Phase.TO_PLANT
@@ -142,10 +152,14 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			if context.day_time_period != GameTime.DayTimePeriod.WORK:
 				return Status.SUCCEEDED
 			if workplace.storage_full():
+				_release_harvest()
 				var warehouse := Warehouse.nearest(
 					context.structure_manager(),
 					workplace.cell_index,
 					workplace.harvest_item_id(),
+					true,
+					false,
+					false,
 					true,
 				)
 				if not warehouse:
@@ -156,7 +170,10 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				character.visible = true
 				_phase = Phase.TO_WAREHOUSE
 				return Status.RUNNING
+			if not _claim_harvest(context, workplace):
+				return Status.RUNNING
 			if not pick_and_mark.call():
+				_release_harvest()
 				character.visible = true
 				_phase = Phase.WAIT_PLANT
 				_elapsed_seconds = 0.0
@@ -186,6 +203,7 @@ func on_exit(context: CharacterAiContext) -> void:
 	var workplace := _workplace(context)
 	if workplace and not context.character.carried_items.is_empty():
 		workplace.deposit_carried(context.character.carried_items)
+	_release_harvest()
 	if _plant_id != 0:
 		context.structure_manager().mark_occupied(_plant_id, 0)
 		_plant_id = 0
@@ -198,7 +216,40 @@ func _serialize_payload() -> Dictionary:
 		KEY_PLANT_ID: _plant_id,
 		KEY_WAREHOUSE_ID: _warehouse_id,
 		KEY_WORKPLACE_ID: _workplace_id,
+		KEY_HOLDING_SLOT: _holding_slot,
 	}
+
+
+func holds_harvest_slot() -> bool:
+	return _holding_slot
+
+
+func _claim_harvest(context: CharacterAiContext, workplace: HarvestWorkplace) -> bool:
+	if _holding_slot:
+		return true
+	if workplace.stock_count() + _other_harvests(context, workplace) >= workplace.harvest_capacity():
+		return false
+	_holding_slot = true
+	return true
+
+
+func _release_harvest() -> void:
+	_holding_slot = false
+
+
+func _other_harvests(context: CharacterAiContext, workplace: HarvestWorkplace) -> int:
+	var game := Game.find(context.character)
+	if game == null:
+		return 0
+	var committed := 0
+	for worker_id in game.employment.workers_of(workplace.id):
+		var worker := game.character_manager.characters.get(worker_id) as Character
+		if worker == null or worker == context.character:
+			continue
+		var top := worker.ai_task_stack.peek()
+		if top is CharacterAiHarvestCycleTask and (top as CharacterAiHarvestCycleTask).holds_harvest_slot():
+			committed += 1
+	return committed
 
 
 func _workplace(context: CharacterAiContext) -> HarvestWorkplace:

@@ -1,7 +1,7 @@
 extends Structure
 class_name HarvestWorkplace
 
-## 采集小屋与伐木营地共用库存上限与存入截断。
+## 采集小屋与伐木营地共用库存上限。存入不截断，放不下的留在容器里。
 
 const HAUL_BATCH := 10
 
@@ -36,7 +36,3 @@ func withdraw_harvest(target: ItemContainer, amount: int) -> int:
 
 func deposit_carried(source: ItemContainer) -> void:
 	source.transfer_all_to(container)
-	var item_id := harvest_item_id()
-	var capacity := harvest_capacity()
-	if container.count_of(item_id) > capacity:
-		container.set_count(item_id, capacity)

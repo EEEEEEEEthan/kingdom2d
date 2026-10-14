@@ -175,7 +175,13 @@ func _run() -> void:
 	if not _berry_cap_ok(game):
 		quit(1)
 		return
+	if not _no_second_harvest_ok(game):
+		quit(1)
+		return
 	if not _haul_ok(game):
+		quit(1)
+		return
+	if not _warehouse_capacity_ok(game):
 		quit(1)
 		return
 	print("gatherer_hut_ok")
@@ -276,8 +282,53 @@ func _berry_cap_ok(game) -> bool:
 		return false
 	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 5)
 	hut.deposit_carried(gatherer.carried_items)
-	if hut.berry_count() != GathererHut.BERRY_CAPACITY or not gatherer.carried_items.is_empty():
-		push_error("存入应截断到 10，实际 %s" % hut.berry_count())
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY - 1 + 5 or not gatherer.carried_items.is_empty():
+		push_error("溢出不应丢弃，实际 %s" % hut.berry_count())
+		return false
+	hut.container.set_count(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 2)
+	gatherer.abandon_ai_tasks()
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY + 2 or not gatherer.carried_items.is_empty():
+		push_error("打断后也不应截断，实际 %s" % hut.berry_count())
+		return false
+	return true
+
+
+func _no_second_harvest_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var left = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(left, 90)
+	var right = StructureConfig.bush.instantiate()
+	game.structure_manager.add_structure(right, 110)
+	var first = game.spawn_resident_at_cell(99)
+	var second = game.spawn_resident_at_cell(101)
+	first.set_process(false)
+	second.set_process(false)
+	_set_hour(game, 12)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY - 1)
+	var saw_one := false
+	for _step in 400:
+		first._process(0.5)
+		second._process(0.5)
+		var occupied := 0
+		if game.structure_manager.occupant_of(left.id) != 0:
+			occupied += 1
+		if game.structure_manager.occupant_of(right.id) != 0:
+			occupied += 1
+		if occupied > 1:
+			push_error("只剩 1 个空位时不应两人同时出去采")
+			return false
+		if occupied == 1:
+			saw_one = true
+		if saw_one and hut.berry_count() >= GathererHut.BERRY_CAPACITY:
+			break
+	if not saw_one:
+		push_error("应有一人出去采")
+		return false
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY:
+		push_error("一人回来应正好到 10，实际 %s" % hut.berry_count())
 		return false
 	return true
 
@@ -326,6 +377,77 @@ func _haul_ok(game) -> bool:
 	gatherer.abandon_ai_tasks()
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY or near.container.count_of(ItemConfig.TypeId.BERRY) != HarvestWorkplace.HAUL_BATCH:
 		push_error("运送中断应把浆果退回小屋 hut=%s warehouse=%s carried=%s" % [hut.berry_count(), near.container.count_of(ItemConfig.TypeId.BERRY), gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)])
+		return false
+	return true
+
+
+func _warehouse_capacity_ok(game) -> bool:
+	game._clear()
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var full = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(full, 108)
+	var open = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(open, 140)
+	var gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	full.container.add(ItemConfig.TypeId.BERRY, Warehouse.BERRY_CAPACITY)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	for _step in 300:
+		gatherer._process(0.5)
+		if open.container.count_of(ItemConfig.TypeId.BERRY) > 0:
+			break
+	if open.container.count_of(ItemConfig.TypeId.BERRY) != HarvestWorkplace.HAUL_BATCH:
+		push_error("近仓已满应改送远仓，实际 %s" % open.container.count_of(ItemConfig.TypeId.BERRY))
+		return false
+	if full.berry_count() != Warehouse.BERRY_CAPACITY:
+		push_error("满仓出发前不应再收货，实际 %s" % full.berry_count())
+		return false
+	game._clear()
+	hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var only = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(only, 108)
+	gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	only.container.add(ItemConfig.TypeId.BERRY, Warehouse.BERRY_CAPACITY)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	for _step in 40:
+		gatherer._process(0.5)
+		if gatherer.current_activity() == "正在把浆果送到仓库":
+			push_error("目标仓已满不应开始搬运")
+			return false
+	if hut.berry_count() != GathererHut.BERRY_CAPACITY or only.berry_count() != Warehouse.BERRY_CAPACITY:
+		push_error("满仓时应货留小屋 hut=%s warehouse=%s" % [hut.berry_count(), only.berry_count()])
+		return false
+	if gatherer.current_activity() != "待在采集者小屋":
+		push_error("满仓应待在小屋，实际 %s" % gatherer.current_activity())
+		return false
+	game._clear()
+	hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 100)
+	var warehouse = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(warehouse, 140)
+	gatherer = game.spawn_resident_at_cell(98)
+	gatherer.set_process(false)
+	_set_hour(game, 12)
+	warehouse.container.add(ItemConfig.TypeId.BERRY, Warehouse.BERRY_CAPACITY - 1)
+	hut.container.add(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
+	var hauling := false
+	for _step in 300:
+		gatherer._process(0.5)
+		if gatherer.current_activity() == "正在把浆果送到仓库" and not gatherer.carried_items.is_empty():
+			hauling = true
+			warehouse.container.set_count(ItemConfig.TypeId.BERRY, Warehouse.BERRY_CAPACITY)
+		if hauling and warehouse.berry_count() > Warehouse.BERRY_CAPACITY:
+			break
+	if not hauling:
+		push_error("出发时应还能启运")
+		return false
+	if warehouse.berry_count() != Warehouse.BERRY_CAPACITY + HarvestWorkplace.HAUL_BATCH:
+		push_error("途中满仓到达应爆仓，实际 %s" % warehouse.berry_count())
 		return false
 	return true
 

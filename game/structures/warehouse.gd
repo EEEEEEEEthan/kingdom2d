@@ -9,6 +9,9 @@ enum StoragePolicy {
 
 const POLICY_NAMES := ["接收", "只出不进", "不接收"]
 const SLOT_COUNT := 1
+## 软上限：出发时已满则不启运；到达时仍可入库，允许爆仓。
+const BERRY_CAPACITY := 100
+const LOG_CAPACITY := 100
 const _KEY_POLICIES := 1
 const _KEY_PRIORITY := 2
 
@@ -59,6 +62,7 @@ static func nearest(
 	for_deposit := false,
 	for_withdraw := false,
 	require_stock := false,
+	skip_full := false,
 ) -> Warehouse:
 	var nearest_warehouse: Warehouse
 	var nearest_distance := 0
@@ -69,6 +73,8 @@ static func nearest(
 		if for_withdraw and not warehouse.accepts_withdraw(item_id):
 			continue
 		if require_stock and warehouse.container.count_of(item_id) <= 0:
+			continue
+		if skip_full and warehouse.is_full(item_id):
 			continue
 		var distance := absi(warehouse.cell_index - origin_cell)
 		if nearest_warehouse == null or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest_warehouse.id):
@@ -96,6 +102,27 @@ func _apply_fill() -> void:
 
 func berry_count() -> int:
 	return container.count_of(ItemConfig.TypeId.BERRY)
+
+
+func log_count() -> int:
+	return container.count_of(ItemConfig.TypeId.LOG)
+
+
+func capacity_of(item_id: int) -> int:
+	match item_id:
+		ItemConfig.TypeId.BERRY:
+			return BERRY_CAPACITY
+		ItemConfig.TypeId.LOG:
+			return LOG_CAPACITY
+		_:
+			return 0
+
+
+func is_full(item_id: int) -> bool:
+	var capacity := capacity_of(item_id)
+	if capacity <= 0:
+		return false
+	return container.count_of(item_id) >= capacity
 
 
 func withdraw_logs(target: ItemContainer, amount: int) -> int:

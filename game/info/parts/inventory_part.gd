@@ -38,12 +38,15 @@ func _sync() -> void:
 		if not visible_row:
 			continue
 		shown += 1
-		(row.get_node("Count") as Label).text = "×%d" % count
+		var count_label := row.get_node("Count") as Label
 		if _structure is Warehouse:
+			count_label.text = "×%d/%d" % [count, (_structure as Warehouse).capacity_of(item_id)]
 			var menu := row.get_node("Policy") as OptionButton
 			var policy := (_structure as Warehouse).policy_of(item_id)
 			if menu.selected != policy:
 				menu.select(policy)
+		else:
+			count_label.text = "×%d" % count
 	%Empty.visible = shown == 0
 	_revision = _revision_key()
 
