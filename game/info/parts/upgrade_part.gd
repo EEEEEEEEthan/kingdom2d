@@ -27,9 +27,9 @@ func _sync() -> void:
 		return
 	if _structure != null and _structure.is_under_construction():
 		visible = true
-		var button := %UpgradeButton as Button
-		button.disabled = true
-		button.text = "修建中"
+		var site_button := %UpgradeButton as Button
+		site_button.disabled = true
+		site_button.text = "修建中"
 		%Status.text = "原木 %d/%d · 建造 %d/%d" % [
 			mini(_structure.container.count_of(ItemConfig.TypeId.LOG), _structure.builder_log_cost()),
 			_structure.builder_log_cost(),
@@ -37,25 +37,48 @@ func _sync() -> void:
 			_structure.builder_work_units_required(),
 		]
 		return
-	var hovel := _structure as SunkenFloorThatchHovel
-	if hovel == null or not hovel.is_built() or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+	var home := _structure as Dwelling
+	if home == null or not home.is_built() or not Food.is_dwelling(home):
 		visible = false
 		return
 	visible = true
 	var button := %UpgradeButton as Button
-	if hovel.upgrade_ordered:
+	if home.upgrade_ordered:
 		button.disabled = true
 		button.text = "升级中"
-		%Status.text = "原木 %d/%d · 建造 %d/%d" % [mini(hovel.log_count(), SunkenFloorThatchHovel.LOG_COST), SunkenFloorThatchHovel.LOG_COST, hovel.work_units, SunkenFloorThatchHovel.WORK_UNITS_REQUIRED]
-	else:
-		button.disabled = false
-		button.text = "升级为木架茅屋"
-		%Status.text = "需要 20 原木"
+		%Status.text = "原木 %d/%d · 建造 %d/%d" % [mini(home.log_count(), Dwelling.COTTAGE_LOG_COST), Dwelling.COTTAGE_LOG_COST, home.work_units, Dwelling.COTTAGE_WORK_UNITS]
+		return
+	if home.level >= DwellingGrade.LEVEL_TIMBER:
+		button.disabled = true
+		button.text = "原木宅"
+		%Status.text = _stock_line(home)
+		return
+	if home.level >= DwellingGrade.LEVEL_COTTAGE:
+		button.disabled = not DwellingGrade.can_raise(home, DwellingGrade.LEVEL_TIMBER)
+		button.text = "升级为原木宅"
+		%Status.text = "仓库原木 %d/%d" % [DwellingGrade.withdrawable_logs(home), DwellingGrade.LOG_NEED]
+		return
+	button.disabled = not DwellingGrade.can_raise(home, DwellingGrade.LEVEL_COTTAGE)
+	button.text = "升级为木架茅屋"
+	%Status.text = "居民 %d · 浆果 %d/%d" % [DwellingGrade.resident_count(home), Food.stored(home), Food.PER_DAY]
+
+
+func _stock_line(home: Dwelling) -> String:
+	return "居民 %d · 浆果 %d/%d · 仓库原木 %d/%d" % [
+		DwellingGrade.resident_count(home),
+		Food.stored(home),
+		Food.PER_DAY,
+		DwellingGrade.withdrawable_logs(home),
+		DwellingGrade.LOG_NEED,
+	]
 
 
 func _on_pressed() -> void:
-	var hovel := _structure as SunkenFloorThatchHovel
-	if hovel == null or not hovel.is_built() or hovel.upgrade_ordered or hovel.config.id != StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
+	var home := _structure as Dwelling
+	if home == null:
 		return
-	hovel.order_upgrade()
+	if home.level < DwellingGrade.LEVEL_COTTAGE and DwellingGrade.can_raise(home, DwellingGrade.LEVEL_COTTAGE):
+		home.order_upgrade()
+	elif DwellingGrade.can_raise(home, DwellingGrade.LEVEL_TIMBER):
+		home.promote_timber()
 	_sync()
