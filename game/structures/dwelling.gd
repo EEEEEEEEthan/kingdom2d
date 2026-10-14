@@ -84,6 +84,8 @@ func cancel_upgrade() -> void:
 func promote_timber() -> void:
 	if not DwellingGrade.can_raise(self, DwellingGrade.LEVEL_TIMBER):
 		return
+	if not DwellingGrade.consume_upgrade_logs(self):
+		return
 	level = DwellingGrade.LEVEL_TIMBER
 	_sync_tier_mark()
 	_save()

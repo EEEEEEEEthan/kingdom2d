@@ -20,7 +20,10 @@ func _run() -> void:
 	if not await _food_drop_ok(game):
 		quit(1)
 		return
-	if not await _log_drop_ok(game):
+	if not await _log_spend_ok(game):
+		quit(1)
+		return
+	if not await _shared_stock_ok(game):
 		quit(1)
 		return
 	if not await _empty_house_ok(game):
@@ -96,7 +99,7 @@ func _food_drop_ok(game) -> bool:
 	return true
 
 
-func _log_drop_ok(game) -> bool:
+func _log_spend_ok(game) -> bool:
 	game._clear()
 	await process_frame
 	var home := _home(game, 60)
@@ -124,34 +127,64 @@ func _log_drop_ok(game) -> bool:
 	if home.level != 3 or home.display_name() != "原木宅" or not home.get_node("TierMark").visible:
 		push_error("3 级应是带烟囱的原木宅，level=%s" % home.level)
 		return false
+	if warehouse.log_count() != 0:
+		push_error("升原木宅应扣掉仓库里的 %d 根，剩余 %s" % [DwellingGrade.LOG_NEED, warehouse.log_count()])
+		return false
 	await process_frame
 	if browser.get_node("%PageHost").get_child(0).get_node("Rows/Title").text != "原木宅":
 		push_error("检查页标题应是原木宅")
 		return false
-	warehouse.container.take(ItemConfig.TypeId.LOG, 1)
-	home.maintain_grade()
-	if home.level != 2 or home.display_name() != "木架茅屋" or home.config.id != StructureConfig.TypeId.TIMBER_FRAME_COTTAGE:
-		push_error("原木不够应降到 2 级木架茅屋，level=%s name=%s" % [home.level, home.display_name()])
+	if not _status(browser).contains("原木已扣"):
+		push_error("已升原木宅应显示原木已扣，实际 %s" % _status(browser))
 		return false
-	if home.get_node("TierMark").visible:
-		push_error("降到 2 级应拆掉烟囱")
+	# 别的工程搬走原木时，仓库数字再低也不掉级。
+	home.maintain_grade()
+	if home.level != 3 or home.display_name() != "原木宅":
+		push_error("仓库已空也不应掉级，level=%s name=%s" % [home.level, home.display_name()])
 		return false
 	if Food.stored(home) != Food.HOME_CAPACITY:
-		push_error("降级不应动食物")
+		push_error("升级不应动食物")
 		return false
-	var restored := Structure.deserialize(home.serialize(), game) as Dwelling
-	if restored.level != 2 or restored.get_node("TierMark").visible:
-		push_error("2 级存档不应带烟囱")
-		return false
-	restored.free()
-	warehouse.container.add(ItemConfig.TypeId.LOG, 1)
-	home.promote_timber()
 	var timber := Structure.deserialize(home.serialize(), game) as Dwelling
 	if timber.level != 3 or timber.display_name() != "原木宅" or not timber.get_node("TierMark").visible:
 		push_error("3 级应能读档，level=%s mark=%s" % [timber.level, timber.get_node_or_null("TierMark")])
 		return false
 	timber.free()
 	browser.queue_free()
+	return true
+
+
+func _shared_stock_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var first := _cottage(game, 60)
+	var second := _cottage(game, 70)
+	game.spawn_resident_at_cell(60).set_process(false)
+	game.spawn_resident_at_cell(70).set_process(false)
+	first.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	second.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	var warehouse := StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(warehouse, 65)
+	warehouse.container.add(ItemConfig.TypeId.LOG, DwellingGrade.LOG_NEED)
+	first.promote_timber()
+	if first.level != 3 or warehouse.log_count() != 0:
+		push_error("第一户应扣光仓库原木，level=%s stock=%s" % [first.level, warehouse.log_count()])
+		return false
+	second.promote_timber()
+	if second.level != 2:
+		push_error("第二户不能共用已扣掉的原木，level=%s" % second.level)
+		return false
+	warehouse.container.add(ItemConfig.TypeId.LOG, DwellingGrade.LOG_NEED)
+	second.promote_timber()
+	if second.level != 3 or warehouse.log_count() != 0:
+		push_error("第二户有自己的原木后应能升级，level=%s stock=%s" % [second.level, warehouse.log_count()])
+		return false
+	warehouse.container.take(ItemConfig.TypeId.LOG, warehouse.log_count())
+	first.maintain_grade()
+	second.maintain_grade()
+	if first.level != 3 or second.level != 3:
+		push_error("两户升完后仓库清空也不应掉级")
+		return false
 	return true
 
 
@@ -203,6 +236,14 @@ func _cancel_build_ok(game) -> bool:
 func _home(game, cell: int) -> Dwelling:
 	var home := StructureConfig.sunken_floor_thatch_hovel.instantiate() as Dwelling
 	game.structure_manager.add_structure(home, cell)
+	return home
+
+
+func _cottage(game, cell: int) -> Dwelling:
+	var home := _home(game, cell)
+	home.order_upgrade()
+	home.container.add(ItemConfig.TypeId.LOG, Dwelling.COTTAGE_LOG_COST)
+	home.finish_upgrade()
 	return home
 
 
