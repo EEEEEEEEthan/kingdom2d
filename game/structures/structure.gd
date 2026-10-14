@@ -99,6 +99,10 @@ func serialize() -> Dictionary:
 		},
 	}
 
+func display_name() -> String:
+	return String(config.name)
+
+
 func _serialize() -> Dictionary:
 	return {}
 

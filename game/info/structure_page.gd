@@ -17,9 +17,9 @@ func bind(structure: Structure, characters: CharacterManager) -> void:
 		child.free()
 	var title := Label.new()
 	title.name = "Title"
-	title.text = String(structure.config.name)
+	title.text = structure.display_name()
 	%Rows.add_child(title)
-	if structure.is_under_construction() or structure is SunkenFloorThatchHovel:
+	if structure.is_under_construction() or Food.is_dwelling(structure):
 		var upgrade := UPGRADE_PART.instantiate()
 		upgrade.name = "Upgrade"
 		%Rows.add_child(upgrade)
@@ -51,8 +51,8 @@ func _process(_delta: float) -> void:
 	if not alive():
 		return
 	var title := %Rows.get_node_or_null("Title") as Label
-	if title and title.text != String(_structure.config.name):
-		title.text = String(_structure.config.name)
+	if title and title.text != _structure.display_name():
+		title.text = _structure.display_name()
 
 
 func _shows_inventory(structure: Structure) -> bool:

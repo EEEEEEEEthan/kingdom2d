@@ -1,2 +1,2 @@
-extends Structure
+extends Dwelling
 class_name TimberFrameCottage

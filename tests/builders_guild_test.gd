@@ -278,7 +278,7 @@ func _upgrade_ok(game) -> bool:
 	if manager.workplace_structure_id() != office.id or game.employment.count_of(guild.id) != 2:
 		push_error("仓库管理员不应占建筑工名额")
 		return false
-	hovel.container.add(ItemConfig.TypeId.BERRY, 4)
+	hovel.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
 	var browser = (load("res://game/info/info_browser.tscn") as PackedScene).instantiate()
 	root.add_child(browser)
 	browser.open_structure(guild)
@@ -344,7 +344,7 @@ func _upgrade_ok(game) -> bool:
 	if not _until(crew, 600, func() -> bool: return hovel.config.name == &"木架茅屋"):
 		push_error("三个建造单元后应升级，单元 %s 活动 %s %s" % [hovel.work_units, left.current_activity(), right.current_activity()])
 		return false
-	if hovel.log_count() != 0 or Food.stored(hovel) != 4:
+	if hovel.log_count() != 0 or Food.stored(hovel) != Food.PER_DAY:
 		push_error("升级应消耗 20 原木并留下浆果，原木 %s 浆果 %s" % [hovel.log_count(), Food.stored(hovel)])
 		return false
 	if hovel.config.id != StructureConfig.TypeId.TIMBER_FRAME_COTTAGE:
@@ -367,11 +367,12 @@ func _upgrade_ok(game) -> bool:
 	if page.get_node("Rows/Title").text != "木架茅屋":
 		push_error("检查页标题应改成新名字，实际 %s" % page.get_node("Rows/Title").text)
 		return false
-	if page.get_node("Rows/Upgrade").visible:
-		push_error("升级后不应再显示升级按钮")
+	var next_button: Button = page.get_node("Rows/Upgrade/UpgradeButton")
+	if not page.get_node("Rows/Upgrade").visible or next_button.text != "升级为原木宅" or not next_button.disabled:
+		push_error("木架茅屋应能升原木宅，仓库没原木时按钮禁用，实际 %s" % next_button.text)
 		return false
 	var restored = Structure.deserialize(hovel.serialize(), game)
-	if restored.config.name != &"木架茅屋" or restored.container.count_of(ItemConfig.TypeId.BERRY) != 4 or restored is SunkenFloorThatchHovel:
+	if restored.config.name != &"木架茅屋" or restored.level != 2 or restored.container.count_of(ItemConfig.TypeId.BERRY) != Food.PER_DAY or restored is SunkenFloorThatchHovel:
 		push_error("读档应得到木架茅屋")
 		return false
 	restored.free()
