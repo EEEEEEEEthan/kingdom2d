@@ -1,8 +1,8 @@
 extends Node
 class_name StructureManager
 
-const _KEY_NEXT_ID = 1
-const _KEY_STRUCTURES = 2
+const KEY_NEXT_ID = 1
+const KEY_STRUCTURES = 2
 const _KEY_OCCUPANTS = 3
 
 var _next_id = 0
@@ -29,24 +29,36 @@ func serialize() -> Dictionary:
 	for structure in structures.values():
 		structure_data.append((structure as Structure).serialize())
 	return {
-		_KEY_NEXT_ID: _next_id,
-		_KEY_STRUCTURES: structure_data,
+		KEY_NEXT_ID: _next_id,
+		KEY_STRUCTURES: structure_data,
 		_KEY_OCCUPANTS: _occupant_by_structure_id,
 	}
 
 
 func deserialize(data: Dictionary, save_version := 0) -> void:
-	_next_id = data[_KEY_NEXT_ID]
-	var structure_data: Array = data[_KEY_STRUCTURES]
-	for item in structure_data:
-		var structure = Structure.deserialize(item, self, save_version)
-		if structure == null:
-			continue
-		_register_structure(structure)
+	var listed = data.get(KEY_STRUCTURES, [])
+	if listed is Array:
+		for item in listed:
+			if not item is Dictionary:
+				continue
+			var structure = Structure.deserialize(item, self, save_version)
+			if structure == null:
+				continue
+			if structure.cell_index < 0 or structure.cell_index >= index_to_structures.size():
+				structure.free()
+				continue
+			_register_structure(structure)
+	if data.has(KEY_NEXT_ID):
+		_next_id = int(data[KEY_NEXT_ID])
+	else:
+		_next_id = 0
+		for structure_id in structures:
+			_next_id = maxi(_next_id, int(structure_id))
 	_occupant_by_structure_id.clear()
-	var occupants: Dictionary = data.get(_KEY_OCCUPANTS, {})
-	for structure_id in occupants:
-		_occupant_by_structure_id[int(structure_id)] = int(occupants[structure_id])
+	var occupants = data.get(_KEY_OCCUPANTS, {})
+	if occupants is Dictionary:
+		for structure_id in occupants:
+			_occupant_by_structure_id[int(structure_id)] = int(occupants[structure_id])
 
 
 ## by_character_id 传 0 表示解除占用。

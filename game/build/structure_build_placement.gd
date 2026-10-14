@@ -65,7 +65,7 @@ func _try_place() -> void:
 	_preview.begin_initial_upgrade()
 	if _preview.is_built() and _structure_config.id == StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL:
 		_game.spawn_resident_at_cell(_preview.cell_index)
-	_game.save_game()
+	_game.request_save()
 	_preview.play_bounce()
 	queue_free()
 

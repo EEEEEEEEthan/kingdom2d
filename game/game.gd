@@ -6,15 +6,8 @@ const HALF_TILE_SIZE = round(TILE_SIZE / 2.0)
 const MAP_CELL_COUNT = 512
 const MAP_WIDTH = MAP_CELL_COUNT * TILE_SIZE
 const SAVE_FILE_PATH = "user://save.dat"
+const _SAVE_TEMP_PATH = "user://save.dat.tmp"
 const _GAME_START_DAYS = 7.25
-
-const _SERKEY_STRUCTURE_MANAGER = 1
-const _SERKEY_CHARACTER_MANAGER = 2
-const _SERKEY_TERRAIN = 3
-const _SERKEY_DAYS = 4
-const _SERKEY_EMPLOYMENT = 5
-const _SERKEY_VERSION = 6
-const SAVE_VERSION = 1
 
 static func get_position_by_cell_index(cell_index: int) -> int:
 	return cell_index * TILE_SIZE
@@ -51,6 +44,8 @@ var character_manager: CharacterManager:
 		if not character_manager: character_manager = %CharacterManager
 		return character_manager
 
+var _save_pending := false
+
 @export var view_height: float:
 	set(value):
 		view_height = value
@@ -59,24 +54,21 @@ var character_manager: CharacterManager:
 		%Terrain.view_height = value
 		%CelestialLayer.offset = Vector2(0, %Terrain.celestial_drop_y(value))
 
-func _ready() -> void:
-	if FileAccess.file_exists(SAVE_FILE_PATH):
-		load_game()
-	else:
-		new_game()
-
-
 func advance_debug_time_by_hours(hours: float = 1.0) -> void:
 	game_time.all_days += hours / 24.0
 
 
 func _process(dt: float) -> void:
 	game_time.all_days += dt * GameTime.REAL_SECONDS_TO_GAME_DAYS
+	if _save_pending:
+		_save_pending = false
+		_write_save()
+
+func request_save() -> void:
+	_save_pending = true
 
 func new_game() -> void:
-	_clear()
-	GameBuilder.build(self)
-	save_game()
+	_boot_world(true)
 
 func reset_game() -> void:
 	if FileAccess.file_exists(SAVE_FILE_PATH):
@@ -84,39 +76,80 @@ func reset_game() -> void:
 	_clear()
 	new_game()
 
-func load_game() -> void:
-	print("load_game")
+func _boot_world(persist: bool) -> void:
 	_clear()
+	GameBuilder.build(self)
+	if persist:
+		request_save()
+
+func _ready() -> void:
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		if not load_game():
+			# 整档不是字典：不写盘，原文件留着。
+			_boot_world(false)
+	else:
+		new_game()
+
+func load_game() -> bool:
+	print("load_game")
+	var parsed = _read_save_variant()
+	if not parsed is Dictionary:
+		return false
+	_clear()
+	_apply_save(parsed)
+	return true
+
+func _read_save_variant() -> Variant:
 	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
-	var data := file.get_var() as Dictionary
-	var save_version := int(data.get(_SERKEY_VERSION, 0))
-	terrain.deserialize(data.get(_SERKEY_TERRAIN, {}))
-	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}), save_version)
-	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
-	if data.has(_SERKEY_EMPLOYMENT):
-		employment.deserialize(data[_SERKEY_EMPLOYMENT])
+	if file == null:
+		return null
+	var parsed = file.get_var()
+	file.close()
+	return parsed
+
+func _apply_save(data: Dictionary) -> void:
+	var save_version := int(data.get(SaveFormat.SECTION_VERSION, 0))
+	var terrain_data = data.get(SaveFormat.SECTION_TERRAIN, {})
+	if terrain_data is Dictionary:
+		terrain.deserialize(terrain_data)
+	var structures_data = data.get(SaveFormat.SECTION_STRUCTURES, {})
+	if not structures_data is Dictionary:
+		structures_data = {}
+	structure_manager.deserialize(structures_data, save_version)
+	var characters_data = data.get(SaveFormat.SECTION_CHARACTERS, {})
+	if not characters_data is Dictionary:
+		characters_data = {}
+	character_manager.deserialize(characters_data)
+	var employment_data = data.get(SaveFormat.SECTION_EMPLOYMENT, null)
+	if employment_data is Dictionary:
+		employment.deserialize(employment_data)
 	else:
 		employment.import_legacy(
-			data.get(_SERKEY_STRUCTURE_MANAGER, {}),
-			data.get(_SERKEY_CHARACTER_MANAGER, {}),
+			structures_data,
+			characters_data,
 			character_manager.characters,
 			structure_manager.structures
 		)
-	game_time.all_days = data.get(_SERKEY_DAYS, _GAME_START_DAYS)
+	game_time.all_days = float(data.get(SaveFormat.SECTION_DAYS, _GAME_START_DAYS))
 	rebalance_workplaces()
 
-func save_game() -> void:
-	print("save_game")
-	var file := FileAccess.open(SAVE_FILE_PATH, FileAccess.WRITE)
-	var data = {
-		_SERKEY_VERSION: SAVE_VERSION,
-		_SERKEY_STRUCTURE_MANAGER: structure_manager.serialize(),
-		_SERKEY_CHARACTER_MANAGER: character_manager.serialize(),
-		_SERKEY_TERRAIN: terrain.serialize(),
-		_SERKEY_DAYS: game_time.all_days,
-		_SERKEY_EMPLOYMENT: employment.serialize(),
-	}
-	file.store_var(data)
+func _write_save() -> void:
+	var file := FileAccess.open(_SAVE_TEMP_PATH, FileAccess.WRITE)
+	if file == null:
+		_save_pending = true
+		return
+	var stored := file.store_var({
+		SaveFormat.SECTION_VERSION: SaveFormat.VERSION,
+		SaveFormat.SECTION_STRUCTURES: structure_manager.serialize(),
+		SaveFormat.SECTION_CHARACTERS: character_manager.serialize(),
+		SaveFormat.SECTION_TERRAIN: terrain.serialize(),
+		SaveFormat.SECTION_DAYS: game_time.all_days,
+		SaveFormat.SECTION_EMPLOYMENT: employment.serialize(),
+	})
+	file.flush()
+	file.close()
+	if not stored or DirAccess.rename_absolute(_SAVE_TEMP_PATH, SAVE_FILE_PATH) != OK:
+		_save_pending = true
 
 func _clear() -> void:
 	game_time.all_days = 0

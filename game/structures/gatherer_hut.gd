@@ -3,7 +3,7 @@ class_name GathererHut
 
 const SLOT_COUNT := 2
 const BERRY_CAPACITY := 10
-const _KEY_WORKER_IDS := 1
+const KEY_WORKER_IDS := 1
 const _KEY_PRIORITY := 2
 const _KEY_PRIORITY_ORDER := 3
 

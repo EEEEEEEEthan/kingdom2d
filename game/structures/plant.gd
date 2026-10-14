@@ -16,7 +16,7 @@ func _serialize() -> Dictionary:
 	}
 
 func _deserialize(_data: Dictionary) -> void:
-	growth = _data[_KEY_GROWTH]
+	growth = float(_data.get(_KEY_GROWTH, 0.0))
 
 func _on_growth_changed() -> void:
 	pass

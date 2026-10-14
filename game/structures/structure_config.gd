@@ -9,7 +9,7 @@ enum TypeId {
 	BUSH = 4,
 	GATHERER_HUT = 5,
 	WAREHOUSE = 6,
-	# 7 是旧档难民棚，见 Structure._LEGACY_REFUGEE_SHELTER。
+	# 7 是旧档难民棚，见 Structure.LEGACY_REFUGEE_SHELTER。
 	LUMBER_CAMP = 8,
 	BUILDERS_GUILD = 9,
 	TIMBER_FRAME_COTTAGE = 10,

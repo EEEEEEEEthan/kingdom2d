@@ -3,9 +3,10 @@ class_name CharacterAiTaskStack
 
 ## 任务自底向上执行；栈顶返回 FAILED 时整栈废弃。
 
-const _KEY_TASKS = 1
+const KEY_TASKS = 1
 
 var _tasks: Array[CharacterAiTask] = []
+var _preserved: Array[Dictionary] = []
 
 func is_empty() -> bool:
 	return _tasks.is_empty()
@@ -47,12 +48,23 @@ func serialize() -> Dictionary:
 	var serialized_tasks: Array[Dictionary] = []
 	for task in _tasks:
 		serialized_tasks.append(task.serialize())
-	return {_KEY_TASKS: serialized_tasks}
+	for raw in _preserved:
+		serialized_tasks.append(raw)
+	return {KEY_TASKS: serialized_tasks}
 
 func deserialize(data: Dictionary, context: CharacterAiContext) -> void:
 	abandon(context)
-	for task_data in data.get(_KEY_TASKS, []):
-		var task: CharacterAiTask = CharacterAiTask.deserialize(task_data as Dictionary)
+	_preserved.clear()
+	var listed = data.get(KEY_TASKS, [])
+	if not listed is Array:
+		return
+	for task_data in listed:
+		if not task_data is Dictionary:
+			continue
+		if CharacterAiTask.is_unknown_type(task_data):
+			_preserved.append(task_data.duplicate(true))
+			continue
+		var task := CharacterAiTask.deserialize(task_data)
 		if task:
 			push(task, context)
 

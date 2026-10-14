@@ -2,13 +2,13 @@
 extends Node2D
 class_name Structure
 
-const _KEY_TYPE_ID = 1
-const _KEY_INSTANCE_ID = 2
-const _KEY_DATA = 3
-const _KEY_CELL_INDEX = 4
-const _KEY_HP = 5
+const KEY_TYPE_ID = 1
+const KEY_INSTANCE_ID = 2
+const KEY_DATA = 3
+const KEY_CELL_INDEX = 4
+const KEY_HP = 5
 const _KEY_CONTAINER = 6
-const _LEGACY_REFUGEE_SHELTER = 7
+const LEGACY_REFUGEE_SHELTER = 7
 const _KEY_LEVEL = 8
 const _KEY_CONSTRUCTION = 9
 
@@ -49,25 +49,33 @@ var hp: int
 			outline.show_outline = value
 
 static func deserialize(data: Dictionary, parent: Node, save_version := 0) -> Structure:
-	var raw_type := int(data[_KEY_TYPE_ID])
-	if save_version < 1 and raw_type == _LEGACY_REFUGEE_SHELTER:
+	if not data.has(KEY_TYPE_ID) or not data.has(KEY_INSTANCE_ID) or not data.has(KEY_CELL_INDEX):
+		return null
+	var raw_type := int(data[KEY_TYPE_ID])
+	if save_version < 1 and raw_type == LEGACY_REFUGEE_SHELTER:
 		raw_type = StructureConfig.TypeId.SUNKEN_FLOOR_THATCH_HOVEL
 	var type_id := raw_type as StructureConfig.TypeId
 	var structure_config = StructureConfig.configs_by_id.get(type_id)
 	if not structure_config:
 		printerr("type_id not found: %s" % type_id)
 		return null
+	var cell_index := int(data[KEY_CELL_INDEX])
 	var structure := structure_config.instantiate() as Structure
 	parent.add_child(structure)
-	structure.id = data[_KEY_INSTANCE_ID]
-	structure.cell_index = data[_KEY_CELL_INDEX]
-	structure.hp = data[_KEY_HP]
-	structure.container = ItemContainer.deserialize(data.get(_KEY_CONTAINER, {}))
+	structure.id = int(data[KEY_INSTANCE_ID])
+	structure.cell_index = cell_index
+	structure.hp = int(data.get(KEY_HP, 0))
+	var container_data = data.get(_KEY_CONTAINER, {})
+	if container_data is Dictionary:
+		structure.container = ItemContainer.deserialize(container_data)
 	structure.level = int(data.get(_KEY_LEVEL, 1))
-	var construction: Dictionary = data.get(_KEY_CONSTRUCTION, {})
-	structure.construction_ordered = bool(construction.get(_CONSTRUCTION_ORDERED, false))
-	structure.construction_work_units = int(construction.get(_CONSTRUCTION_WORK_UNITS, 0))
-	structure._deserialize(data[_KEY_DATA])
+	var construction = data.get(_KEY_CONSTRUCTION, {})
+	if construction is Dictionary:
+		structure.construction_ordered = bool(construction.get(_CONSTRUCTION_ORDERED, false))
+		structure.construction_work_units = int(construction.get(_CONSTRUCTION_WORK_UNITS, 0))
+	var payload = data.get(KEY_DATA, {})
+	if payload is Dictionary:
+		structure._deserialize(payload)
 	structure._ensure_scaffold()
 	structure.sync_scaffold()
 	structure._sync_built_visual()
@@ -78,11 +86,11 @@ func _deserialize(_data: Dictionary) -> void:
 
 func serialize() -> Dictionary:
 	return {
-		_KEY_TYPE_ID: int(config.id),
-		_KEY_INSTANCE_ID: id,
-		_KEY_DATA: _serialize(),
-		_KEY_CELL_INDEX: cell_index,
-		_KEY_HP: hp,
+		KEY_TYPE_ID: int(config.id),
+		KEY_INSTANCE_ID: id,
+		KEY_DATA: _serialize(),
+		KEY_CELL_INDEX: cell_index,
+		KEY_HP: hp,
 		_KEY_CONTAINER: container.serialize(),
 		_KEY_LEVEL: level,
 		_KEY_CONSTRUCTION: {
@@ -144,7 +152,7 @@ func finish_construction() -> void:
 	if game:
 		if self is GathererHut or self is LumberCamp or self is BuildersGuild:
 			game.rebalance_workplaces()
-		game.save_game()
+		game.request_save()
 	_on_construction_finished()
 
 
