@@ -93,6 +93,7 @@ func load_game() -> void:
 	terrain.deserialize(data.get(_SERKEY_TERRAIN, {}))
 	structure_manager.deserialize(data.get(_SERKEY_STRUCTURE_MANAGER, {}), save_version)
 	character_manager.deserialize(data.get(_SERKEY_CHARACTER_MANAGER, {}))
+	structure_manager.release_missing_occupants(character_manager.characters)
 	if data.has(_SERKEY_EMPLOYMENT):
 		employment.deserialize(data[_SERKEY_EMPLOYMENT])
 	else:

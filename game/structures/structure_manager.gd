@@ -61,6 +61,13 @@ func occupant_of(structure_id: int) -> int:
 	return _occupant_by_structure_id.get(structure_id, 0)
 
 
+## 读档后调用。只看居民 id 还在不在 characters 里，不在就解除占用。
+func release_missing_occupants(characters: Dictionary) -> void:
+	for structure_id in _occupant_by_structure_id.keys():
+		if not characters.has(int(_occupant_by_structure_id[structure_id])):
+			_occupant_by_structure_id.erase(structure_id)
+
+
 func get_structure_by_id(structure_id: int) -> Structure:
 	return structures.get(structure_id)
 
