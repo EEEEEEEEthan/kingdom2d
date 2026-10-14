@@ -78,7 +78,27 @@ func cancel_upgrade() -> void:
 		return
 	upgrade_ordered = false
 	work_units = 0
+	_return_upgrade_logs()
 	sync_scaffold()
+
+
+## 取消订单时把已送到的原木退回仓库。没有仓库可退则留在住房里，方便再下单或之后搬走。
+func _return_upgrade_logs() -> void:
+	var amount := log_count()
+	if amount <= 0:
+		return
+	var game := Game.find(self)
+	if game == null:
+		return
+	var warehouse := Warehouse.nearest(
+		game.structure_manager,
+		cell_index,
+		ItemConfig.TypeId.LOG,
+	)
+	if warehouse == null:
+		return
+	container.take(ItemConfig.TypeId.LOG, amount)
+	warehouse.restore_logs(amount)
 
 
 func promote_timber() -> void:

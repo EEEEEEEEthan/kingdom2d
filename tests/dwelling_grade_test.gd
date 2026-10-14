@@ -29,6 +29,9 @@ func _run() -> void:
 	if not await _cancel_build_ok(game):
 		quit(1)
 		return
+	if not await _cancel_keeps_logs_without_warehouse_ok(game):
+		quit(1)
+		return
 	print("dwelling_grade_ok")
 	quit(0)
 
@@ -185,6 +188,9 @@ func _cancel_build_ok(game) -> bool:
 	await process_frame
 	var home := _home(game, 80)
 	game.spawn_resident_at_cell(80).set_process(false)
+	var warehouse := StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(warehouse, 84)
+	warehouse.set_storage_policy(ItemConfig.TypeId.LOG, Warehouse.StoragePolicy.WITHDRAW_ONLY)
 	home.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
 	home.order_upgrade()
 	home.container.add(ItemConfig.TypeId.LOG, 4)
@@ -194,8 +200,31 @@ func _cancel_build_ok(game) -> bool:
 	if home.upgrade_ordered or home.work_units != 0:
 		push_error("食物不够应取消未完成的升级")
 		return false
-	if home.log_count() != 4 or home.level != 1:
-		push_error("取消升级应留下已送到的原木，原木 %s level %s" % [home.log_count(), home.level])
+	if home.log_count() != 0 or home.level != 1:
+		push_error("取消升级应退回已送到的原木，住房原木 %s level %s" % [home.log_count(), home.level])
+		return false
+	if warehouse.container.count_of(ItemConfig.TypeId.LOG) != 4:
+		push_error("原木应退回仓库，仓 %s" % warehouse.container.count_of(ItemConfig.TypeId.LOG))
+		return false
+	return true
+
+
+func _cancel_keeps_logs_without_warehouse_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var home := _home(game, 90)
+	game.spawn_resident_at_cell(90).set_process(false)
+	home.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	home.order_upgrade()
+	home.container.add(ItemConfig.TypeId.LOG, 3)
+	home.work_units = 1
+	home.container.take(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	home.maintain_grade()
+	if home.upgrade_ordered or home.work_units != 0:
+		push_error("无仓库时也应取消升级")
+		return false
+	if home.log_count() != 3:
+		push_error("仓库不收时应把原木留在住房，原木 %s" % home.log_count())
 		return false
 	return true
 
