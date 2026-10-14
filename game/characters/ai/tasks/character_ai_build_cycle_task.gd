@@ -1,7 +1,8 @@
 extends CharacterAiTask
 class_name CharacterAiBuildCycleTask
 
-## 建筑工的一轮：去工会，要么去仓库搬还缺的原木，要么在工地干满 10 秒。
+## 建筑工的一轮：去工会，要么去仓库搬原木，要么在工地干满 10 秒。
+## 多人可以各搬一整份。送到工地后只留下还缺的，多的退回仓库。
 ## 一轮结束就收工；还在工时就再来一轮。材料没齐就在工会等。
 ## 工地包括：玩家放下后待建的建筑，以及半穴茅舍升木架。
 
@@ -10,7 +11,6 @@ const KEY_ELAPSED_SECONDS = 2
 const KEY_SITE_ID = 3
 const KEY_WAREHOUSE_ID = 4
 const KEY_GUILD_ID = 5
-const KEY_RESERVED = 6
 const KEY_WAIT_KIND = 7
 const KEY_PACE_FAR = 8
 const KEY_KNOCKS = 9
@@ -23,6 +23,7 @@ const _PHASE_TO_SITE := 4
 const _PHASE_BUILD := 5
 const _PHASE_BACK := 6
 const _PHASE_WAIT := 7
+const _PHASE_RETURN := 8
 
 const _INSIDE_SECONDS := 0.4
 const _WAIT_SECONDS := 2.0
@@ -34,7 +35,6 @@ var _elapsed_seconds := 0.0
 var _site_id := 0
 var _warehouse_id := 0
 var _guild_id := 0
-var _reserved := 0
 var _wait_kind := 0
 var _pace_far := true
 var _knocks := 0
@@ -46,7 +46,6 @@ func _init(save_payload: Dictionary) -> void:
 	_site_id = save_payload.get(KEY_SITE_ID, 0)
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
 	_guild_id = save_payload.get(KEY_GUILD_ID, 0)
-	_reserved = save_payload.get(KEY_RESERVED, 0)
 	_wait_kind = save_payload.get(KEY_WAIT_KIND, 0)
 	_pace_far = bool(save_payload.get(KEY_PACE_FAR, true))
 	_knocks = save_payload.get(KEY_KNOCKS, 0)
@@ -66,6 +65,8 @@ func activity_text() -> String:
 			return "正在去仓库取原木"
 		_PHASE_HAUL:
 			return "正在搬运原木"
+		_PHASE_RETURN:
+			return "正在退回原木"
 		_PHASE_TO_SITE:
 			return "正在去工地"
 		_PHASE_BUILD:
@@ -107,6 +108,9 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		_PHASE_HAUL:
 			if not _haul(delta_seconds, context, character):
 				return Status.FAILED
+		_PHASE_RETURN:
+			if not _return_surplus(delta_seconds, context, character):
+				return Status.FAILED
 		_PHASE_TO_SITE:
 			var site := _site(context)
 			if site == null or not site.builder_logs_ready():
@@ -144,21 +148,14 @@ func on_exit(context: CharacterAiContext) -> void:
 	_reset_pose(character)
 	if not character.visible and not character.indoors:
 		character.visible = true
-	if _reserved <= 0:
-		return
 	var carried := character.carried_items.count_of(ItemConfig.TypeId.LOG)
 	var site := _site(context)
 	var warehouse := _warehouse(context)
 	if carried > 0 and warehouse != null:
 		character.carried_items.take(ItemConfig.TypeId.LOG, carried)
-		warehouse.container.add(ItemConfig.TypeId.LOG, carried)
+		warehouse.restore_logs(carried)
 	elif carried > 0 and site != null:
-		character.carried_items.take(ItemConfig.TypeId.LOG, carried)
-		site.container.add(ItemConfig.TypeId.LOG, carried)
-		site.sync_scaffold()
-	if site != null:
-		site.release_logs(_reserved)
-	_reserved = 0
+		site.accept_builder_logs(character.carried_items)
 
 
 func _decide(context: CharacterAiContext, character: Character, guild: BuildersGuild) -> void:
@@ -204,8 +201,6 @@ func _walk_to_warehouse(delta_seconds: float, context: CharacterAiContext, chara
 	if moved <= 0:
 		_phase = _PHASE_TO_GUILD
 		return true
-	_reserved = moved
-	site.reserve_logs(moved)
 	_phase = _PHASE_HAUL
 	return true
 
@@ -217,13 +212,10 @@ func _haul(delta_seconds: float, context: CharacterAiContext, character: Charact
 	character.visible = true
 	if not character.advance_toward_world_x(delta_seconds, _world_x(site)):
 		return true
-	var moved := character.carried_items.count_of(ItemConfig.TypeId.LOG)
-	if moved > 0:
-		character.carried_items.take(ItemConfig.TypeId.LOG, moved)
-		site.container.add(ItemConfig.TypeId.LOG, moved)
-	site.release_logs(_reserved)
-	_reserved = 0
-	site.sync_scaffold()
+	site.accept_builder_logs(character.carried_items)
+	if character.carried_items.count_of(ItemConfig.TypeId.LOG) > 0:
+		_phase = _PHASE_RETURN
+		return true
 	if site.builder_logs_ready():
 		if site.builder_work_units_required() <= 0:
 			site.add_work_unit()
@@ -232,6 +224,26 @@ func _haul(delta_seconds: float, context: CharacterAiContext, character: Charact
 		_phase = _PHASE_BUILD
 		_elapsed_seconds = 0.0
 		_knocks = 0
+		_pace_far = true
+		return true
+	_phase = _PHASE_BACK
+	return true
+
+
+func _return_surplus(delta_seconds: float, context: CharacterAiContext, character: Character) -> bool:
+	var warehouse := _warehouse(context)
+	if warehouse == null:
+		return false
+	character.visible = true
+	if not character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
+		return true
+	var carried := character.carried_items.count_of(ItemConfig.TypeId.LOG)
+	if carried > 0:
+		character.carried_items.take(ItemConfig.TypeId.LOG, carried)
+		warehouse.restore_logs(carried)
+	var site := _site(context)
+	if site != null and site.builder_logs_ready():
+		_phase = _PHASE_TO_SITE
 		_pace_far = true
 		return true
 	_phase = _PHASE_BACK
@@ -287,7 +299,6 @@ func _serialize_payload() -> Dictionary:
 		KEY_SITE_ID: _site_id,
 		KEY_WAREHOUSE_ID: _warehouse_id,
 		KEY_GUILD_ID: _guild_id,
-		KEY_RESERVED: _reserved,
 		KEY_WAIT_KIND: _wait_kind,
 		KEY_PACE_FAR: _pace_far,
 		KEY_KNOCKS: _knocks,

@@ -29,6 +29,12 @@ func _run() -> void:
 	if not await _abandon_ok(game):
 		quit(1)
 		return
+	if not await _surplus_returns_ok(game):
+		quit(1)
+		return
+	if not await _full_site_keeps_carried_ok(game):
+		quit(1)
+		return
 	if not await _upgrade_ok(game):
 		quit(1)
 		return
@@ -64,9 +70,8 @@ func _save_progress_ok(game) -> bool:
 	hovel.container.add(ItemConfig.TypeId.LOG, 5)
 	hovel.container.add(ItemConfig.TypeId.BERRY, 2)
 	hovel.work_units = 1
-	hovel.reserve_logs(3)
 	var restored = Structure.deserialize(hovel.serialize(), game) as SunkenFloorThatchHovel
-	if restored == null or not restored.upgrade_ordered or restored.work_units != 1 or restored.logs_inbound != 3:
+	if restored == null or not restored.upgrade_ordered or restored.work_units != 1:
 		push_error("升级进度应进存档")
 		return false
 	if restored.log_count() != 5 or restored.container.count_of(ItemConfig.TypeId.BERRY) != 2:
@@ -143,8 +148,101 @@ func _abandon_ok(game) -> bool:
 		push_error("应进入搬运，活动 %s 携带 %s" % [builder.current_activity(), builder.carried_items.count_of(ItemConfig.TypeId.LOG)])
 		return false
 	builder.abandon_ai_tasks()
-	if near.container.count_of(ItemConfig.TypeId.LOG) != 20 or hovel.log_count() != 0 or hovel.logs_inbound != 0:
-		push_error("中断搬运应把原木退回仓库，仓 %s 茅舍 %s 在途 %s 携带 %s" % [near.container.count_of(ItemConfig.TypeId.LOG), hovel.log_count(), hovel.logs_inbound, builder.carried_items.count_of(ItemConfig.TypeId.LOG)])
+	if near.container.count_of(ItemConfig.TypeId.LOG) != 20 or hovel.log_count() != 0 or builder.carried_items.count_of(ItemConfig.TypeId.LOG) != 0:
+		push_error("中断搬运应把原木退回仓库，仓 %s 茅舍 %s 携带 %s" % [near.container.count_of(ItemConfig.TypeId.LOG), hovel.log_count(), builder.carried_items.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	return true
+
+
+func _surplus_returns_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var guild = StructureConfig.builders_guild.instantiate()
+	var hovel = StructureConfig.sunken_floor_thatch_hovel.instantiate() as SunkenFloorThatchHovel
+	var warehouse = StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(guild, 100)
+	game.structure_manager.add_structure(hovel, 106)
+	game.structure_manager.add_structure(warehouse, 112)
+	var left = game.spawn_resident_at_cell(98)
+	var right = game.spawn_resident_at_cell(102)
+	left.set_process(false)
+	right.set_process(false)
+	hovel.container.add(ItemConfig.TypeId.BERRY, 4)
+	warehouse.container.add(ItemConfig.TypeId.LOG, 40)
+	hovel.order_upgrade()
+	_set_hour(game, 12)
+	var crew: Array = [left, right]
+	var saw_return := false
+	for _step in 800:
+		for person in crew:
+			person._process(0.5)
+		if hovel.log_count() > SunkenFloorThatchHovel.LOG_COST:
+			push_error("住房里的原木不能超过 %s，实际 %s" % [SunkenFloorThatchHovel.LOG_COST, hovel.log_count()])
+			return false
+		var returning: Character = null
+		if left.current_activity() == "正在退回原木":
+			returning = left
+		elif right.current_activity() == "正在退回原木":
+			returning = right
+		if returning != null:
+			saw_return = true
+		if saw_return and hovel.log_count() == SunkenFloorThatchHovel.LOG_COST and warehouse.container.count_of(ItemConfig.TypeId.LOG) == 20 and left.carried_items.count_of(ItemConfig.TypeId.LOG) == 0 and right.carried_items.count_of(ItemConfig.TypeId.LOG) == 0:
+			break
+	if not saw_return or hovel.log_count() != 20 or warehouse.container.count_of(ItemConfig.TypeId.LOG) != 20:
+		push_error("多搬的原木应退回仓库，茅舍 %s 仓 %s 退回 %s 活动 %s %s 携带 %s %s" % [hovel.log_count(), warehouse.container.count_of(ItemConfig.TypeId.LOG), saw_return, left.current_activity(), right.current_activity(), left.carried_items.count_of(ItemConfig.TypeId.LOG), right.carried_items.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	if Food.stored(hovel) != 4 or not hovel.get_node("Scaffold").visible:
+		push_error("退回后应留下浆果并搭起脚手架")
+		return false
+	warehouse.set_storage_policy(ItemConfig.TypeId.LOG, Warehouse.StoragePolicy.WITHDRAW_ONLY)
+	warehouse.container.set_count(ItemConfig.TypeId.LOG, 1000)
+	warehouse.restore_logs(20)
+	if warehouse.container.count_of(ItemConfig.TypeId.LOG) != 1020 or hovel.log_count() != 20:
+		push_error("退回应允许爆仓，仓 %s 茅舍 %s" % [warehouse.container.count_of(ItemConfig.TypeId.LOG), hovel.log_count()])
+		return false
+	return true
+
+
+func _full_site_keeps_carried_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var guild = StructureConfig.builders_guild.instantiate()
+	var hovel = StructureConfig.sunken_floor_thatch_hovel.instantiate() as SunkenFloorThatchHovel
+	game.structure_manager.add_structure(guild, 100)
+	game.structure_manager.add_structure(hovel, 106)
+	var builder = game.spawn_resident_at_cell(98)
+	builder.set_process(false)
+	hovel.order_upgrade()
+	hovel.container.add(ItemConfig.TypeId.LOG, SunkenFloorThatchHovel.LOG_COST)
+	builder.carried_items.add(ItemConfig.TypeId.LOG, 8)
+	builder.push_ai_task(CharacterAiBuildCycleTask.new({
+		CharacterAiBuildCycleTask.KEY_PHASE: 3,
+		CharacterAiBuildCycleTask.KEY_SITE_ID: hovel.id,
+		CharacterAiBuildCycleTask.KEY_GUILD_ID: guild.id,
+	}))
+	builder.abandon_ai_tasks()
+	if hovel.log_count() != SunkenFloorThatchHovel.LOG_COST or builder.carried_items.count_of(ItemConfig.TypeId.LOG) != 8:
+		push_error("没有仓库且工地已满时，多搬的原木应留在身上，茅舍 %s 携带 %s" % [hovel.log_count(), builder.carried_items.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	game._clear()
+	await process_frame
+	guild = StructureConfig.builders_guild.instantiate()
+	hovel = StructureConfig.sunken_floor_thatch_hovel.instantiate() as SunkenFloorThatchHovel
+	game.structure_manager.add_structure(guild, 100)
+	game.structure_manager.add_structure(hovel, 106)
+	builder = game.spawn_resident_at_cell(98)
+	builder.set_process(false)
+	hovel.order_upgrade()
+	hovel.container.add(ItemConfig.TypeId.LOG, 15)
+	builder.carried_items.add(ItemConfig.TypeId.LOG, 10)
+	builder.push_ai_task(CharacterAiBuildCycleTask.new({
+		CharacterAiBuildCycleTask.KEY_PHASE: 3,
+		CharacterAiBuildCycleTask.KEY_SITE_ID: hovel.id,
+		CharacterAiBuildCycleTask.KEY_GUILD_ID: guild.id,
+	}))
+	builder.abandon_ai_tasks()
+	if hovel.log_count() != SunkenFloorThatchHovel.LOG_COST or builder.carried_items.count_of(ItemConfig.TypeId.LOG) != 5:
+		push_error("没有仓库时只补缺口，剩下的留在身上，茅舍 %s 携带 %s" % [hovel.log_count(), builder.carried_items.count_of(ItemConfig.TypeId.LOG)])
 		return false
 	return true
 

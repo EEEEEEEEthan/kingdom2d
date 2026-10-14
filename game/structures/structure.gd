@@ -14,7 +14,6 @@ const _KEY_CONSTRUCTION = 9
 
 const _CONSTRUCTION_ORDERED = 1
 const _CONSTRUCTION_WORK_UNITS = 2
-const _CONSTRUCTION_LOGS_INBOUND = 3
 
 ## 一个建造单元的秒数；初始修建与茅舍升级共用。
 const WORK_UNIT_SECONDS := 10.0
@@ -26,7 +25,6 @@ var container := ItemContainer.new()
 var level := 1
 var construction_ordered := false
 var construction_work_units := 0
-var construction_logs_inbound := 0
 var _scaffold: Node2D
 var _knock_tween: Tween
 var cell_index: int:
@@ -69,7 +67,6 @@ static func deserialize(data: Dictionary, parent: Node, save_version := 0) -> St
 	var construction: Dictionary = data.get(_KEY_CONSTRUCTION, {})
 	structure.construction_ordered = bool(construction.get(_CONSTRUCTION_ORDERED, false))
 	structure.construction_work_units = int(construction.get(_CONSTRUCTION_WORK_UNITS, 0))
-	structure.construction_logs_inbound = int(construction.get(_CONSTRUCTION_LOGS_INBOUND, 0))
 	structure._deserialize(data[_KEY_DATA])
 	structure._ensure_scaffold()
 	structure.sync_scaffold()
@@ -91,7 +88,6 @@ func serialize() -> Dictionary:
 		_KEY_CONSTRUCTION: {
 			_CONSTRUCTION_ORDERED: construction_ordered,
 			_CONSTRUCTION_WORK_UNITS: construction_work_units,
-			_CONSTRUCTION_LOGS_INBOUND: construction_logs_inbound,
 		},
 	}
 
@@ -123,7 +119,6 @@ func begin_initial_upgrade() -> void:
 	level = 0
 	construction_ordered = true
 	construction_work_units = 0
-	construction_logs_inbound = 0
 	_ensure_scaffold()
 	sync_scaffold()
 	_sync_built_visual()
@@ -139,7 +134,6 @@ func finish_construction() -> void:
 		container.take(ItemConfig.TypeId.LOG, cost)
 	construction_ordered = false
 	construction_work_units = 0
-	construction_logs_inbound = 0
 	level = 1
 	if _knock_tween and _knock_tween.is_valid():
 		_knock_tween.kill()
@@ -181,17 +175,19 @@ func builder_logs_ready() -> bool:
 func builder_logs_still_needed() -> int:
 	if not builder_job_active() or builder_logs_ready():
 		return 0
-	return maxi(0, builder_log_cost() - container.count_of(ItemConfig.TypeId.LOG) - construction_logs_inbound)
+	return maxi(0, builder_log_cost() - container.count_of(ItemConfig.TypeId.LOG))
 
 
-func reserve_logs(amount: int) -> void:
-	if amount <= 0:
-		return
-	construction_logs_inbound += amount
-
-
-func release_logs(amount: int) -> void:
-	construction_logs_inbound = maxi(0, construction_logs_inbound - amount)
+## 只收下还缺的原木。多出来的留在来源里，不丢。
+func accept_builder_logs(source: ItemContainer) -> int:
+	var room := maxi(0, builder_log_cost() - container.count_of(ItemConfig.TypeId.LOG))
+	var kept := mini(source.count_of(ItemConfig.TypeId.LOG), room)
+	if kept <= 0:
+		return 0
+	source.take(ItemConfig.TypeId.LOG, kept)
+	container.add(ItemConfig.TypeId.LOG, kept)
+	sync_scaffold()
+	return kept
 
 
 func add_work_unit() -> void:
