@@ -71,7 +71,12 @@ func serialize() -> Dictionary:
 
 func deserialize(data: Dictionary) -> void:
 	clear()
-	for pair in data.get(_KEY_PAIRS, []):
+	var pairs = data.get(_KEY_PAIRS, [])
+	if not pairs is Array:
+		return
+	for pair in pairs:
+		if not pair is Array or pair.size() < 2:
+			continue
 		assign(int(pair[0]), int(pair[1]))
 
 
@@ -115,10 +120,17 @@ func _pairs() -> Array:
 
 func _legacy_worker_lists(manager: Dictionary) -> Dictionary:
 	var lists: Dictionary = {}
-	for item in manager.get(StructureManager._KEY_STRUCTURES, []):
-		var structure_id := int(item.get(Structure._KEY_INSTANCE_ID, 0))
-		var payload: Dictionary = item.get(Structure._KEY_DATA, {})
-		var raw = payload.get(GathererHut._KEY_WORKER_IDS, [])
+	var listed = manager.get(StructureManager.KEY_STRUCTURES, [])
+	if not listed is Array:
+		return lists
+	for item in listed:
+		if not item is Dictionary:
+			continue
+		var structure_id := int(item.get(Structure.KEY_INSTANCE_ID, 0))
+		var payload = item.get(Structure.KEY_DATA, {})
+		if not payload is Dictionary:
+			continue
+		var raw = payload.get(GathererHut.KEY_WORKER_IDS, [])
 		if raw is Array:
 			if raw.is_empty():
 				continue
@@ -133,9 +145,14 @@ func _legacy_worker_lists(manager: Dictionary) -> Dictionary:
 
 func _legacy_workplace_claims(manager: Dictionary) -> Dictionary:
 	var claims: Dictionary = {}
-	for item in manager.get(CharacterManager._KEY_CHARACTERS, []):
-		var character_id := int(item.get(Character._KEY_ID, 0))
-		var structure_id := int(item.get(Character._KEY_WORKPLACE_STRUCTURE_ID, 0))
+	var listed = manager.get(CharacterManager.KEY_CHARACTERS, [])
+	if not listed is Array:
+		return claims
+	for item in listed:
+		if not item is Dictionary:
+			continue
+		var character_id := int(item.get(Character.KEY_ID, 0))
+		var structure_id := int(item.get(Character.KEY_WORKPLACE_STRUCTURE_ID, 0))
 		if character_id > 0 and structure_id > 0:
 			claims[character_id] = structure_id
 	return claims

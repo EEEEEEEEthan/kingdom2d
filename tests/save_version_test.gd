@@ -10,15 +10,27 @@ func _run() -> void:
 		DirAccess.open("user://").remove(Game.SAVE_FILE_PATH.get_file())
 	var file := FileAccess.open(Game.SAVE_FILE_PATH, FileAccess.WRITE)
 	file.store_var({
-		1: {
-			1: 4,
-			2: [
-				{1: 7, 2: 2, 3: {}, 4: 8, 5: 32},
-				{1: 99, 2: 3, 3: {}, 4: 9, 5: 32},
+		SaveFormat.SECTION_STRUCTURES: {
+			StructureManager.KEY_NEXT_ID: 4,
+			StructureManager.KEY_STRUCTURES: [
+				{
+					Structure.KEY_TYPE_ID: Structure.LEGACY_REFUGEE_SHELTER,
+					Structure.KEY_INSTANCE_ID: 2,
+					Structure.KEY_DATA: {},
+					Structure.KEY_CELL_INDEX: 8,
+					Structure.KEY_HP: 32,
+				},
+				{
+					Structure.KEY_TYPE_ID: 99,
+					Structure.KEY_INSTANCE_ID: 3,
+					Structure.KEY_DATA: {},
+					Structure.KEY_CELL_INDEX: 9,
+					Structure.KEY_HP: 32,
+				},
 			],
 		},
-		3: {},
-		2: {},
+		SaveFormat.SECTION_TERRAIN: {},
+		SaveFormat.SECTION_CHARACTERS: {},
 	})
 	file.close()
 	var game := (load("res://game/game.tscn") as PackedScene).instantiate() as Game
@@ -37,10 +49,11 @@ func _run() -> void:
 		push_error("未知建筑不应登记")
 		quit(1)
 		return
-	game.save_game()
+	game.request_save()
+	await process_frame
 	var saved := FileAccess.open(Game.SAVE_FILE_PATH, FileAccess.READ).get_var() as Dictionary
-	if int(saved.get(6, 0)) != Game.SAVE_VERSION:
-		push_error("新存档应写存档号 %s，实际 %s" % [Game.SAVE_VERSION, saved.get(6, 0)])
+	if int(saved.get(SaveFormat.SECTION_VERSION, 0)) != SaveFormat.VERSION:
+		push_error("新存档应写存档号 %s，实际 %s" % [SaveFormat.VERSION, saved.get(SaveFormat.SECTION_VERSION, 0)])
 		quit(1)
 		return
 	print("save_version_ok")

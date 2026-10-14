@@ -8,8 +8,8 @@ var _elapsed_seconds: float
 var _duration_seconds: float
 
 func _init(save_payload: Dictionary) -> void:
-	_duration_seconds = save_payload[KEY_DURATION_SECONDS]
-	_elapsed_seconds = save_payload.get(KEY_ELAPSED_SECONDS, 0.0)
+	_duration_seconds = float(save_payload[KEY_DURATION_SECONDS])
+	_elapsed_seconds = float(save_payload.get(KEY_ELAPSED_SECONDS, 0.0))
 
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.WAIT_DURATION

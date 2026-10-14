@@ -6,7 +6,7 @@ const KEY_TARGET_WORLD_X = 1
 var _target_world_x: float
 
 func _init(save_payload: Dictionary) -> void:
-	_target_world_x = save_payload[KEY_TARGET_WORLD_X]
+	_target_world_x = float(save_payload[KEY_TARGET_WORLD_X])
 
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X

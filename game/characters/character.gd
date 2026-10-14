@@ -1,12 +1,12 @@
 extends Node2D
 class_name Character
 
-const _KEY_ID = 1
+const KEY_ID = 1
 const _KEY_POSITION = 2
-const _KEY_AI_TASK_STACK = 3
+const KEY_AI_TASK_STACK = 3
 const _KEY_HOME_CELL_INDEX = 4
 const _KEY_INDOORS = 5
-const _KEY_WORKPLACE_STRUCTURE_ID = 6 # 旧档字段，关系已改由 WorkplaceIndex 保存
+const KEY_WORKPLACE_STRUCTURE_ID = 6 # 旧档字段，关系已改由 WorkplaceIndex 保存
 const _KEY_CARRIED_ITEMS = 7
 const _KEY_FOOD_DAY = 8
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
@@ -82,22 +82,29 @@ func advance_toward_world_x(delta_seconds: float, target_world_x: float) -> bool
 	position.x += signf(offset) * step
 	return false
 
-func deserialize(data: Dictionary) -> void:
-	id = data[_KEY_ID]
-	position = Vector2(data[_KEY_POSITION], 0)
-	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
-	indoors = data.get(_KEY_INDOORS, false)
-	carried_items = ItemContainer.deserialize(data.get(_KEY_CARRIED_ITEMS, {}))
-	_food_day = data.get(_KEY_FOOD_DAY, -1)
+func deserialize(data: Dictionary) -> bool:
+	if not data.has(KEY_ID):
+		return false
+	id = int(data[KEY_ID])
+	position = Vector2(float(data.get(_KEY_POSITION, 0.0)), 0)
+	home_cell_index = int(data.get(_KEY_HOME_CELL_INDEX, -1))
+	indoors = bool(data.get(_KEY_INDOORS, false))
+	var carried = data.get(_KEY_CARRIED_ITEMS, {})
+	if carried is Dictionary:
+		carried_items = ItemContainer.deserialize(carried)
+	_food_day = int(data.get(_KEY_FOOD_DAY, -1))
 	visible = not indoors
 	_schedule_initialized = false
-	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
+	var stack = data.get(KEY_AI_TASK_STACK, {})
+	if stack is Dictionary:
+		ai_task_stack.deserialize(stack, _get_ai_context())
+	return true
 
 func serialize() -> Dictionary:
 	return {
-		_KEY_ID: id,
+		KEY_ID: id,
 		_KEY_POSITION: position.x,
-		_KEY_AI_TASK_STACK: ai_task_stack.serialize(),
+		KEY_AI_TASK_STACK: ai_task_stack.serialize(),
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
 		_KEY_CARRIED_ITEMS: carried_items.serialize(),

@@ -524,15 +524,15 @@ func _dangling_ids_ok(game) -> bool:
 		push_error("清掉失效关系后空位应重新分配 %s" % [game.employment.workers_of(hut.id)])
 		return false
 	var legacy_structures := {
-		StructureManager._KEY_STRUCTURES: [{
-			Structure._KEY_INSTANCE_ID: hut.id,
-			Structure._KEY_DATA: {GathererHut._KEY_WORKER_IDS: [resident.id, 404]},
+		StructureManager.KEY_STRUCTURES: [{
+			Structure.KEY_INSTANCE_ID: hut.id,
+			Structure.KEY_DATA: {GathererHut.KEY_WORKER_IDS: [resident.id, 404]},
 		}],
 	}
 	var legacy_characters := {
-		CharacterManager._KEY_CHARACTERS: [
-			{Character._KEY_ID: resident.id, Character._KEY_WORKPLACE_STRUCTURE_ID: hut.id},
-			{Character._KEY_ID: 7, Character._KEY_WORKPLACE_STRUCTURE_ID: 12345},
+		CharacterManager.KEY_CHARACTERS: [
+			{Character.KEY_ID: resident.id, Character.KEY_WORKPLACE_STRUCTURE_ID: hut.id},
+			{Character.KEY_ID: 7, Character.KEY_WORKPLACE_STRUCTURE_ID: 12345},
 		],
 	}
 	var imported := WorkplaceIndex.new()

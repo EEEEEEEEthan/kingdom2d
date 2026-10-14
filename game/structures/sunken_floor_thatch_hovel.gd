@@ -119,7 +119,7 @@ func finish_upgrade() -> void:
 		game.structure_manager.retarget_config(self, StructureConfig.timber_frame_cottage)
 	_apply_cottage_look()
 	if game:
-		game.save_game()
+		game.request_save()
 
 
 func _apply_cottage_look() -> void:
