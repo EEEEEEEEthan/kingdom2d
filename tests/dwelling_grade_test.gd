@@ -32,6 +32,9 @@ func _run() -> void:
 	if not await _cancel_keeps_logs_without_warehouse_ok(game):
 		quit(1)
 		return
+	if not await _cancel_keeps_logs_when_refuse_ok(game):
+		quit(1)
+		return
 	print("dwelling_grade_ok")
 	quit(0)
 
@@ -224,7 +227,33 @@ func _cancel_keeps_logs_without_warehouse_ok(game) -> bool:
 		push_error("无仓库时也应取消升级")
 		return false
 	if home.log_count() != 3:
-		push_error("仓库不收时应把原木留在住房，原木 %s" % home.log_count())
+		push_error("无可退仓库时应把原木留在住房，原木 %s" % home.log_count())
+		return false
+	return true
+
+
+func _cancel_keeps_logs_when_refuse_ok(game) -> bool:
+	game._clear()
+	await process_frame
+	var home := _home(game, 100)
+	game.spawn_resident_at_cell(100).set_process(false)
+	var warehouse := StructureConfig.warehouse.instantiate() as Warehouse
+	game.structure_manager.add_structure(warehouse, 104)
+	warehouse.set_storage_policy(ItemConfig.TypeId.LOG, Warehouse.StoragePolicy.REFUSE)
+	home.container.add(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	home.order_upgrade()
+	home.container.add(ItemConfig.TypeId.LOG, 5)
+	home.work_units = 1
+	home.container.take(ItemConfig.TypeId.BERRY, Food.PER_DAY)
+	home.maintain_grade()
+	if home.upgrade_ordered or home.work_units != 0:
+		push_error("REFUSE 仓时也应取消升级")
+		return false
+	if home.log_count() != 5:
+		push_error("REFUSE 仓不可退时应把原木留在住房，原木 %s" % home.log_count())
+		return false
+	if warehouse.container.count_of(ItemConfig.TypeId.LOG) != 0:
+		push_error("原木不应进 REFUSE 仓，仓 %s" % warehouse.container.count_of(ItemConfig.TypeId.LOG))
 		return false
 	return true
 
