@@ -21,11 +21,11 @@ static func deserialize(data: Dictionary) -> CharacterAiTask:
 		CharacterAiTaskTypeId.TypeId.ENTER_HOME:
 			return CharacterAiEnterHomeTask.new(payload)
 		CharacterAiTaskTypeId.TypeId.GATHER_CYCLE:
-			return CharacterAiGatherCycleTask.new(payload)
+			return CharacterAiHarvestCycleTask.new(payload, CharacterAiTaskTypeId.TypeId.GATHER_CYCLE)
 		CharacterAiTaskTypeId.TypeId.FETCH_FOOD:
 			return CharacterAiFetchFoodTask.new(payload)
 		CharacterAiTaskTypeId.TypeId.LOG_CYCLE:
-			return CharacterAiLogCycleTask.new(payload)
+			return CharacterAiHarvestCycleTask.new(payload, CharacterAiTaskTypeId.TypeId.LOG_CYCLE)
 		CharacterAiTaskTypeId.TypeId.BUILD_CYCLE:
 			return CharacterAiBuildCycleTask.new(payload)
 		_:

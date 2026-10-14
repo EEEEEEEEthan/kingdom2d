@@ -50,12 +50,10 @@ func _process(delta_seconds: float) -> void:
 			_queue_enter_home()
 		return
 	if _is_work_time() and workplace_structure_id() > 0 and not _workplace() is Warehouse:
-		if _workplace() is LumberCamp:
-			_queue_log_cycle()
-		elif _workplace() is BuildersGuild:
+		if _workplace() is BuildersGuild:
 			_queue_build_cycle()
 		else:
-			_queue_gather_cycle()
+			_queue_harvest_cycle()
 		return
 	_schedule_idle_wander()
 
@@ -216,10 +214,8 @@ func current_activity() -> String:
 		return "正在发呆"
 	if top is CharacterAiEnterHomeTask:
 		return "正在进屋"
-	if top is CharacterAiGatherCycleTask:
-		return (top as CharacterAiGatherCycleTask).activity_text()
-	if top is CharacterAiLogCycleTask:
-		return (top as CharacterAiLogCycleTask).activity_text()
+	if top is CharacterAiHarvestCycleTask:
+		return (top as CharacterAiHarvestCycleTask).activity_text()
 	if top is CharacterAiBuildCycleTask:
 		return (top as CharacterAiBuildCycleTask).activity_text()
 	if top is CharacterAiFetchFoodTask:
@@ -244,7 +240,7 @@ func _apply_daily_schedule() -> void:
 		return
 	if _is_on_food_errand():
 		return
-	if _is_on_gather_cycle() or _is_on_log_cycle() or _is_on_build_cycle():
+	if _is_on_harvest_cycle() or _is_on_build_cycle():
 		_schedule_initialized = true
 		_schedule_sleeping = sleeping
 		return
@@ -271,18 +267,17 @@ func _workplace() -> Structure:
 	return game.structure_manager.get_structure_by_id(structure_id)
 
 
-func _queue_gather_cycle() -> void:
-	push_ai_task(CharacterAiGatherCycleTask.new({}))
+func _queue_harvest_cycle() -> void:
+	var workplace := _workplace()
+	var type_id := (
+		CharacterAiTaskTypeId.TypeId.LOG_CYCLE
+		if workplace is LumberCamp
+		else CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
+	)
+	push_ai_task(CharacterAiHarvestCycleTask.new({}, type_id))
 
-func _is_on_gather_cycle() -> bool:
-	return ai_task_stack.peek() is CharacterAiGatherCycleTask
-
-
-func _queue_log_cycle() -> void:
-	push_ai_task(CharacterAiLogCycleTask.new({}))
-
-func _is_on_log_cycle() -> bool:
-	return ai_task_stack.peek() is CharacterAiLogCycleTask
+func _is_on_harvest_cycle() -> bool:
+	return ai_task_stack.peek() is CharacterAiHarvestCycleTask
 
 
 func _queue_build_cycle() -> void:

@@ -50,16 +50,11 @@ static func nearest_stocked_warehouse(character: Character) -> Warehouse:
 	if game == null:
 		return null
 	var origin := roundi((character.position.x - Game.HALF_TILE_SIZE) / float(Game.TILE_SIZE))
-	var nearest: Warehouse
-	var nearest_distance := 0
-	for structure in game.structure_manager.index_to_structures:
-		if not structure is Warehouse:
-			continue
-		var warehouse := structure as Warehouse
-		if warehouse.berry_count() <= 0 or not warehouse.accepts_withdraw(ItemConfig.TypeId.BERRY):
-			continue
-		var distance := absi(warehouse.cell_index - origin)
-		if nearest == null or distance < nearest_distance or (distance == nearest_distance and warehouse.id < nearest.id):
-			nearest = warehouse
-			nearest_distance = distance
-	return nearest
+	return Warehouse.nearest(
+		game.structure_manager,
+		origin,
+		ITEM_ID,
+		false,
+		true,
+		true,
+	)

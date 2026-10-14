@@ -8,7 +8,7 @@ func _run() -> void:
 	load("res://game/game.gd")
 	load("res://game/game_builder.gd")
 	load("res://game/structures/lumber_camp.gd")
-	load("res://game/characters/ai/tasks/character_ai_log_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	if not _log_icon_ok():
 		quit(1)
 		return
@@ -99,7 +99,7 @@ func _run() -> void:
 		return
 	lumberjack._process(0.05)
 	var top = lumberjack.ai_task_stack.peek()
-	if not top is CharacterAiLogCycleTask:
+	if not top is CharacterAiHarvestCycleTask:
 		push_error("工作段一轮结束后应继续伐木")
 		quit(1)
 		return
@@ -149,6 +149,9 @@ func _run() -> void:
 	if not _haul_ok(game):
 		quit(1)
 		return
+	if not _haul_policy_ok(game):
+		quit(1)
+		return
 	if not _shared_staffing_ok(game):
 		quit(1)
 		return
@@ -181,15 +184,15 @@ func _log_icon_ok() -> bool:
 
 
 func _save_ok(game, camp: LumberCamp) -> bool:
-	camp.priority = LumberCamp.Priority.HIGH
+	camp.priority = WorkplacePriority.Priority.HIGH
 	camp.container.set_count(ItemConfig.TypeId.LOG, 4)
 	var restored: Structure = Structure.deserialize(camp.serialize(), game)
 	var restored_camp := restored as LumberCamp
-	if restored_camp == null or restored_camp.log_count() != 4 or restored_camp.priority != LumberCamp.Priority.HIGH:
+	if restored_camp == null or restored_camp.log_count() != 4 or restored_camp.priority != WorkplacePriority.Priority.HIGH:
 		push_error("伐木营地存档应保留原木和优先级")
 		return false
 	restored.free()
-	camp.priority = LumberCamp.Priority.NORMAL
+	camp.priority = WorkplacePriority.Priority.NORMAL
 	return true
 
 
@@ -305,7 +308,7 @@ func _haul_ok(game) -> bool:
 	if not saw_haul:
 		push_error("满仓应去送仓库")
 		return false
-	if near.container.count_of(ItemConfig.TypeId.LOG) != LumberCamp.HAUL_BATCH:
+	if near.container.count_of(ItemConfig.TypeId.LOG) != HarvestWorkplace.HAUL_BATCH:
 		push_error("应把 10 个原木送到最近仓库，实际 %s" % near.container.count_of(ItemConfig.TypeId.LOG))
 		return false
 	if far.container.count_of(ItemConfig.TypeId.LOG) != 0:
@@ -322,8 +325,34 @@ func _haul_ok(game) -> bool:
 			break
 	game.employment.release(lumberjack.id)
 	lumberjack.abandon_ai_tasks()
-	if camp.log_count() != LumberCamp.LOG_CAPACITY or near.container.count_of(ItemConfig.TypeId.LOG) != LumberCamp.HAUL_BATCH:
+	if camp.log_count() != LumberCamp.LOG_CAPACITY or near.container.count_of(ItemConfig.TypeId.LOG) != HarvestWorkplace.HAUL_BATCH:
 		push_error("运送中断应把原木退回营地 camp=%s warehouse=%s carried=%s" % [camp.log_count(), near.container.count_of(ItemConfig.TypeId.LOG), lumberjack.carried_items.count_of(ItemConfig.TypeId.LOG)])
+		return false
+	return true
+
+
+func _haul_policy_ok(game) -> bool:
+	game._clear()
+	var camp = StructureConfig.lumber_camp.instantiate()
+	game.structure_manager.add_structure(camp, 100)
+	var near = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(near, 108)
+	near.set_storage_policy(ItemConfig.TypeId.LOG, Warehouse.StoragePolicy.REFUSE)
+	var far = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(far, 140)
+	var lumberjack = game.spawn_resident_at_cell(98)
+	lumberjack.set_process(false)
+	_set_hour(game, 12)
+	camp.container.add(ItemConfig.TypeId.LOG, LumberCamp.LOG_CAPACITY)
+	for _step in 300:
+		lumberjack._process(0.5)
+		if far.container.count_of(ItemConfig.TypeId.LOG) > 0:
+			break
+	if near.container.count_of(ItemConfig.TypeId.LOG) != 0:
+		push_error("拒收原木的近仓不应收到")
+		return false
+	if far.container.count_of(ItemConfig.TypeId.LOG) != HarvestWorkplace.HAUL_BATCH:
+		push_error("应跳过拒收仓送到可接收的仓库，实际 %s" % far.container.count_of(ItemConfig.TypeId.LOG))
 		return false
 	return true
 
@@ -331,7 +360,7 @@ func _haul_ok(game) -> bool:
 func _shared_staffing_ok(game) -> bool:
 	game._clear()
 	var hut = StructureConfig.gatherer_hut.instantiate()
-	hut.priority = GathererHut.Priority.HIGH
+	hut.priority = WorkplacePriority.Priority.HIGH
 	game.structure_manager.add_structure(hut, 0)
 	var camp = StructureConfig.lumber_camp.instantiate()
 	game.structure_manager.add_structure(camp, 100)

@@ -11,7 +11,7 @@ func _run() -> void:
 	load("res://game/items/item_config.gd")
 	load("res://game/items/item_container.gd")
 	load("res://game/structures/gatherer_hut.gd")
-	load("res://game/characters/ai/tasks/character_ai_gather_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	if not _berry_icon_is_atlas_cell():
 		quit(1)
 		return

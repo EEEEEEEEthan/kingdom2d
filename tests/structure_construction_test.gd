@@ -10,7 +10,7 @@ func _run() -> void:
 	load("res://game/structures/builders_guild.gd")
 	load("res://game/structures/sunken_floor_thatch_hovel.gd")
 	load("res://game/characters/ai/tasks/character_ai_build_cycle_task.gd")
-	load("res://game/characters/ai/tasks/character_ai_log_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	var game = (load("res://game/game.tscn") as PackedScene).instantiate()
 	root.add_child(game)
 	await process_frame
