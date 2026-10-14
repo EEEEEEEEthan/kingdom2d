@@ -28,6 +28,9 @@ func _run() -> void:
 	if not await _full_pantry_skips_trip(game):
 		quit(1)
 		return
+	if not await _surplus_returns_to_warehouse(game):
+		quit(1)
+		return
 	if not await _once_per_day(game):
 		quit(1)
 		return
@@ -135,7 +138,7 @@ func _once_per_day(game) -> bool:
 		push_error("读档后同一夜不应再吃，实际 %s" % Food.stored(home))
 		return false
 	game.game_time.all_days = 9.0 + 12.5 / 24.0
-	restored.workplace_structure_id = 0
+	game.employment.release(restored.id)
 	restored.abandon_ai_tasks()
 	for structure in game.structure_manager.structures.values():
 		if structure is Warehouse:
@@ -145,6 +148,28 @@ func _once_per_day(game) -> bool:
 	restored._process(0.05)
 	if Food.stored(home) != 0:
 		push_error("下一晚应再吃 5，实际 %s" % Food.stored(home))
+		return false
+	return true
+
+
+func _surplus_returns_to_warehouse(game) -> bool:
+	var home = await _place_home(game, 170)
+	var character = game.spawn_resident_at_cell(170)
+	character.set_process(false)
+	home.container.add(ItemConfig.TypeId.BERRY, Food.HOME_CAPACITY)
+	await _clear_cell(game, 176)
+	var warehouse = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(warehouse, 176)
+	character.carried_items.add(ItemConfig.TypeId.BERRY, 4)
+	Food.settle_carried(character)
+	if Food.stored(home) != Food.HOME_CAPACITY:
+		push_error("住房已满时不应再塞进浆果，实际 %s" % Food.stored(home))
+		return false
+	if warehouse.berry_count() != 4:
+		push_error("取食余量应退回仓库，实际 %s" % warehouse.berry_count())
+		return false
+	if not character.carried_items.is_empty():
+		push_error("退回后身上应为空")
 		return false
 	return true
 

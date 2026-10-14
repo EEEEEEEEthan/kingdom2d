@@ -7,6 +7,7 @@ func _initialize() -> void:
 func _run() -> void:
 	load("res://game/game.gd")
 	load("res://game/game_builder.gd")
+	load("res://game/food.gd")
 	load("res://game/structures/gatherer_hut.gd")
 	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	var game = (load("res://game/game.tscn") as PackedScene).instantiate()
@@ -285,11 +286,34 @@ func _berry_cap_ok(game) -> bool:
 	if hut.berry_count() != GathererHut.BERRY_CAPACITY - 1 + 5 or not gatherer.carried_items.is_empty():
 		push_error("溢出不应丢弃，实际 %s" % hut.berry_count())
 		return false
+	var home = StructureConfig.sunken_floor_thatch_hovel.instantiate()
+	game.structure_manager.add_structure(home, 96)
+	gatherer.home_cell_index = 96
+	var warehouse = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(warehouse, 104)
+	home.container.set_count(ItemConfig.TypeId.BERRY, Food.HOME_CAPACITY)
 	hut.container.set_count(ItemConfig.TypeId.BERRY, GathererHut.BERRY_CAPACITY)
-	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 2)
+	var saw_harvest := false
+	for _step in 120:
+		gatherer._process(0.5)
+		if gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY) > 0:
+			saw_harvest = true
+			break
+	if not saw_harvest:
+		push_error("应采到本轮浆果后再测打断")
+		return false
+	var owed: int = gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY)
+	gatherer.carried_items.add(ItemConfig.TypeId.BERRY, 3)
+	var hut_before: int = hut.berry_count()
 	gatherer.abandon_ai_tasks()
-	if hut.berry_count() != GathererHut.BERRY_CAPACITY + 2 or not gatherer.carried_items.is_empty():
-		push_error("打断后也不应截断，实际 %s" % hut.berry_count())
+	if hut.berry_count() != hut_before + owed:
+		push_error("打断只应收本轮收获 hut=%s owed=%s" % [hut.berry_count() - hut_before, owed])
+		return false
+	if gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY) != 0:
+		push_error("取食余量应离开随身容器，实际 %s" % gatherer.carried_items.count_of(ItemConfig.TypeId.BERRY))
+		return false
+	if warehouse.berry_count() != 3:
+		push_error("住房已满时取食余量应退回仓库，实际 %s" % warehouse.berry_count())
 		return false
 	return true
 

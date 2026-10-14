@@ -34,5 +34,15 @@ func withdraw_harvest(target: ItemContainer, amount: int) -> int:
 	return moved
 
 
+## 只收本工位的收获物。身上其它物品不动。
 func deposit_carried(source: ItemContainer) -> void:
-	source.transfer_all_to(container)
+	deposit_harvest(source, source.count_of(harvest_item_id()))
+
+
+func deposit_harvest(source: ItemContainer, amount: int) -> void:
+	var item_id := harvest_item_id()
+	var moving := mini(amount, source.count_of(item_id))
+	if moving <= 0:
+		return
+	source.take(item_id, moving)
+	container.add(item_id, moving)
