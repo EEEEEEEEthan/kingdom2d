@@ -78,6 +78,21 @@ func cancel_upgrade() -> void:
 		return
 	upgrade_ordered = false
 	work_units = 0
+	# 只退到可取料的仓（排除 REFUSE/未完工）；退不到就留在住房。
+	var amount := log_count()
+	if amount > 0:
+		var game := Game.find(self)
+		if game != null:
+			var warehouse := Warehouse.nearest(
+				game.structure_manager,
+				cell_index,
+				ItemConfig.TypeId.LOG,
+				false,
+				true,
+			)
+			if warehouse != null:
+				container.take(ItemConfig.TypeId.LOG, amount)
+				warehouse.restore_logs(amount)
 	sync_scaffold()
 
 
