@@ -11,7 +11,7 @@ func _run() -> void:
 	load("res://game/characters/character_manager.gd")
 	load("res://game/characters/ai/character_ai_task.gd")
 	load("res://game/characters/ai/character_ai_task_stack.gd")
-	load("res://game/characters/ai/tasks/character_ai_gather_cycle_task.gd")
+	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	load("res://game/characters/ai/tasks/character_ai_move_to_world_x_task.gd")
 	load("res://game/characters/ai/tasks/character_ai_enter_home_task.gd")
 	load("res://game/characters/ai/tasks/character_ai_wait_duration_task.gd")
@@ -129,12 +129,12 @@ func _run() -> void:
 		push_error("白天窗口应刷新掉睡觉，实际 %s" % activity_text)
 		quit(1)
 		return
-	var gather := CharacterAiGatherCycleTask.new({CharacterAiGatherCycleTask.KEY_PHASE: 2})
+	var gather := CharacterAiHarvestCycleTask.new({CharacterAiHarvestCycleTask.KEY_PHASE: 2})
 	if gather.activity_text() != "正在采集":
 		push_error("去灌木应显示正在采集，实际 %s" % gather.activity_text())
 		quit(1)
 		return
-	gather = CharacterAiGatherCycleTask.new({CharacterAiGatherCycleTask.KEY_PHASE: 4})
+	gather = CharacterAiHarvestCycleTask.new({CharacterAiHarvestCycleTask.KEY_PHASE: 4})
 	if gather.activity_text() != "正在回采集者小屋":
 		push_error("返回应显示正在回采集者小屋，实际 %s" % gather.activity_text())
 		quit(1)

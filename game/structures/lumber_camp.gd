@@ -1,19 +1,23 @@
-extends Structure
+extends HarvestWorkplace
 class_name LumberCamp
-
-enum Priority {
-	LOW,
-	NORMAL,
-	HIGH,
-}
 
 const SLOT_COUNT := 2
 const LOG_CAPACITY := 10
-const HAUL_BATCH := 10
-const PRIORITY_NAMES := ["低优先", "普通", "高优先"]
 const _KEY_PRIORITY := 1
 
-var priority := Priority.NORMAL
+var priority := WorkplacePriority.Priority.NORMAL
+
+
+func harvest_item_id() -> int:
+	return ItemConfig.TypeId.LOG
+
+
+func harvest_plant_type_id() -> int:
+	return StructureConfig.TypeId.OAK
+
+
+func harvest_capacity() -> int:
+	return LOG_CAPACITY
 
 
 func _serialize() -> Dictionary:
@@ -23,28 +27,19 @@ func _serialize() -> Dictionary:
 
 
 func _deserialize(data: Dictionary) -> void:
-	priority = int(data.get(_KEY_PRIORITY, Priority.NORMAL))
+	priority = int(data.get(_KEY_PRIORITY, WorkplacePriority.Priority.NORMAL))
 
 
 func log_count() -> int:
-	return container.count_of(ItemConfig.TypeId.LOG)
+	return stock_count()
 
 
 func logs_full() -> bool:
-	return log_count() >= LOG_CAPACITY
+	return storage_full()
 
 
 func withdraw_logs(target: ItemContainer, amount: int) -> int:
-	var moved := container.take(ItemConfig.TypeId.LOG, amount)
-	if moved > 0:
-		target.add(ItemConfig.TypeId.LOG, moved)
-	return moved
-
-
-func deposit_carried(source: ItemContainer) -> void:
-	source.transfer_all_to(container)
-	if log_count() > LOG_CAPACITY:
-		container.set_count(ItemConfig.TypeId.LOG, LOG_CAPACITY)
+	return withdraw_harvest(target, amount)
 
 
 func change_priority(value: int) -> void:
