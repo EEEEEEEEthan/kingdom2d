@@ -35,6 +35,9 @@ static func deserialize(data: Dictionary) -> CharacterAiTask:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.NONE
 
+func activity_text() -> String:
+	return ""
+
 func serialize() -> Dictionary:
 	return {
 		_KEY_TYPE_ID: get_type_id(),

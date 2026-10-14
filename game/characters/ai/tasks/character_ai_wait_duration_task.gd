@@ -14,6 +14,9 @@ func _init(save_payload: Dictionary) -> void:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.WAIT_DURATION
 
+func activity_text() -> String:
+	return "正在歇着"
+
 func tick(delta_seconds: float, _context: CharacterAiContext) -> Status:
 	_elapsed_seconds += delta_seconds
 	if _elapsed_seconds >= _duration_seconds:

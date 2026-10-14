@@ -11,6 +11,9 @@ func _init(save_payload: Dictionary) -> void:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.MOVE_TO_WORLD_X
 
+func activity_text() -> String:
+	return "正在闲逛"
+
 func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 	if context.character.advance_toward_world_x(delta_seconds, _target_world_x):
 		return Status.SUCCEEDED

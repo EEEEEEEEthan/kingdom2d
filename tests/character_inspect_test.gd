@@ -35,11 +35,12 @@ func _run() -> void:
 		push_error("白天无业应在闲逛或歇着，实际 %s" % character.current_activity())
 		quit(1)
 		return
-	game.employment.assign(character.id, 1)
+	var hut = StructureConfig.gatherer_hut.instantiate()
+	game.structure_manager.add_structure(hut, 40)
 	character.abandon_ai_tasks()
 	character._process(0.05)
 	if character.occupation_name() != "采集者":
-		push_error("有工作地点时应是采集者")
+		push_error("入职采集小屋应是采集者，实际 %s" % character.occupation_name())
 		quit(1)
 		return
 	if character.current_activity() != "正在去采集者小屋":
@@ -97,7 +98,7 @@ func _run() -> void:
 		push_error("人物页头像应跟 id 走")
 		quit(1)
 		return
-	game.employment.assign(character.id, 1)
+	game.employment.assign(character.id, hut.id)
 	page._process(0.0)
 	if page.get_node("%IdentityLabel").text != "Aldric Ashford，采集者":
 		push_error("有职业应跟在姓名后面，实际 %s" % page.get_node("%IdentityLabel").text)

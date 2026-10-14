@@ -10,9 +10,6 @@ const _KEY_WORKPLACE_STRUCTURE_ID = 6 # 旧档字段，关系已改由 Workplace
 const _KEY_CARRIED_ITEMS = 7
 const _KEY_FOOD_DAY = 8
 const DEFAULT_MOVE_SPEED_PIXELS_PER_SECOND = 6.0
-const _IDLE_WANDER_WAIT_SECONDS_MIN = 1.0
-const _IDLE_WANDER_WAIT_SECONDS_MAX = 3.0
-const _IDLE_WANDER_RADIUS_PIXELS = 32.0
 
 var id: int
 var home_cell_index := -1
@@ -28,36 +25,17 @@ var carried_items := ItemContainer.new()
 var ai_task_stack := CharacterAiTaskStack.new()
 
 var _ai_context: CharacterAiContext
-var _schedule_initialized := false
-var _schedule_sleeping := false
-var _food_day := -1
+var _schedule: CharacterSchedule
+
 
 func _ready() -> void:
 	_get_ai_context()
+	_get_schedule()
 	set_process(true)
 	HoverOutline.attach(self)
 
 func _process(delta_seconds: float) -> void:
-	_apply_daily_schedule()
-	ai_task_stack.tick(delta_seconds, _get_ai_context())
-	if not ai_task_stack.is_empty():
-		return
-	if _is_sleeping():
-		if _needs_food_today():
-			_queue_food_errand()
-			return
-		if not indoors:
-			_queue_enter_home()
-		return
-	if _is_work_time() and workplace_structure_id() > 0 and not _workplace() is Warehouse:
-		if _workplace() is LumberCamp:
-			_queue_log_cycle()
-		elif _workplace() is BuildersGuild:
-			_queue_build_cycle()
-		else:
-			_queue_gather_cycle()
-		return
-	_schedule_idle_wander()
+	_get_schedule().tick(delta_seconds, self)
 
 func leave_home() -> void:
 	_leave_home()
@@ -90,9 +68,10 @@ func deserialize(data: Dictionary) -> void:
 	home_cell_index = data.get(_KEY_HOME_CELL_INDEX, -1)
 	indoors = data.get(_KEY_INDOORS, false)
 	carried_items = ItemContainer.deserialize(data.get(_KEY_CARRIED_ITEMS, {}))
-	_food_day = data.get(_KEY_FOOD_DAY, -1)
+	var schedule := _get_schedule()
+	schedule.food_day = data.get(_KEY_FOOD_DAY, -1)
+	schedule.reset_period()
 	visible = not indoors
-	_schedule_initialized = false
 	ai_task_stack.deserialize(data.get(_KEY_AI_TASK_STACK, {}), _get_ai_context())
 
 func serialize() -> Dictionary:
@@ -103,7 +82,7 @@ func serialize() -> Dictionary:
 		_KEY_HOME_CELL_INDEX: home_cell_index,
 		_KEY_INDOORS: indoors,
 		_KEY_CARRIED_ITEMS: carried_items.serialize(),
-		_KEY_FOOD_DAY: _food_day,
+		_KEY_FOOD_DAY: _get_schedule().food_day,
 	}
 
 
@@ -112,80 +91,16 @@ func _get_ai_context() -> CharacterAiContext:
 		_ai_context = CharacterAiContext.new(self)
 	return _ai_context
 
-const _GIVEN_NAMES := [
-	"Aldric",
-	"Baldwin",
-	"Cedric",
-	"Dunstan",
-	"Edmund",
-	"Godfrey",
-	"Guy",
-	"Henry",
-	"Humphrey",
-	"Leofric",
-	"Miles",
-	"Osric",
-	"Ralph",
-	"Roger",
-	"Simon",
-	"Walter",
-	"Wulfric",
-	"Bernard",
-	"Cuthbert",
-	"Gilbert",
-	"Beatrice",
-	"Edith",
-	"Eleanor",
-	"Godiva",
-	"Hilda",
-	"Isolde",
-	"Joan",
-	"Matilda",
-	"Maud",
-	"Rowena",
-	"Winifred",
-	"Cecily",
-]
-const _SURNAMES := [
-	"Ashford",
-	"Baker",
-	"Blackwood",
-	"Carpenter",
-	"Carter",
-	"Cooper",
-	"Crowley",
-	"Dunmore",
-	"Eldridge",
-	"Fairfax",
-	"Fletcher",
-	"Grimsby",
-	"Holloway",
-	"Ironwood",
-	"Kingsley",
-	"Lockwood",
-	"Marsh",
-	"Mason",
-	"Mercer",
-	"Norwood",
-	"Oakley",
-	"Pemberton",
-	"Ravenscroft",
-	"Smith",
-	"Stonemoor",
-	"Tanner",
-	"Thorne",
-	"Underhill",
-	"Vance",
-	"Weaver",
-	"Whitmore",
-	"Wright",
-]
 
-# 姓名由「名 + 姓」组合而来，id 与组合一一对应，储备 32×32 保证不重名。
+func _get_schedule() -> CharacterSchedule:
+	if _schedule == null:
+		_schedule = CharacterSchedule.new()
+	return _schedule
+
+
 func display_name() -> String:
-	var given_count := _GIVEN_NAMES.size()
-	var index := posmod(id - 1, given_count * _SURNAMES.size())
-	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]
+	return CharacterNames.display_name(id)
+
 
 func workplace_structure_id() -> int:
 	var game := Game.find(self)
@@ -195,71 +110,12 @@ func workplace_structure_id() -> int:
 
 
 func occupation_name() -> String:
-	var workplace := _workplace()
-	if workplace is Warehouse:
-		return "仓库管理员"
-	if workplace is LumberCamp:
-		return "伐木工"
-	if workplace is BuildersGuild:
-		return "建筑工"
-	if workplace_structure_id() > 0:
-		return "采集者"
-	return ""
+	return WorkplaceJob.occupation_of(_workplace())
+
 
 func current_activity() -> String:
-	if indoors and _is_sleeping():
-		return "正在睡觉"
-	if indoors:
-		return "正在家里"
-	var top := ai_task_stack.peek()
-	if top == null:
-		return "正在发呆"
-	if top is CharacterAiEnterHomeTask:
-		return "正在进屋"
-	if top is CharacterAiGatherCycleTask:
-		return (top as CharacterAiGatherCycleTask).activity_text()
-	if top is CharacterAiLogCycleTask:
-		return (top as CharacterAiLogCycleTask).activity_text()
-	if top is CharacterAiBuildCycleTask:
-		return (top as CharacterAiBuildCycleTask).activity_text()
-	if top is CharacterAiFetchFoodTask:
-		return (top as CharacterAiFetchFoodTask).activity_text()
-	if top is CharacterAiMoveToWorldXTask and ai_task_stack.has_task(CharacterAiEnterHomeTask):
-		return "正在回家"
-	if top is CharacterAiWaitDurationTask:
-		return "正在歇着"
-	if top is CharacterAiMoveToWorldXTask:
-		return "正在闲逛"
-	return "正在发呆"
+	return CharacterActivity.describe(self)
 
-func _is_sleeping() -> bool:
-	return _get_ai_context().day_time_period == GameTime.DayTimePeriod.SLEEP
-
-func _is_work_time() -> bool:
-	return _get_ai_context().day_time_period == GameTime.DayTimePeriod.WORK
-
-func _apply_daily_schedule() -> void:
-	var sleeping := _is_sleeping()
-	if _schedule_initialized and sleeping == _schedule_sleeping:
-		return
-	if _is_on_food_errand():
-		return
-	if _is_on_gather_cycle() or _is_on_log_cycle() or _is_on_build_cycle():
-		_schedule_initialized = true
-		_schedule_sleeping = sleeping
-		return
-	_schedule_initialized = true
-	_schedule_sleeping = sleeping
-	abandon_ai_tasks()
-	if sleeping:
-		if _needs_food_today():
-			_queue_food_errand()
-		elif indoors:
-			visible = false
-		else:
-			_queue_enter_home()
-	else:
-		_leave_home()
 
 func _workplace() -> Structure:
 	var structure_id := workplace_structure_id()
@@ -270,57 +126,6 @@ func _workplace() -> Structure:
 		return null
 	return game.structure_manager.get_structure_by_id(structure_id)
 
-
-func _queue_gather_cycle() -> void:
-	push_ai_task(CharacterAiGatherCycleTask.new({}))
-
-func _is_on_gather_cycle() -> bool:
-	return ai_task_stack.peek() is CharacterAiGatherCycleTask
-
-
-func _queue_log_cycle() -> void:
-	push_ai_task(CharacterAiLogCycleTask.new({}))
-
-func _is_on_log_cycle() -> bool:
-	return ai_task_stack.peek() is CharacterAiLogCycleTask
-
-
-func _queue_build_cycle() -> void:
-	push_ai_task(CharacterAiBuildCycleTask.new({}))
-
-func _is_on_build_cycle() -> bool:
-	return ai_task_stack.peek() is CharacterAiBuildCycleTask
-
-
-func _is_on_food_errand() -> bool:
-	return ai_task_stack.peek() is CharacterAiFetchFoodTask
-
-
-func _needs_food_today() -> bool:
-	return _food_day != _food_cycle_index()
-
-
-func _food_cycle_index() -> int:
-	var game_time := _get_ai_context().game_time
-	var day_index := int(game_time.all_days)
-	if game_time.hour_of_day < 6:
-		return day_index - 1
-	return day_index
-
-
-func _queue_food_errand() -> void:
-	_food_day = _food_cycle_index()
-	push_ai_task(CharacterAiFetchFoodTask.new({}))
-
-func _queue_enter_home() -> void:
-	if not indoors:
-		visible = true
-	var enter_task := CharacterAiEnterHomeTask.new({})
-	var move_task := CharacterAiMoveToWorldXTask.new({
-		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: _home_world_x(),
-	})
-	push_ai_task(enter_task)
-	push_ai_task(move_task)
 
 func _leave_home() -> void:
 	if indoors:
@@ -336,22 +141,3 @@ func resolved_home_cell_index() -> int:
 		return home_cell_index
 	var cell := roundi((position.x - Game.HALF_TILE_SIZE) / float(Game.TILE_SIZE))
 	return clampi(cell, 0, Game.MAP_CELL_COUNT - 1)
-
-func _schedule_idle_wander() -> void:
-	var wait_duration_seconds := randf_range(_IDLE_WANDER_WAIT_SECONDS_MIN, _IDLE_WANDER_WAIT_SECONDS_MAX)
-	var wait_task := CharacterAiWaitDurationTask.new({
-		CharacterAiWaitDurationTask.KEY_DURATION_SECONDS: wait_duration_seconds,
-	})
-	var move_task := CharacterAiMoveToWorldXTask.new({
-		CharacterAiMoveToWorldXTask.KEY_TARGET_WORLD_X: _pick_idle_wander_target_world_x(),
-	})
-	push_ai_task(move_task)
-	push_ai_task(wait_task)
-
-func _pick_idle_wander_target_world_x() -> float:
-	var map_min_world_x: float = Game.get_position_by_cell_index(0) + Game.HALF_TILE_SIZE
-	var map_max_world_x: float = Game.get_position_by_cell_index(Game.MAP_CELL_COUNT - 1) + Game.HALF_TILE_SIZE
-	var offset_pixels := randf_range(-_IDLE_WANDER_RADIUS_PIXELS, _IDLE_WANDER_RADIUS_PIXELS)
-	if is_zero_approx(offset_pixels):
-		offset_pixels = 1.0 if randf() < 0.5 else -1.0
-	return clampf(position.x + offset_pixels, map_min_world_x, map_max_world_x)

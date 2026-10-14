@@ -1,0 +1,78 @@
+extends RefCounted
+class_name CharacterNames
+
+const _GIVEN_NAMES := [
+	"Aldric",
+	"Baldwin",
+	"Cedric",
+	"Dunstan",
+	"Edmund",
+	"Godfrey",
+	"Guy",
+	"Henry",
+	"Humphrey",
+	"Leofric",
+	"Miles",
+	"Osric",
+	"Ralph",
+	"Roger",
+	"Simon",
+	"Walter",
+	"Wulfric",
+	"Bernard",
+	"Cuthbert",
+	"Gilbert",
+	"Beatrice",
+	"Edith",
+	"Eleanor",
+	"Godiva",
+	"Hilda",
+	"Isolde",
+	"Joan",
+	"Matilda",
+	"Maud",
+	"Rowena",
+	"Winifred",
+	"Cecily",
+]
+const _SURNAMES := [
+	"Ashford",
+	"Baker",
+	"Blackwood",
+	"Carpenter",
+	"Carter",
+	"Cooper",
+	"Crowley",
+	"Dunmore",
+	"Eldridge",
+	"Fairfax",
+	"Fletcher",
+	"Grimsby",
+	"Holloway",
+	"Ironwood",
+	"Kingsley",
+	"Lockwood",
+	"Marsh",
+	"Mason",
+	"Mercer",
+	"Norwood",
+	"Oakley",
+	"Pemberton",
+	"Ravenscroft",
+	"Smith",
+	"Stonemoor",
+	"Tanner",
+	"Thorne",
+	"Underhill",
+	"Vance",
+	"Weaver",
+	"Whitmore",
+	"Wright",
+]
+
+
+# 姓名由「名 + 姓」组合而来，id 与组合一一对应，储备 32×32 保证不重名。
+static func display_name(character_id: int) -> String:
+	var given_count := _GIVEN_NAMES.size()
+	var index := posmod(character_id - 1, given_count * _SURNAMES.size())
+	return "%s %s" % [_GIVEN_NAMES[index % given_count], _SURNAMES[index / given_count]]

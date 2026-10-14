@@ -9,6 +9,9 @@ func _init(_save_payload: Dictionary) -> void:
 func get_type_id() -> CharacterAiTaskTypeId.TypeId:
 	return CharacterAiTaskTypeId.TypeId.ENTER_HOME
 
+func activity_text() -> String:
+	return "正在进屋"
+
 func tick(_delta_seconds: float, context: CharacterAiContext) -> Status:
 	context.character.enter_home()
 	return Status.SUCCEEDED
