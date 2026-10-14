@@ -7,6 +7,7 @@ func _initialize() -> void:
 func _run() -> void:
 	load("res://game/game.gd")
 	load("res://game/game_builder.gd")
+	load("res://game/food.gd")
 	load("res://game/structures/lumber_camp.gd")
 	load("res://game/characters/ai/tasks/character_ai_harvest_cycle_task.gd")
 	if not _log_icon_ok():
@@ -289,11 +290,37 @@ func _log_cap_ok(game) -> bool:
 	if camp.log_count() != LumberCamp.LOG_CAPACITY - 1 + 5 or not lumberjack.carried_items.is_empty():
 		push_error("溢出不应丢弃，实际 %s" % camp.log_count())
 		return false
+	var home = StructureConfig.sunken_floor_thatch_hovel.instantiate()
+	game.structure_manager.add_structure(home, 96)
+	lumberjack.home_cell_index = 96
+	var warehouse = StructureConfig.warehouse.instantiate()
+	game.structure_manager.add_structure(warehouse, 104)
+	home.container.set_count(ItemConfig.TypeId.BERRY, Food.HOME_CAPACITY)
 	camp.container.set_count(ItemConfig.TypeId.LOG, LumberCamp.LOG_CAPACITY)
-	lumberjack.carried_items.add(ItemConfig.TypeId.LOG, 2)
+	var saw_harvest := false
+	for _step in 120:
+		lumberjack._process(0.5)
+		if lumberjack.carried_items.count_of(ItemConfig.TypeId.LOG) > 0:
+			saw_harvest = true
+			break
+	if not saw_harvest:
+		push_error("应砍到本轮原木后再测打断")
+		return false
+	var owed: int = lumberjack.carried_items.count_of(ItemConfig.TypeId.LOG)
+	lumberjack.carried_items.add(ItemConfig.TypeId.BERRY, 3)
+	var camp_before: int = camp.log_count()
 	lumberjack.abandon_ai_tasks()
-	if camp.log_count() != LumberCamp.LOG_CAPACITY + 2 or not lumberjack.carried_items.is_empty():
-		push_error("打断后也不应截断，实际 %s" % camp.log_count())
+	if camp.log_count() != camp_before + owed:
+		push_error("打断只应收本轮原木 camp=%s owed=%s" % [camp.log_count() - camp_before, owed])
+		return false
+	if camp.container.count_of(ItemConfig.TypeId.BERRY) != 0:
+		push_error("取食浆果不应进伐木营地")
+		return false
+	if lumberjack.carried_items.count_of(ItemConfig.TypeId.BERRY) != 0:
+		push_error("取食余量应离开随身容器，实际 %s" % lumberjack.carried_items.count_of(ItemConfig.TypeId.BERRY))
+		return false
+	if warehouse.berry_count() != 3:
+		push_error("住房已满时取食余量应退回仓库，实际 %s" % warehouse.berry_count())
 		return false
 	return true
 

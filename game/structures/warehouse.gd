@@ -141,6 +141,13 @@ func restore_logs(amount: int) -> void:
 	container.add(ItemConfig.TypeId.LOG, amount)
 
 
+## 退回浆果。不看收发策略，也不卡住容量。
+func restore_berries(amount: int) -> void:
+	if amount <= 0:
+		return
+	container.add(ItemConfig.TypeId.BERRY, amount)
+
+
 func withdraw_berries(target: ItemContainer, amount: int) -> int:
 	if not accepts_withdraw(ItemConfig.TypeId.BERRY):
 		return 0

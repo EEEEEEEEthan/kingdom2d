@@ -57,7 +57,7 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_phase = 2
 		return Status.RUNNING
 	if character.advance_toward_world_x(delta_seconds, _world_x(character.resolved_home_cell_index())):
-		Food.deposit(home, character.carried_items)
+		Food.settle_carried(character)
 		_eat(home)
 		return Status.SUCCEEDED
 	return Status.RUNNING
@@ -65,10 +65,10 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 
 func on_exit(context: CharacterAiContext) -> void:
 	var character := context.character
+	Food.settle_carried(character)
 	var home := Food.home_of(character)
 	if home == null:
 		return
-	Food.deposit(home, character.carried_items)
 	_eat(home)
 
 

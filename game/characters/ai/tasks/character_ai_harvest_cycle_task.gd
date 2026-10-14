@@ -21,6 +21,7 @@ const KEY_PLANT_ID = 3
 const KEY_WAREHOUSE_ID = 4
 const KEY_WORKPLACE_ID = 5
 const KEY_HOLDING_SLOT = 6
+const KEY_OWED_TO_WORKPLACE = 7
 const _INSIDE_SECONDS := 0.4
 const _SHAKE_SECONDS := 2.4
 const _NO_PLANT_WAIT_SECONDS := 2.0
@@ -32,6 +33,7 @@ var _plant_id := 0
 var _warehouse_id := 0
 var _workplace_id := 0
 var _holding_slot := false
+var _owed_to_workplace := 0
 var _type_id := CharacterAiTaskTypeId.TypeId.GATHER_CYCLE
 
 
@@ -42,6 +44,7 @@ func _init(save_payload: Dictionary, type_id: CharacterAiTaskTypeId.TypeId = Cha
 	_warehouse_id = save_payload.get(KEY_WAREHOUSE_ID, 0)
 	_workplace_id = save_payload.get(KEY_WORKPLACE_ID, 0)
 	_holding_slot = bool(save_payload.get(KEY_HOLDING_SLOT, false))
+	_owed_to_workplace = int(save_payload.get(KEY_OWED_TO_WORKPLACE, 0))
 	_type_id = type_id
 
 
@@ -124,11 +127,12 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 			_elapsed_seconds += delta_seconds
 			if _elapsed_seconds >= _SHAKE_SECONDS:
 				character.carried_items.add(workplace.harvest_item_id(), _HARVEST_ITEM_COUNT)
+				_owed_to_workplace += _HARVEST_ITEM_COUNT
 				_phase = Phase.RETURN_HARVEST
 		Phase.RETURN_HARVEST:
 			if character.advance_toward_world_x(delta_seconds, _world_x(workplace)):
 				character.visible = false
-				workplace.deposit_carried(character.carried_items)
+				_deposit_owed(workplace, character)
 				_release_harvest()
 				return Status.SUCCEEDED
 		Phase.WAIT_PLANT:
@@ -164,8 +168,10 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 				)
 				if not warehouse:
 					return Status.RUNNING
-				if workplace.withdraw_harvest(character.carried_items, HarvestWorkplace.HAUL_BATCH) <= 0:
+				var moved := workplace.withdraw_harvest(character.carried_items, HarvestWorkplace.HAUL_BATCH)
+				if moved <= 0:
 					return Status.RUNNING
+				_owed_to_workplace += moved
 				_warehouse_id = warehouse.id
 				character.visible = true
 				_phase = Phase.TO_WAREHOUSE
@@ -183,11 +189,11 @@ func tick(delta_seconds: float, context: CharacterAiContext) -> Status:
 		Phase.TO_WAREHOUSE:
 			var warehouse := _warehouse(context)
 			if not warehouse:
-				workplace.deposit_carried(character.carried_items)
+				_deposit_owed(workplace, character)
 				_warehouse_id = 0
 				return Status.SUCCEEDED
 			if character.advance_toward_world_x(delta_seconds, _world_x(warehouse)):
-				_deposit_accepted(character, warehouse)
+				_deposit_accepted(character, warehouse, workplace)
 				_warehouse_id = 0
 				_phase = Phase.RETURN_HAUL
 		Phase.RETURN_HAUL:
@@ -201,8 +207,9 @@ func on_exit(context: CharacterAiContext) -> void:
 	if context.character.visible == false and not context.character.indoors:
 		context.character.visible = true
 	var workplace := _workplace(context)
-	if workplace and not context.character.carried_items.is_empty():
-		workplace.deposit_carried(context.character.carried_items)
+	if workplace:
+		_deposit_owed(workplace, context.character)
+	Food.settle_carried(context.character)
 	_release_harvest()
 	if _plant_id != 0:
 		context.structure_manager().mark_occupied(_plant_id, 0)
@@ -217,6 +224,7 @@ func _serialize_payload() -> Dictionary:
 		KEY_WAREHOUSE_ID: _warehouse_id,
 		KEY_WORKPLACE_ID: _workplace_id,
 		KEY_HOLDING_SLOT: _holding_slot,
+		KEY_OWED_TO_WORKPLACE: _owed_to_workplace,
 	}
 
 
@@ -270,13 +278,24 @@ func _is_log() -> bool:
 	return _type_id == CharacterAiTaskTypeId.TypeId.LOG_CYCLE
 
 
-func _deposit_accepted(character: Character, warehouse: Warehouse) -> void:
+func _deposit_owed(workplace: HarvestWorkplace, character: Character) -> void:
+	if _owed_to_workplace <= 0:
+		return
+	workplace.deposit_harvest(character.carried_items, _owed_to_workplace)
+	_owed_to_workplace = 0
+
+
+func _deposit_accepted(character: Character, warehouse: Warehouse, workplace: HarvestWorkplace) -> void:
+	var harvest_id := workplace.harvest_item_id()
 	for item_id in character.carried_items.item_ids():
 		if not warehouse.accepts_deposit(item_id):
 			continue
 		var moved := character.carried_items.take(item_id, character.carried_items.count_of(item_id))
-		if moved > 0:
-			warehouse.container.add(item_id, moved)
+		if moved <= 0:
+			continue
+		warehouse.container.add(item_id, moved)
+		if item_id == harvest_id:
+			_owed_to_workplace = maxi(0, _owed_to_workplace - moved)
 
 
 func _warehouse(context: CharacterAiContext) -> Warehouse:
